@@ -1,0 +1,81 @@
+// INTERIOR PAGES  (markup: Layouts/FullWidth.aspx)
+//
+// The homepage hero clears the fixed header itself; every other layout wraps
+// its content in `.page`, which carries the offset. Content sits in the same
+// 1240px container as the rest of the site — the design has no unrestricted
+// full-width page — while the Feature zone is full-bleed for hero blocks.
+//
+// Also home to the small overrides Rock's own markup needs (ajax error, the
+// postback spinner from Site.Master).
+
+@use "config" as *;
+
+// ===========================================================================
+// STICKY FOOTER
+// Rock wraps the whole page in Site.Master's <form>, so the form is the column:
+// at least one viewport tall, with the footer pushed to its end. On a short
+// page the gap opens above the footer (the content keeps its own bottom
+// padding); on a long page `margin-top: auto` resolves to 0 and nothing moves.
+// The fixed utility bar / header, the absolutely-placed sprite and skip link,
+// and Rock's hidden inputs are out of flow or zero-height, so they don't
+// disturb the column. Works for every layout without layout-specific markup.
+// ===========================================================================
+.site-body > form {
+  display: flex; flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+}
+.site-body > form > main { flex-shrink: 0; }
+.site-footer { margin-top: auto; }
+
+.page { padding-top: var(--header-h); }
+
+// Page title band, driven by the theme.json "Header & Footer" fields.
+.page-title-band {
+  margin: 0;
+  background-color: var(--page-title-background);
+  color: var(--page-title-foreground);
+  padding-block: clamp(2rem, 6vw, 4rem);
+}
+.page-title-heading {
+  margin: 0;
+  color: var(--page-title-foreground);
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  text-transform: uppercase;
+}
+.page-title-heading i { font-size: 0.6em; margin-right: 0.35em; vertical-align: 0.1em; }
+
+.breadcrumb-container { padding-block: var(--space-sm); font-size: 0.8125rem; color: var(--text-secondary); }
+.breadcrumb-container .breadcrumb { margin: 0; padding: 0; background: none; }
+.breadcrumb-container a { color: var(--brand-text); text-decoration: none; }
+.breadcrumb-container a:hover { text-decoration: underline; }
+
+// Feature zone: full-bleed, no container, for hero-style blocks.
+.page-feature { position: relative; }
+
+// Main content
+.page-content { padding-block: clamp(2rem, 5vw, 4rem); }
+.page-content > * + * { margin-top: var(--space-xl); }
+
+// Zones B/C/D: one column on phones, thirds from the medium breakpoint.
+.page-grid { display: grid; gap: var(--space-lg); grid-template-columns: 1fr; }
+@media (min-width: #{$bp-md}) {
+  .page-grid--thirds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+// Empty zones must not leave a gap: Rock renders an empty zone as nothing in
+// view mode, but the grid wrapper would still take its margin. (:empty won't
+// do — the whitespace between the zone tags counts as content.)
+.page-grid:not(:has(*)) { display: none; }
+
+// ===========================================================================
+// ROCK CHROME
+// ===========================================================================
+.ajax-error { margin-bottom: var(--space-lg); }
+
+.updateprogress-status {
+  position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+}
+.updateprogress-status .updateprogress-loader { width: 48px; color: var(--brand); }
+.updateprogress-bg { position: fixed; inset: 0; z-index: 1990; background: oklch(0.16 0.01 135 / 0.4); }

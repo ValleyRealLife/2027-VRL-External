@@ -1,0 +1,116 @@
+// SITE FOOTER  (the main menu, reflected)
+//
+// Markup: Layouts/Site.Master renders the `.site-footer` shell with a Rock
+// "Footer" zone inside it; an HTML block in that zone includes
+// Assets/Lava/Footer.lava, which renders everything below.
+//
+// Below the desktop nav breakpoint the hamburger already carries the full
+// menu, so the footer drops its link columns, repeats the drawer-style
+// collapsible menu (.footer-mobnav) and becomes a centred visit card.
+// Mobile first: the centred layout is the base; columns arrive at $bp-nav.
+
+@use "config" as *;
+
+.site-footer {
+  position: relative; z-index: 7;
+  box-shadow: 0 -30px 60px -20px oklch(0 0 0 / 0.35);
+  background: var(--site-footer-background);
+  color: var(--on-ink);
+  overflow: hidden;
+  padding-top: clamp(3rem, 7vw, 5rem);
+  text-align: center;
+}
+
+.site-footer__logo { margin-bottom: var(--space-xl); }
+.site-footer__logo img { height: 40px; width: auto; margin-inline: auto; }
+
+.footer-mobnav { display: block; width: 100%; margin-bottom: var(--space-2xl); }
+
+.site-footer__inner {
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: var(--menu-gap);
+  position: relative; z-index: 2;
+}
+.site-footer .mega__col,
+.site-footer .mega__hours { display: none; }
+.site-footer .today-line { display: inline-flex; margin-top: var(--space-md); }
+.site-footer .mega__aside { justify-items: center; }
+.site-footer .mega__visit h2 { margin-inline: auto; }
+.site-footer .mega__address { justify-content: center; }
+.site-footer .mega__times { min-width: 220px; }
+
+.footer-watermark {
+  position: relative; z-index: 1;
+  margin-top: var(--space-2xl);
+  font-size: clamp(1.75rem, 8.4vw, 7.5rem);
+  font-weight: 800; line-height: 0.9;
+  letter-spacing: var(--tracking-tight); text-transform: uppercase;
+  text-align: center; white-space: nowrap;
+  color: oklch(1 0 0 / 0.07);
+  user-select: none;
+}
+.footer-watermark__pre { display: block; }
+
+.site-footer__bar {
+  position: relative; z-index: 2;
+  border-top: 1px solid oklch(1 0 0 / 0.14);
+  padding-block: var(--space-md);
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: center; gap: var(--space-md);
+  font-size: 0.6875rem; font-weight: 600;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--on-ink-muted);
+}
+.site-footer__bar a { text-decoration: none; }
+.site-footer__bar a:hover { color: var(--brand); }
+.site-footer__brand { display: none; align-items: center; gap: var(--space-sm); }
+.site-footer__brand img { height: 22px; width: auto; }
+.site-footer__contact {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-xs);
+}
+
+@media (min-width: #{$bp-nav}) {
+  .site-footer { text-align: left; }
+  .site-footer__logo img { margin-inline: 0; }
+  .footer-mobnav { display: none; }
+  .site-footer__inner { grid-template-columns: $menu-grid; justify-items: stretch; }
+  .site-footer .mega__col,
+  .site-footer .mega__hours { display: block; }
+  .site-footer .today-line { display: none; }
+  .site-footer .mega__aside { justify-items: start; }
+  .site-footer .mega__visit h2 { margin-inline: 0; }
+  .site-footer .mega__address { justify-content: flex-start; }
+  .footer-watermark { margin-top: clamp(1rem, 4vw, 2rem); }
+  .footer-watermark__pre { display: none; }
+  .site-footer__brand { display: flex; }
+  .site-footer__bar { justify-content: space-between; }
+  .site-footer__contact { flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--space-lg); }
+}
+
+// ---------------------------------------------------------------------------
+// Footer runway (homepage only; markup is the LAST element of
+// Assets/Lava/Home.lava). position: sticky can't hold a section past the end of
+// its parent — here, the HTML block's wrapper — so the runway extends that
+// wrapper by the footer's height + a dwell, and the footer slides back up over
+// it. Scoped with :has() so the negative margin only exists on pages with a
+// runway; everywhere else the sticky-footer `margin-top: auto` (_page.scss)
+// stands.
+// ---------------------------------------------------------------------------
+.footer-runway { display: none; }
+.js .footer-runway { display: block; height: calc(var(--footer-h, 0px) + var(--footer-dwell, 60vh)); }
+.js .site-body:has(.footer-runway) .site-footer { margin-top: calc(var(--footer-h, 0px) * -1); }
+
+// Fade-in choreography for the footer (theme.js adds .is-in)
+.js .site-footer__inner,
+.js .footer-watermark { opacity: 0; transform: translateY(24px); }
+.js .site-footer.is-in .site-footer__inner,
+.js .site-footer.is-in .footer-watermark {
+  opacity: 1; transform: none;
+  transition: opacity 900ms var(--ease-out), transform 900ms var(--ease-out);
+}
+.js .site-footer.is-in .footer-watermark { transition-delay: 160ms; }
+@media (prefers-reduced-motion: reduce) {
+  .js .site-footer__inner, .js .footer-watermark { opacity: 1; transform: none; }
+}

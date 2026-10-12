@@ -1,0 +1,356 @@
+// SITE HEADER: nav row, mega menu, mobile drawer
+//
+// Markup: Layouts/Site.Master renders the fixed `.site-header` shell with a
+// Rock "Navigation" zone inside it. A Page Menu block in that zone uses
+// Assets/Lava/PageNav.lava as its template, which renders everything else:
+//
+//   .site-nav                       (wrapper, carries --menu-cols inline)
+//     .container.nav-row            logo · .nav__list · .nav__actions
+//     .mega-scrim                   frosted tint over the page (desktop)
+//     .mega                         the panel (desktop)
+//     .mobilenav                    full-screen drawer (below $bp-nav)
+//
+// Baseline (no JS): the panel opens on :hover / :focus-within, so keyboard and
+// mouse both work with CSS alone. JS adds hover intent, Esc-to-close, the
+// shared utility-bar hover zone and the column highlight.
+//
+// The concept called the row `.nav`; it is `.nav-row` here because core.css
+// (Bootstrap 3) owns `.nav`.
+
+@use "config" as *;
+
+.site-header {
+  position: fixed; inset: var(--util-h) 0 auto 0; z-index: 80;
+  background: transparent;
+  transition: box-shadow var(--duration) var(--ease-out);
+  // One timing for every part of the light ⇄ dark swap, so the bar, links and
+  // logo change together and never pass through a mismatched frame.
+  --bar-swap: 260ms var(--ease-out);
+}
+
+// Rock's block wrappers must not become positioning contexts: `.mega` is
+// absolutely positioned against the header so it can span the full width.
+.site-header .block-instance,
+.site-header .block-content { position: static; }
+
+// Once the hero has scrolled out from under the bar, JS sets data-solid and
+// the bar picks up a shadow over the pinned sections. Interior pages are
+// always solid.
+.site-header[data-solid="true"][data-stuck="true"] { box-shadow: var(--shadow-sm); }
+
+// Frosted glass behind the bar so it holds up over scrolled content. It sits on
+// a pseudo-element, not the header itself: backdrop-filter on .site-header
+// would trap the fixed .mega-scrim inside the bar. When the menu opens this
+// same layer turns ink — its colour changes, never its opacity: fading opacity
+// on a backdrop-filter layer makes Chrome and Safari drop the blur for a frame.
+.site-header::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: color-mix(in oklch, var(--site-header-background) 68%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border-bottom: 1px solid oklch(0 0 0 / 0.06);
+  transition: background-color var(--bar-swap), border-color var(--bar-swap);
+}
+
+// ---------------------------------------------------------------------------
+// Nav row
+// ---------------------------------------------------------------------------
+.nav-row {
+  position: relative; z-index: 2;   // stays crisp above the mega scrim
+  height: var(--nav-h);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-lg);
+}
+.nav__logo { display: inline-grid; align-items: center; text-decoration: none; }
+// The lockup is a green mark + white wordmark, built for dark grounds. On the
+// light bar #logo-ink (in the icon sprite) turns the wordmark ink and leaves
+// the green alone; the dark open-menu bar shows it as drawn. Two stacked
+// copies cross-fade, because a filter can't transition.
+.nav__logo img {
+  grid-area: 1 / 1;
+  height: var(--logo-height, 34px); width: auto;
+  transition: opacity var(--bar-swap); will-change: opacity;
+}
+.nav__logo-ink { filter: url(#logo-ink); }
+.nav__logo-light { opacity: 0; }
+
+.nav__list { display: none; }
+
+.nav__link {
+  position: relative;
+  display: inline-block;
+  padding: 0.5rem 0;
+  font-size: 0.8125rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  text-decoration: none; color: var(--text);
+  transition: color var(--bar-swap);
+}
+.nav__link::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+  height: 2px; background: currentColor;
+  transform: scaleX(0); transform-origin: left;
+  transition: transform var(--duration) var(--ease-out);
+}
+.nav__link:hover::after,
+.nav__link:focus-visible::after,
+.nav__link.is-current::after { transform: scaleX(1); }
+
+.nav__actions { display: flex; align-items: center; gap: var(--space-sm); justify-self: end; }
+.nav__burger {
+  display: inline-grid; place-items: center;
+  width: 44px; height: 44px;
+  background: none; border: 0; color: var(--text);
+}
+.nav__cta { display: none; }
+
+@media (min-width: #{$bp-nav}) {
+  .nav-row { grid-template-columns: $menu-grid; gap: var(--menu-gap); }
+  .nav__list {
+    display: grid;
+    grid-column: 2 / span var(--menu-cols);
+    grid-template-columns: repeat(var(--menu-cols), minmax(0, 1fr)); // fallback
+    grid-template-columns: subgrid;
+    align-items: center;
+  }
+  .nav__actions { grid-column: -2; }
+  .nav__burger { display: none; }
+  .nav__cta { display: inline-flex; }
+}
+
+// ---------------------------------------------------------------------------
+// Mega panel (desktop only)
+// ---------------------------------------------------------------------------
+.mega-scrim {
+  // Starts below the header, so the bar itself stays crisp.
+  position: fixed; inset: var(--header-h) 0 0 0; z-index: 0;
+  pointer-events: none;
+  // will-change keeps this full-page layer composited for good. Without it the
+  // browser promotes the layer for the fade, then drops it ~0.5s after the fade
+  // ends — repainting the whole page under it (a delayed flicker in Edge and
+  // Safari). The blur stays constant; only opacity animates.
+  background: oklch(0.16 0.01 135 / 0.28);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  opacity: 0;
+  will-change: opacity;
+  transition: opacity var(--duration-slow) var(--ease-out);
+}
+
+.mega {
+  z-index: 1;
+  position: absolute; left: 0; right: 0; top: 100%;
+  background: var(--ink-deep);
+  color: var(--on-ink);
+  overflow: hidden;
+  max-height: 0;
+  visibility: hidden;
+  transition: max-height var(--duration-slow) var(--ease-out),
+              visibility 0s linear var(--duration-slow);
+}
+
+@media (min-width: #{$bp-nav}) {
+  // Open state. Without JS, plain :hover / :focus-within opens it. With JS,
+  // data-menu="open" does, so hover intent can delay it.
+  :root:not(.js) .site-header:is(:hover, :focus-within) .mega-scrim,
+  .site-header[data-menu="open"] .mega-scrim { opacity: 1; }
+
+  // The bar goes dark with the panel, so the top-level links read as the first
+  // row of the menu rather than a separate strip above it.
+  :root:not(.js) .site-header:is(:hover, :focus-within)::before,
+  .site-header[data-menu="open"]::before {
+    background-color: var(--ink-deep);
+    border-bottom-color: transparent;
+  }
+  :root:not(.js) .site-header:is(:hover, :focus-within) .nav__link,
+  .site-header[data-menu="open"] .nav__link { color: var(--on-ink); }
+  :root:not(.js) .site-header:is(:hover, :focus-within) .nav__logo-ink,
+  .site-header[data-menu="open"] .nav__logo-ink { opacity: 0; }
+  :root:not(.js) .site-header:is(:hover, :focus-within) .nav__logo-light,
+  .site-header[data-menu="open"] .nav__logo-light { opacity: 1; }
+
+  :root:not(.js) .site-header:is(:hover, :focus-within) .mega,
+  .site-header[data-menu="open"] .mega {
+    max-height: 80vh;
+    visibility: visible;
+    transition: max-height var(--duration-slow) var(--ease-out), visibility 0s;
+  }
+}
+
+.mega__inner {
+  display: grid;
+  grid-template-columns: $menu-grid;
+  gap: var(--menu-gap);
+  padding-block: var(--space-xl) var(--space-2xl);
+}
+
+// Hovering or focusing a parent link lifts its column of children. The link
+// and column share a page id (data-page / data-col); theme.js adds .is-hot.
+.mega__col.is-hot a { color: var(--on-ink); }
+
+.mega__col h3 a { text-decoration: none; }
+.mega__col h3 {
+  font-size: 0.8125rem; font-weight: 800;   // parents bold, matching the nav row
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  margin-bottom: var(--space-md);
+}
+.mega__col li + li { margin-top: 0.7rem; }
+.mega .mega__col { padding-top: 0.35rem; }   // optical align with the visit headline's cap height
+.mega__col a {
+  font-size: 0.75rem; font-weight: 500;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--on-ink-muted); text-decoration: none;
+  transition: color var(--duration) var(--ease-out);
+}
+.mega__col a:hover { color: var(--brand); }
+
+// Visit block (shared markup: Assets/Lava/Partials/VisitInfo.lava)
+.mega__visit h2 {
+  font-size: clamp(2rem, 3.4vw, 3.25rem);
+  text-transform: uppercase;
+  max-width: 6ch;
+}
+.mega .mega__visit h2 { font-size: clamp(1.625rem, 2.4vw, 2.25rem); }   // shares a row with the link columns
+.mega__visit .mega__address {
+  margin-top: var(--space-md);
+  color: var(--brand);
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  text-decoration: none;
+  display: inline-flex; align-items: flex-start; gap: 0.35rem;
+}
+.mega__visit .mega__address:hover { text-decoration: underline; }
+.mega__times {
+  margin-top: var(--space-lg); padding-top: var(--space-lg);
+  border-top: 1px solid oklch(1 0 0 / 0.2);
+  font-size: 0.75rem; letter-spacing: var(--tracking-wide);
+  text-transform: uppercase; color: var(--on-ink-muted);
+}
+.mega__times strong { display: block; color: var(--on-ink); margin-bottom: 0.4rem; }
+
+// Menu aside (today's hours, office, social)
+.mega__aside { display: grid; gap: var(--space-lg); align-content: start; }
+.mega__contact { font-size: 0.75rem; line-height: 1.5; color: var(--on-ink-muted); }
+.mega__contact p + p { margin-top: 0.15rem; }
+.mega__contact-label {
+  margin-bottom: 0.35rem;
+  color: var(--on-ink); font-size: 0.6875rem; font-weight: 700;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+}
+.mega__contact a { color: inherit; text-decoration: none; }
+.mega__contact a:hover { color: var(--brand); }
+
+// Hours card (dark, compact; shared markup: Assets/Lava/Partials/HoursCard.lava)
+.mega__hours {
+  align-self: start;
+  padding: var(--space-lg) var(--space-md) var(--space-md);
+  border-radius: var(--radius-lg);
+  background: oklch(1 0 0 / 0.06);
+  border: 1px solid oklch(1 0 0 / 0.1);
+}
+.mega__hours-head { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: var(--space-sm); }
+.mega__hours-head span {
+  width: 34px; height: 34px; border-radius: var(--radius-circle);
+  display: grid; place-items: center; flex-shrink: 0;
+  background: var(--brand); color: var(--text-on-brand);
+}
+.mega__hours-head h3 { margin: 0; font-size: 0.6875rem; letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+// `dl dt` / `dl dd` (0,1,2) rather than `dt` (0,1,1): core.css styles
+// `dl:not(.dl-horizontal) dt` at 0,1,2 (small regular grey type, a top margin)
+// and would otherwise win. Equal specificity, later in the file, so these win.
+.mega__hours dl { margin: 0; font-size: 0.75rem; line-height: 1.5; color: var(--on-ink-muted); }
+.mega__hours div + div { margin-top: 0.4rem; }
+.mega__hours dl dt { display: block; margin: 0; color: var(--on-ink); font-weight: 700; font-size: 0.6875rem; letter-spacing: var(--tracking-wide); text-transform: uppercase; }
+.mega__hours dl dd { margin: 0; }
+// Today's row (the card always renders today, server-side): hours larger and bold
+.mega__hours[data-today="true"] dl dd { font-size: 0.875rem; font-weight: 700; color: var(--on-ink); }
+.mega__hours a { display: inline-block; margin-top: var(--space-sm); font-size: 0.6875rem; font-weight: 700; letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--brand); text-decoration: none; }
+.mega__hours a:hover { text-decoration: underline; }
+
+// ---------------------------------------------------------------------------
+// Mobile drawer  (collapsible sections; <details> so they work without JS)
+//
+// It renders inside the header's block, so its z-index is resolved inside the
+// header's stacking context — which sits above the utility bar (80 > 70), so
+// the drawer covers the whole viewport as designed.
+// ---------------------------------------------------------------------------
+.mobilenav {
+  position: fixed; inset: 0; z-index: 95;
+  background: var(--ink-deep); color: var(--on-ink);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+  transform: translateY(-100%);
+  visibility: hidden;
+  transition: transform var(--duration-slow) var(--ease-out), visibility 0s linear var(--duration-slow);
+}
+.mobilenav[data-open="true"] {
+  transform: none; visibility: visible;
+  transition: transform var(--duration-slow) var(--ease-out), visibility 0s;
+}
+@media (min-width: #{$bp-nav}) { .mobilenav { display: none; } }
+
+.mobilenav__top {
+  height: var(--nav-h);
+  display: flex; align-items: center; justify-content: space-between;
+  padding-inline: var(--gutter);
+  flex-shrink: 0;
+}
+.mobilenav__top .logo { height: var(--logo-height, 34px); width: auto; }
+.mobilenav__close {
+  width: 44px; height: 44px; display: grid; place-items: center;
+  background: none; border: 0; color: var(--on-ink);
+}
+.mobilenav__body { padding: var(--space-lg) var(--gutter) var(--space-3xl); }
+.mobilenav__cta { display: flex; justify-content: center; margin-bottom: var(--space-xl); }
+
+// Shared by the drawer and the footer's repeat of it (.footer-mobnav)
+:is(.mobilenav, .footer-mobnav) details { border-bottom: 1px solid oklch(1 0 0 / 0.14); }
+:is(.mobilenav, .footer-mobnav) summary {
+  list-style: none;
+  display: flex; align-items: center; justify-content: center; gap: var(--space-xs);
+  padding: var(--space-md) 0;
+  font-size: 1.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-tight); text-transform: uppercase;
+  cursor: pointer;
+}
+:is(.mobilenav, .footer-mobnav) summary::-webkit-details-marker { display: none; }
+:is(.mobilenav, .footer-mobnav) summary .chev { transition: transform var(--duration) var(--ease-out); }
+:is(.mobilenav, .footer-mobnav) details[open] summary .chev { transform: rotate(180deg); }
+:is(.mobilenav, .footer-mobnav) details[open] summary { color: var(--brand); }
+// A top-level page with no children renders as a plain link in the same style
+:is(.mobilenav, .footer-mobnav) .mobilenav__single {
+  display: block; padding: var(--space-md) 0;
+  border-bottom: 1px solid oklch(1 0 0 / 0.14);
+  font-size: 1.75rem; font-weight: 800; text-align: center;
+  letter-spacing: var(--tracking-tight); text-transform: uppercase;
+  text-decoration: none;
+}
+.mobilenav__sub { padding: 0 0 var(--space-md); text-align: center; }
+.mobilenav__sub li + li { margin-top: 0.75rem; }
+.mobilenav__sub a {
+  font-size: 0.8125rem; font-weight: 500;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--on-ink-muted); text-decoration: none;
+}
+.mobilenav__sub a:hover { color: var(--brand); }
+
+.mobilenav__foot {
+  margin-top: var(--space-2xl);
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg);
+  font-size: 0.6875rem; letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--on-ink-muted);
+}
+.mobilenav__foot h3 { font-size: 1.5rem; color: var(--on-ink); max-width: 5ch; }
+.mobilenav__foot strong { display: block; color: var(--on-ink); margin-bottom: 0.3rem; }
+.mobilenav__foot .mega__address { color: var(--brand); text-decoration: none; }
+.mobilenav__foot .social { margin-top: var(--space-md); }
+.mobilenav__extra {
+  grid-column: 1 / -1;
+  display: grid; gap: 0.35rem;
+  padding-top: var(--space-lg);
+  border-top: 1px solid oklch(1 0 0 / 0.14);
+}
+.mobilenav__extra strong { display: inline; margin: 0 0.35rem 0 0; }
+.mobilenav__extra a { color: var(--on-ink); text-decoration: none; }
+.mobilenav__extra .today-line { margin-bottom: 0.25rem; }

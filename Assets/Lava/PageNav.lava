@@ -1,0 +1,189 @@
+{% comment %}
+    SITE NAVIGATION — template for the Page Menu block in the Site.Master
+    "Navigation" zone. One block renders all three presentations of the menu:
+
+        .nav-row     logo · top-level links · Discover CTA · hamburger
+        .mega        the mega panel (desktop): visit info, one column of child
+                     pages per top-level page, today's hours / office / social
+        .mobilenav   the full-screen drawer (below 1000px): <details> per
+                     top-level page, CTA, visit info, social, hours
+
+    Block settings:
+      * Root Page:           41952 (the site's home / parent page)
+      * Number of Levels:    2
+      * Template:            {% include '~~/Assets/Lava/PageNav.lava' %}
+
+    Markup contract (styled by Styles/_header.scss, driven by Assets/Scripts/theme.js):
+      .nav__link[data-page=ID]  ↔  .mega__col[data-col=ID]   pairs a link with its column
+      [data-mobilenav-open] / [data-mobilenav-close]          drawer buttons
+      --menu-cols (inline on .site-nav)                       number of top-level pages,
+                                                              drives the shared column grid
+
+    STATIC FOR NOW: everything that isn't the page tree (visit info, service
+    times, office, playground hours, social links, the Discover link) is
+    hardcoded below and repeated in Footer.lava. ROCK: make these dynamic later
+    (schedules, campus, global attributes); search both files for the text.
+
+    The design was drawn around four top-level pages; the grid adapts to the
+    count, but more than five will crowd the row.
+{% endcomment %}
+{%- comment -%}
+    Today's hours. STATIC FOR NOW: the weekly playground schedule is written
+    out here and today's row is picked server-side (Rock's organisation time
+    zone). ROCK: this becomes a dynamic schedule (major events, office hours,
+    playground hours). Same block in PageNav.lava and Footer.lava.
+{%- endcomment -%}
+{%- assign todayName = 'Now' | Date:'dddd' -%}
+{%- case todayName -%}
+    {%- when 'Sunday' or 'Monday' or 'Tuesday' -%}{%- assign playgroundToday = '9:00am – 1:00pm' -%}
+    {%- when 'Wednesday' -%}{%- assign playgroundToday = '11:30am – 1:00pm' -%}
+    {%- when 'Thursday' -%}{%- assign playgroundToday = '9:00am – 1:00pm &amp; 5:30 – 8:00pm' -%}
+    {%- else -%}{%- assign playgroundToday = 'Closed' -%}
+{%- endcase -%}
+{%- assign topPages = Page.Pages -%}
+{%- assign menuCols = topPages | Size -%}
+{%- assign logoUrl = '~~/Assets/Images/vrl_logo.png' | ResolveRockUrl -%}
+{%- assign homeUrl = '~' | ResolveRockUrl -%}
+
+<div class="site-nav" style="--menu-cols: {{ menuCols }}">
+
+    <div class="container nav-row">
+        <a class="nav__logo" href="{{ homeUrl }}" aria-label="Valley Real Life — home">
+            {%- comment -%} Two copies cross-fade: ink wordmark on the light bar, as drawn on the dark open-menu bar (see .nav__logo in _header.scss). {%- endcomment -%}
+            <img class="nav__logo-ink" src="{{ logoUrl }}" width="694" height="168" alt="" />
+            <img class="nav__logo-light" src="{{ logoUrl }}" width="694" height="168" alt="" />
+        </a>
+
+        <nav class="nav__list" aria-label="Main">
+            {%- for childPage in topPages %}
+            <a class="nav__link{% if childPage.Current or childPage.IsParentOfCurrent %} is-current{% endif %}" href="{{ childPage.Url }}" data-page="{{ childPage.Id }}"{% if childPage.Current %} aria-current="page"{% endif %}>{{ childPage.Title }}</a>
+            {%- endfor %}
+        </nav>
+
+        <div class="nav__actions">
+            <a class="btn btn--primary btn--sm nav__cta" href="/discover-vrl">Discover VRL</a>
+            <button class="nav__burger" type="button" data-mobilenav-open aria-expanded="false" aria-controls="mobilenav">
+                <span class="u-visually-hidden">Open menu</span>
+                <svg width="26" height="26" aria-hidden="true"><use href="#i-menu"/></svg>
+            </button>
+        </div>
+    </div>
+
+    {%- comment -%} ===== MEGA MENU (desktop) ===== {%- endcomment -%}
+    <div class="mega-scrim" aria-hidden="true"></div>
+    <div class="mega" id="megamenu">
+        <div class="container mega__inner">
+            <div class="mega__visit">
+                <h2>Join us this week</h2>
+                <a class="mega__address" href="https://maps.google.com/?q=1831+S+Barker+Rd+Spokane+Valley+WA" target="_blank" rel="noopener">
+                    1831 S. Barker Rd.<br />Spokane Valley, WA 99016
+                    <span class="u-visually-hidden">(opens map in a new tab)</span>
+                </a>
+                <p class="mega__times">
+                    <strong>Service times</strong>
+                    Thursdays at 6:30pm<br />
+                    Sundays at 8:00, 9:30, 11:00am &amp; 12:30pm
+                </p>
+            </div>
+
+            {%- for childPage in topPages %}
+            <div class="mega__col" data-col="{{ childPage.Id }}">
+                <ul aria-label="{{ childPage.Title | Escape }}">
+                    {%- for grandchildPage in childPage.Pages %}
+                    <li><a href="{{ grandchildPage.Url }}"{% if grandchildPage.Current %} aria-current="page"{% endif %}>{{ grandchildPage.Title }}</a></li>
+                    {%- endfor %}
+                </ul>
+            </div>
+            {%- endfor %}
+
+            <div class="mega__aside">
+                <div class="mega__hours" data-today="true">
+                    <div class="mega__hours-head">
+                        <span aria-hidden="true"><svg width="18" height="18"><use href="#i-clock"/></svg></span>
+                        <h3>Today's hours</h3>
+                    </div>
+                    <dl>
+                        <div><dt>Playground · {{ todayName }}</dt><dd>{{ playgroundToday }}</dd></div>
+                    </dl>
+                    <a href="/kids#playground">All playground hours</a>
+                </div>
+
+                <div class="mega__contact">
+                    <p class="mega__contact-label">Church office</p>
+                    <p>Mon – Thu, 9:00am – 4:00pm</p>
+                    <p><a href="tel:+15092320840">(509) 232-0840</a></p>
+                    <p><a href="mailto:hello@vrl.church">hello@vrl.church</a></p>
+                </div>
+
+                <ul class="social" aria-label="Valley Real Life on social media">
+                    <li><a href="#" aria-label="Instagram"><svg width="18" height="18" aria-hidden="true"><use href="#i-instagram"/></svg></a></li>
+                    <li><a href="#" aria-label="Facebook"><svg width="18" height="18" aria-hidden="true"><use href="#i-facebook"/></svg></a></li>
+                    <li><a href="#" aria-label="YouTube"><svg width="18" height="18" aria-hidden="true"><use href="#i-youtube"/></svg></a></li>
+                    <li><a href="#" aria-label="Podcast"><svg width="18" height="18" aria-hidden="true"><use href="#i-microphone"/></svg></a></li>
+                    <li><a href="#" aria-label="Blog feed"><svg width="18" height="18" aria-hidden="true"><use href="#i-rss"/></svg></a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    {%- comment -%} ===== MOBILE DRAWER ===== {%- endcomment -%}
+    <div class="mobilenav" id="mobilenav" data-open="false" aria-hidden="true">
+        <div class="mobilenav__top">
+            <a href="{{ homeUrl }}" aria-label="Valley Real Life — home"><img class="logo" src="{{ logoUrl }}" width="694" height="168" alt="" /></a>
+            <button class="mobilenav__close" type="button" data-mobilenav-close>
+                <span class="u-visually-hidden">Close menu</span>
+                <svg width="26" height="26" aria-hidden="true"><use href="#i-x"/></svg>
+            </button>
+        </div>
+
+        <div class="mobilenav__body">
+            <div class="mobilenav__cta"><a class="btn btn--primary btn--lg" href="/discover-vrl">Discover VRL</a></div>
+
+            <nav aria-label="Mobile">
+                {%- for childPage in topPages %}
+                {%- assign grandchildCount = childPage.Pages | Size -%}
+                {%- if grandchildCount == 0 %}
+                <a class="mobilenav__single" href="{{ childPage.Url }}">{{ childPage.Title }}</a>
+                {%- else %}
+                <details name="mobilenav">
+                    <summary>{{ childPage.Title }} <svg class="chev" width="20" height="20" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+                    <ul class="mobilenav__sub">
+                        {%- for grandchildPage in childPage.Pages %}
+                        <li><a href="{{ grandchildPage.Url }}">{{ grandchildPage.Title }}</a></li>
+                        {%- endfor %}
+                    </ul>
+                </details>
+                {%- endif %}
+                {%- endfor %}
+            </nav>
+
+            <div class="mobilenav__foot">
+                <div>
+                    <h3>Join us this week</h3>
+                    <a class="mega__address" href="https://maps.google.com/?q=1831+S+Barker+Rd+Spokane+Valley+WA" target="_blank" rel="noopener">1831 S. Barker Rd.<br />Spokane Valley, WA 99016<span class="u-visually-hidden">(opens map in a new tab)</span></a>
+                    <ul class="social" aria-label="Valley Real Life on social media">
+                        <li><a href="#" aria-label="Instagram"><svg width="18" height="18" aria-hidden="true"><use href="#i-instagram"/></svg></a></li>
+                        <li><a href="#" aria-label="Facebook"><svg width="18" height="18" aria-hidden="true"><use href="#i-facebook"/></svg></a></li>
+                        <li><a href="#" aria-label="YouTube"><svg width="18" height="18" aria-hidden="true"><use href="#i-youtube"/></svg></a></li>
+                        <li><a href="#" aria-label="Podcast"><svg width="18" height="18" aria-hidden="true"><use href="#i-microphone"/></svg></a></li>
+                        <li><a href="#" aria-label="Blog feed"><svg width="18" height="18" aria-hidden="true"><use href="#i-rss"/></svg></a></li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>Service times</strong>
+                    Thursdays at 6:30pm<br />
+                    Sundays at 8:00, 9:30,<br />11:00am &amp; 12:30pm
+                </div>
+                <div class="mobilenav__extra">
+                    <p class="today-line">
+                        <svg width="16" height="16" aria-hidden="true"><use href="#i-clock"/></svg>
+                        <a href="/kids#playground">{% if playgroundToday == 'Closed' %}Playground closed today{% else %}Playground today · {{ playgroundToday }}{% endif %}</a>
+                    </p>
+                    <p><strong>Church office</strong> Mon – Thu, 9:00am – 4:00pm</p>
+                    <p><a href="tel:+15092320840">(509) 232-0840</a> &nbsp;·&nbsp; <a href="mailto:hello@vrl.church">hello@vrl.church</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

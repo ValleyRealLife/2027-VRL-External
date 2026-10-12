@@ -1,0 +1,196 @@
+// Base layer: reset, type, focus, the container, buttons and small shared
+// components. Everything site-wide that is not a specific region.
+//
+// core.css (imported in theme.scss, hoisted above everything here) brings a
+// Bootstrap-3-compatible surface with it: `.container`, `.btn`, `.nav` and
+// friends. Where the concept reuses one of those class names the rules below
+// are written to WIN over core's at equal specificity (they come later in the
+// file) and to neutralise anything of core's that would leak through — see the
+// `.container` clearfix note.
+
+@use "config" as *;
+
+// ===========================================================================
+// RESET / BASE
+// ===========================================================================
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+body.is-locked { overflow: hidden; }
+
+// `color: inherit` on headings and paragraphs is load-bearing: core.css gives
+// every h1–h6 `color: var(--color-interface-stronger)` and every <p>
+// `color: var(--color-interface-strong)` (both near-black), which made text in
+// the dark bands (mega menu, drawer, footer) unreadable. The design lets text
+// take its colour from the band it sits in.
+h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 800; line-height: 1.04; letter-spacing: var(--tracking-tight); color: inherit; }
+p { margin: 0; color: inherit; }
+img, svg, video { display: block; max-width: 100%; }
+img { height: auto; }
+button { font: inherit; cursor: pointer; }
+a { color: inherit; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+::selection { background: var(--brand); color: var(--text-on-brand); }
+
+// Visible focus is non-negotiable.
+:where(a, button, [tabindex], summary, input, select, dialog):focus-visible {
+  outline: 3px solid var(--brand-dim);
+  outline-offset: 3px;
+  border-radius: var(--radius-xs);
+}
+.on-ink :where(a, button, summary):focus-visible { outline-color: var(--brand); }
+
+.u-visually-hidden {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute; left: var(--space-md); top: -100px; z-index: 200;
+  background: var(--brand); color: var(--text-on-brand);
+  padding: var(--space-sm) var(--space-lg); border-radius: var(--radius-pill);
+  font-weight: 700; text-decoration: none;
+  transition: top var(--duration) var(--ease-out);
+}
+.skip-link:focus { top: calc(var(--util-h) + var(--space-xs)); }
+
+// The inline SVG icon sprite (Assets/Lava/Partials/IconSprite.lava) must take
+// no space. Icons are referenced as <svg><use href="#i-name"/></svg>.
+.icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+// ===========================================================================
+// CONTAINER
+// core.css ships Bootstrap's .container (fixed widths per breakpoint, 15px
+// padding, and a ::before/::after clearfix). The clearfix pseudo-elements would
+// become grid items wherever .container is also a grid, so they are removed.
+// ===========================================================================
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.container::before,
+.container::after { content: none; display: none; }
+
+// ===========================================================================
+// COMPONENT: section heading (shared)
+// ===========================================================================
+.section-head { text-align: center; }
+.section-head h2 {
+  font-size: clamp(2.25rem, 7vw, 4.5rem);
+  text-transform: uppercase;
+}
+.section-head p {
+  margin-top: var(--space-2xs);
+  font-size: clamp(1rem, 2.6vw, 1.625rem);
+  font-weight: 700;
+  color: var(--brand-text);
+  letter-spacing: var(--tracking-snug);
+}
+
+// ===========================================================================
+// COMPONENT: BUTTONS
+// `.btn` is also Bootstrap's class, so Rock blocks that render
+// <a class="btn btn-primary"> pick up the pill. The BS modifier names are
+// aliased to the concept's BEM modifiers so both render the same.
+// ===========================================================================
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--space-xs);
+  padding: 0.75rem 1.75rem;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: 0.875rem; font-weight: 700; line-height: 1.2;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  text-decoration: none; white-space: nowrap;
+  background: transparent; color: inherit;
+  transition: background var(--duration) var(--ease-out),
+              color var(--duration) var(--ease-out),
+              border-color var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out),
+              box-shadow var(--duration) var(--ease-out);
+}
+.btn--primary,
+.btn-primary { background: var(--brand); color: var(--text-on-brand); border-color: transparent; }
+.btn--primary:hover, .btn--primary:focus,
+.btn-primary:hover, .btn-primary:focus { background: var(--brand-bright); color: var(--text-on-brand); box-shadow: var(--shadow-glow); text-decoration: none; }
+.btn--outline,
+.btn-default { border-color: currentColor; background: transparent; }
+.btn--outline:hover,
+.btn-default:hover { background: var(--text); color: var(--bg-elevated); border-color: var(--text); text-decoration: none; }
+.on-ink .btn--outline:hover { background: var(--on-ink); color: var(--ink); border-color: var(--on-ink); }
+.btn--ghost { background: oklch(1 0 0 / 0.1); color: var(--on-ink); border-color: oklch(1 0 0 / 0.35); }
+.btn--ghost:hover { background: var(--on-ink); color: var(--ink); }
+.btn--lg,
+.btn-lg { padding: 0.875rem 2.375rem; font-size: 0.9375rem; letter-spacing: var(--tracking-wider); }
+.btn--sm,
+.btn-sm, .btn-xs { padding: 0.5rem 1.125rem; font-size: 0.75rem; }
+.btn:active { transform: translateY(1px); }
+
+// ===========================================================================
+// COMPONENT: social row  (mega menu aside, mobile drawer, footer)
+// ===========================================================================
+.social { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-md); }
+.social a {
+  display: grid; place-items: center;
+  width: 32px; height: 32px; margin: -7px;    // 32px target, 18px glyph, optical edge kept
+  color: var(--on-ink-muted);
+  transition: color var(--duration) var(--ease-out);
+}
+.social a:hover { color: var(--brand); }
+
+// ===========================================================================
+// COMPONENT: today line  (compact playground hours: mobile drawer + footer)
+// ===========================================================================
+.today-line {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.75rem; font-weight: 600; letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+.today-line svg { color: var(--brand); flex-shrink: 0; }
+.today-line a { color: var(--on-ink); text-decoration: none; }
+.today-line a:hover { color: var(--brand); }
+
+// ===========================================================================
+// CORE.CSS LINK HOVER/FOCUS
+// core.css sets `a:hover, a:focus { color: var(--color-link-shade) }`
+// (specificity 0,1,1), which beats every single-class link rule here (0,1,0)
+// and turned hovered nav links, step cards, care options and share items dark
+// green. These links keep their own colour on hover/focus, as designed.
+// (Rules written as `.x:hover` elsewhere already win, at 0,2,0.)
+// ===========================================================================
+.nav__link:is(:hover, :focus) { color: var(--text); }
+.skip-link:focus { color: var(--text-on-brand); }
+.care-option:is(:hover, :focus),
+.share__item:is(:hover, :focus) { color: var(--text); }
+.step-card:is(:hover, :focus) { color: #fff; }
+.series__item:is(:hover, :focus) { color: inherit; }
+.btn--outline:focus, .btn-default:focus { color: inherit; }
+.btn--ghost:focus { color: var(--on-ink); }
+.mobilenav__single { color: inherit; }
+.mobilenav__single:is(:hover, :focus) { color: var(--brand); }
+
+// ===========================================================================
+// Reduced motion: no transforms anywhere that could induce motion sickness
+// ===========================================================================
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

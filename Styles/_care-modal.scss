@@ -1,0 +1,83 @@
+// CARE MODAL  (markup: Assets/Lava/UtilityBar.lava)
+//
+// A native <dialog>, so it lives in the browser's top layer regardless of
+// where Rock renders the block. Baseline: the utility-bar trigger is a real
+// link to the care page; JS upgrades it to open this dialog.
+//
+// Two views, switched by data-view on the dialog:
+//   options  — the two care-option cards
+//   frame    — an <iframe> holding the chosen Rock form (Request help / Pray
+//              for me), with a back button. JS sets the iframe src from the
+//              option's data-care-frame attribute, so swapping in the real
+//              form pages is a Lava-only change.
+
+@use "config" as *;
+
+.care-modal {
+  border: 0; padding: 0;
+  width: min(680px, calc(100vw - 2rem));
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  color: var(--text);
+  box-shadow: var(--shadow-xl);
+}
+.care-modal::backdrop { background: oklch(0.16 0.01 135 / 0.6); backdrop-filter: blur(6px); }
+.care-modal__inner { padding: clamp(1.5rem, 5vw, 3rem); text-align: center; }
+.care-modal h2 { font-size: clamp(1.75rem, 5vw, 2.5rem); text-transform: uppercase; }
+.care-modal p { margin-top: var(--space-sm); color: var(--text-secondary); max-width: 46ch; margin-inline: auto; }
+
+.care-modal__options {
+  margin-top: var(--space-xl);
+  display: grid; gap: var(--space-md);
+  grid-template-columns: 1fr;
+}
+@media (min-width: #{$bp-sm}) { .care-modal__options { grid-template-columns: 1fr 1fr; } }
+
+.care-option {
+  display: flex; flex-direction: column; align-items: center; gap: var(--space-sm);
+  padding: var(--space-xl) var(--space-lg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  text-decoration: none; color: var(--text);
+  transition: border-color var(--duration) var(--ease-out),
+              background var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out);
+}
+.care-option:hover { border-color: var(--brand); background: var(--brand-wash); transform: translateY(-2px); }
+.care-option__icon {
+  width: 64px; height: 64px; border-radius: var(--radius-circle);
+  display: grid; place-items: center;
+  background: var(--brand); color: var(--text-on-brand);
+}
+.care-option strong { font-size: 1.125rem; letter-spacing: var(--tracking-snug); }
+.care-option span { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.45; }
+
+.care-modal__close {
+  position: absolute; top: var(--space-md); right: var(--space-md);
+  width: 40px; height: 40px; border-radius: var(--radius-circle);
+  display: grid; place-items: center;
+  background: var(--surface); border: 0; color: var(--text-secondary);
+}
+.care-modal__close:hover { background: var(--surface-hover); color: var(--text); }
+
+// Frame view
+.care-modal__frame { display: none; padding: clamp(1.5rem, 5vw, 3rem); }
+.care-modal__frame-head {
+  display: flex; align-items: center; gap: var(--space-sm);
+  margin-bottom: var(--space-md); padding-right: 48px;   // clear the close button
+}
+.care-modal__frame-head h2 { font-size: 1.25rem; }
+.care-modal__back {
+  display: inline-grid; place-items: center;
+  width: 40px; height: 40px; border-radius: var(--radius-circle);
+  background: var(--surface); border: 0; color: var(--text-secondary);
+}
+.care-modal__back:hover { background: var(--surface-hover); color: var(--text); }
+.care-modal__frame iframe {
+  display: block; width: 100%; height: min(70vh, 640px);
+  border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.care-modal[data-view="frame"] .care-modal__inner { display: none; }
+.care-modal[data-view="frame"] .care-modal__frame { display: block; }

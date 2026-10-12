@@ -1,0 +1,153 @@
+{% comment %}
+    SITE FOOTER — for an HTML block in the Site.Master "Footer" zone.
+
+    Block content:            {% include '~~/Assets/Lava/Footer.lava' %}
+    Enabled Lava Commands:    RockEntity   (block setting — required for the
+                              {% page %} command that reads the page tree)
+
+    The footer is the main menu, reflected: the same page tree the Page Menu
+    block renders in the header, read here directly from the site's parent
+    page so the two never drift. Desktop shows link columns; below 1000px the
+    hamburger already carries the menu, so the footer repeats the drawer-style
+    collapsible list (.footer-mobnav) and becomes a centred visit card.
+
+    The parent page id (41952) is written literally into each {% page %}
+    command below — change all three if the site's root page changes.
+
+    STATIC FOR NOW: everything that isn't the page tree (visit info, service
+    times, office, playground hours, social links, the Discover and Privacy
+    links) is hardcoded below and repeated in PageNav.lava. ROCK: make these
+    dynamic later (schedules, campus, global attributes).
+
+    Styled by Styles/_footer.scss (and the shared .mega__* rules in
+    _header.scss); the fade-in and runway are driven by Assets/Scripts/theme.js.
+{% endcomment %}
+{%- assign logoUrl = '~~/Assets/Images/vrl_logo.png' | ResolveRockUrl -%}
+
+{%- comment -%}
+    Today's hours. STATIC FOR NOW: the weekly playground schedule is written
+    out here and today's row is picked server-side (Rock's organisation time
+    zone). ROCK: this becomes a dynamic schedule (major events, office hours,
+    playground hours). Same block in PageNav.lava and Footer.lava.
+{%- endcomment -%}
+{%- assign todayName = 'Now' | Date:'dddd' -%}
+{%- case todayName -%}
+    {%- when 'Sunday' or 'Monday' or 'Tuesday' -%}{%- assign playgroundToday = '9:00am – 1:00pm' -%}
+    {%- when 'Wednesday' -%}{%- assign playgroundToday = '11:30am – 1:00pm' -%}
+    {%- when 'Thursday' -%}{%- assign playgroundToday = '9:00am – 1:00pm &amp; 5:30 – 8:00pm' -%}
+    {%- else -%}{%- assign playgroundToday = 'Closed' -%}
+{%- endcase -%}
+
+{%- comment -%} Top-level pages, in nav order, skipping any set to never show in navigation. {%- endcomment -%}
+{%- assign menuCols = 0 -%}
+{% page where:'ParentPageId == 41952' sort:'Order' %}
+    {%- for topPage in pageItems -%}
+        {%- if topPage.DisplayInNavWhen == 'Never' %}{% continue %}{% endif -%}
+        {%- assign menuCols = menuCols | Plus:1 -%}
+    {%- endfor -%}
+{% endpage %}
+
+<div class="container" style="--menu-cols: {{ menuCols }}">
+    <div class="site-footer__logo">
+        <img src="{{ logoUrl }}" width="694" height="168" alt="Valley Real Life" />
+    </div>
+
+    {%- comment -%} Below the desktop breakpoint: the drawer-style menu again. {%- endcomment -%}
+    <div class="footer-mobnav">
+        <div class="mobilenav__cta"><a class="btn btn--primary btn--lg" href="/discover-vrl">Discover VRL</a></div>
+        <nav aria-label="Footer">
+            {% page where:'ParentPageId == 41952' sort:'Order' %}
+                {%- for topPage in pageItems -%}
+                    {%- if topPage.DisplayInNavWhen == 'Never' %}{% continue %}{% endif -%}
+                    {%- assign childPages = topPage.Pages | OrderBy:'Order' -%}
+                    {%- assign childCount = childPages | Size -%}
+                    {%- if childCount == 0 %}
+            <a class="mobilenav__single" href="{{ topPage.Id | PageRoute }}">{{ topPage.PageTitle }}</a>
+                    {%- else %}
+            <details name="footernav">
+                <summary>{{ topPage.PageTitle }} <svg class="chev" width="20" height="20" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+                <ul class="mobilenav__sub">
+                        {%- for childPage in childPages -%}
+                            {%- if childPage.DisplayInNavWhen == 'Never' %}{% continue %}{% endif %}
+                    <li><a href="{{ childPage.Id | PageRoute }}">{{ childPage.PageTitle }}</a></li>
+                        {%- endfor %}
+                </ul>
+            </details>
+                    {%- endif -%}
+                {%- endfor -%}
+            {% endpage %}
+        </nav>
+    </div>
+
+    <div class="site-footer__inner">
+        <div class="mega__visit">
+            <h2>Join us this week</h2>
+            <a class="mega__address" href="https://maps.google.com/?q=1831+S+Barker+Rd+Spokane+Valley+WA" target="_blank" rel="noopener">
+                1831 S. Barker Rd.<br />Spokane Valley, WA 99016
+                <span class="u-visually-hidden">(opens map in a new tab)</span>
+            </a>
+            <p class="mega__times">
+                <strong>Service times</strong>
+                Thursdays at 6:30pm<br />
+                Sundays at 8:00, 9:30, 11:00am &amp; 12:30pm
+            </p>
+            <p class="today-line">
+                <svg width="16" height="16" aria-hidden="true"><use href="#i-clock"/></svg>
+                <a href="/kids#playground">{% if playgroundToday == 'Closed' %}Playground closed today{% else %}Playground today · {{ playgroundToday }}{% endif %}</a>
+            </p>
+        </div>
+
+        {% page where:'ParentPageId == 41952' sort:'Order' %}
+            {%- for topPage in pageItems -%}
+                {%- if topPage.DisplayInNavWhen == 'Never' %}{% continue %}{% endif -%}
+                {%- assign childPages = topPage.Pages | OrderBy:'Order' %}
+        <nav class="mega__col" aria-label="{{ topPage.PageTitle | Escape }}">
+            <h3><a href="{{ topPage.Id | PageRoute }}">{{ topPage.PageTitle }}</a></h3>
+            <ul>
+                {%- for childPage in childPages -%}
+                    {%- if childPage.DisplayInNavWhen == 'Never' %}{% continue %}{% endif %}
+                <li><a href="{{ childPage.Id | PageRoute }}">{{ childPage.PageTitle }}</a></li>
+                {%- endfor %}
+            </ul>
+        </nav>
+            {%- endfor -%}
+        {% endpage %}
+
+        <div class="mega__aside">
+            <div class="mega__hours" data-today="true">
+                <div class="mega__hours-head">
+                    <span aria-hidden="true"><svg width="18" height="18"><use href="#i-clock"/></svg></span>
+                    <h3>Today's hours</h3>
+                </div>
+                <dl>
+                    <div><dt>Playground · {{ todayName }}</dt><dd>{{ playgroundToday }}</dd></div>
+                </dl>
+                <a href="/kids#playground">All playground hours</a>
+            </div>
+            <ul class="social" aria-label="Valley Real Life on social media">
+                <li><a href="#" aria-label="Instagram"><svg width="18" height="18" aria-hidden="true"><use href="#i-instagram"/></svg></a></li>
+                <li><a href="#" aria-label="Facebook"><svg width="18" height="18" aria-hidden="true"><use href="#i-facebook"/></svg></a></li>
+                <li><a href="#" aria-label="YouTube"><svg width="18" height="18" aria-hidden="true"><use href="#i-youtube"/></svg></a></li>
+                <li><a href="#" aria-label="Podcast"><svg width="18" height="18" aria-hidden="true"><use href="#i-microphone"/></svg></a></li>
+                <li><a href="#" aria-label="Blog feed"><svg width="18" height="18" aria-hidden="true"><use href="#i-rss"/></svg></a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<p class="footer-watermark" aria-hidden="true"><span class="footer-watermark__pre">Real people</span>Real relationships</p>
+
+<div class="container">
+    <div class="site-footer__bar">
+        <p class="site-footer__brand">
+            <img src="{{ logoUrl }}" width="694" height="168" alt="" />
+            <span>Valley Real Life &copy; {{ 'Now' | Date:'yyyy' }}. All rights reserved.</span>
+        </p>
+        <div class="site-footer__contact">
+            <span>Office hours: M–Th, 9:00am–4:00pm</span>
+            <a href="tel:+15092320840">(509) 232-0840</a>
+            <a href="mailto:hello@vrl.church">hello@vrl.church</a>
+            <a href="/privacy">Privacy</a>
+        </div>
+    </div>
+</div>

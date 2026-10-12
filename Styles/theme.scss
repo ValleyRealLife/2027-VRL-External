@@ -1,0 +1,61 @@
+// Valley Real Life 2027 — theme entry point.
+//
+// BUILD: npm run build   (dart-sass -> Styles/theme.css)
+//        npm run check   (marker, token-sync and import-order gates)
+//
+// theme.css is MACHINE-OWNED once deployed: Rock's ThemeService.BuildTheme
+// rewrites the marker regions below in place whenever theme settings are saved
+// in the admin fields editor. Never hand-edit theme.css; edit this file (or the
+// partials it loads) and rebuild.
+//
+// MARKER STRINGS ARE A ROCK CONSTANT — DO NOT REWORD THEM.
+// Rock v18's Rock.Cms.ThemeOverrideBuilder holds them as exact literals:
+//   TopOverrideStartMarker    "/* CSS Overrides Top Start */"
+//   TopOverrideEndMarker      "/* CSS Overrides Top End */"
+//   BottomOverrideStartMarker "/* CSS Overrides Bottom Start */"
+//   BottomOverrideEndMarker   "/* CSS Overrides Bottom End */"
+// The word "Start" is load-bearing: without it Rock's strip regex matches zero
+// bytes, the region is never rewritten, and nothing declared in theme.json —
+// including base-primary — ever reaches the browser. Rock writes the icon-set
+// @imports into the Top region and the theme.json variable values (plus any
+// admin "custom CSS overrides") into the Bottom region.
+//
+// ORDERING (verified against dart-sass 1.x):
+// All `@use` rules must precede any other rule in this file, including the
+// plain-CSS `@import` of core.css below. Comments do not count as rules, so
+// the marker comments may sit above the `@use` block.
+//
+// dart-sass never inlines a literal ".css" import — it passes it through
+// verbatim and hoists it to the top of the compiled output, ahead of any rule
+// content. So core.css still loads before this theme's own rules in the
+// browser, and the `:root` declarations in _tokens.scss win over core's
+// defaults at equal specificity because they appear later in the file.
+//
+// PARTIALS, in cascade order:
+//   tokens        Rock base tokens (theme.json sync) + VRL three-tier tokens
+//   base          reset, type, focus, .container, buttons, small shared parts
+//   utility-bar   fixed top bar            (Assets/Lava/UtilityBar.lava)
+//   header        nav row, mega menu, mobile drawer (Assets/Lava/PageNav.lava)
+//   care-modal    the care <dialog>        (Assets/Lava/UtilityBar.lava)
+//   footer        footer + runway          (Assets/Lava/Footer.lava)
+//   page          interior page layout     (Layouts/FullWidth.aspx)
+//   home          homepage sections        (Assets/Lava/Home.lava)
+
+/* CSS Overrides Top Start */
+/* CSS Overrides Top End */
+
+@use "tokens";
+@use "base";
+@use "utility-bar";
+@use "header";
+@use "care-modal";
+@use "footer";
+@use "page";
+@use "home";
+
+// Rock v18 design tokens + BS3-compatible component surface.
+// Path is relative to RockWeb root: Themes/<Name>/Styles/ -> ../../../Styles/
+@import "../../../Styles/styles-v2/core.css";
+
+/* CSS Overrides Bottom Start */
+/* CSS Overrides Bottom End */

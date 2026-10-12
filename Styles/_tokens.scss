@@ -1,0 +1,253 @@
+// Design tokens.
+//
+// Two token systems meet in this file and are deliberately kept in two blocks:
+//
+//   1. ROCK BASE TOKENS (`--base-*`, `--font-*`, `--site-*`, `--logo-*`)
+//      Rock v18's styles-v2/core.css declares every `--base-*` token on :root
+//      itself and derives its `--color-*` layer from them, so a var() fallback
+//      aimed at a core token is dead code. The theme must declare its own value
+//      for every base token whose default differs from Rock's. This block is
+//      emitted after the @import of core.css (dart-sass hoists plain CSS
+//      imports), so it wins at equal specificity. Rock's admin theme editor
+//      writes the same variables into the "CSS Overrides Bottom" region at the
+//      very end of theme.css, so it still wins over this block.
+//
+//      KEEP IN SYNC WITH theme.json: every value is the `default` of the
+//      matching theme.json field. `npm run check` fails if they drift.
+//
+//   2. VRL TOKENS (three tiers, ported from the concept / vrl-design-system-v4)
+//      TIER 1 primitives (raw OKLCH scales), TIER 2 semantic (what the rules
+//      consume), TIER 3 lives in the component partials. The two systems are
+//      bridged where they overlap: `--brand` reads Rock's primary colour so the
+//      admin field is live, and Rock's font tokens point at Montserrat so Rock's
+//      own blocks pick up the brand type.
+//
+// LIGHT-ONLY SITE: see the block at the bottom.
+
+@use "config" as *;
+
+:root {
+  // ===========================================================================
+  // 1. ROCK BASE TOKENS  (mirrors theme.json)
+  // ===========================================================================
+
+  // --- Brand -----------------------------------------------------------------
+  --base-primary: #9bc93c;
+  --base-secondary: #0b0e0a;
+  --base-link: #617e00;
+
+  // --- Interface scale (the concept's warm, green-tinted neutral ramp) -------
+  // Darkest rung first. core.css derives both the light and the (disabled, see
+  // below) dark `--color-interface-*` layers from these.
+  --base-interface-strongest: #030402;
+  --base-interface-stronger: #0b0e0a;
+  --base-interface-strong: #3f443c;
+  --base-interface-medium: #8d918b;
+  --base-interface-soft: #dfe2de;
+  --base-interface-softer: #f0f2ef;
+  --base-interface-softest: #f7f9f6;
+
+  // --- Status (Rock's stock values; the concept defines none) ----------------
+  --base-danger: #d70015;
+  --base-success: #01a11e;
+  --base-warning: #e58600;
+  --base-info: #005dd7;
+  --base-critical: #ee7725;
+
+  // --- Typography ------------------------------------------------------------
+  // Montserrat is loaded from Google Fonts in Layouts/Site.Master (<link>, not
+  // @import, so it starts downloading before the stylesheet is parsed).
+  --font-family-title: "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-family-body: "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  // core.css consumes --font-size-regular throughout its component scale.
+  --font-size-regular: 16px;
+  --font-size-h1: 48px;
+  --font-size-h2: 40px;
+  --font-size-h3: 28px;
+  --font-size-h4: 22px;
+  --font-size-h5: 18px;
+  --font-size-h6: 16px;
+
+  // --- Theme-owned surfaces (theme.json "Header & Footer" panel) ---------------
+  // Declared as literals, not var() chains: a custom property that references
+  // itself is a dependency cycle and resolves to nothing.
+  --site-header-background: #ffffff;
+  --site-footer-background: #030402;
+  --page-title-background: #f0f2ef;
+  --page-title-foreground: #0b0e0a;
+
+  // --- Logo ------------------------------------------------------------------
+  // The header Lava (Assets/Lava/PageNav.lava) renders the logo as an <img> so
+  // the ink filter can be applied to it; `--logo-image` from theme.json is
+  // therefore reserved for now. Height and aspect ARE consumed.
+  --logo-height: 34px;
+  --logo-aspect: 694 / 168;
+
+  // ===========================================================================
+  // 2. VRL TOKENS
+  // ===========================================================================
+  color-scheme: light;
+
+  // ---------- TIER 1 · v-green ----------
+  --v-green-50:       oklch(0.980 0.025 124);
+  --v-green-100:      oklch(0.950 0.060 124);
+  --v-green-200:      oklch(0.910 0.110 124);
+  --v-green-300:      oklch(0.860 0.190 124);
+  --v-green-400:      oklch(0.830 0.180 124);
+  --v-green-500:      oklch(0.790 0.170 124);   // BRAND · #9BC93C
+  --v-green-600:      oklch(0.660 0.140 124);
+  --v-green-700:      oklch(0.550 0.140 124);
+  --v-green-800:      oklch(0.420 0.105 124);
+  --v-green-900:      oklch(0.300 0.075 124);
+  --v-green-950:      oklch(0.180 0.045 124);
+
+  // ---------- TIER 1 · v-neutral (warm greige, green undertone) ----------
+  --v-neutral-50:     oklch(0.980 0.004 135);
+  --v-neutral-100:    oklch(0.960 0.005 135);
+  --v-neutral-200:    oklch(0.910 0.007 135);
+  --v-neutral-300:    oklch(0.820 0.008 135);
+  --v-neutral-400:    oklch(0.650 0.010 135);
+  --v-neutral-500:    oklch(0.500 0.012 135);
+  --v-neutral-600:    oklch(0.380 0.016 135);
+  --v-neutral-700:    oklch(0.300 0.014 135);
+  --v-neutral-800:    oklch(0.220 0.012 135);
+  --v-neutral-900:    oklch(0.160 0.010 135);
+  --v-neutral-950:    oklch(0.100 0.008 135);
+
+  // ---------- TIER 2 · Brand ----------
+  // `--brand` is the bridge to Rock: change "Primary Color" in the theme editor
+  // and every brand surface follows. The tints below stay on the green scale.
+  --brand:            var(--base-primary);
+  --brand-bright:     var(--v-green-400);
+  --brand-dim:        var(--v-green-600);
+  --brand-deep:       var(--v-green-800);
+  --brand-text:       var(--v-green-700);          // AA on light surfaces
+  --brand-wash:       oklch(from var(--brand) l c h / 0.14);
+  --brand-glow:       oklch(from var(--brand) l c h / 0.32);
+  --brand-glow-soft:  oklch(from var(--brand) l c h / 0.16);
+
+  // ---------- TIER 2 · Surface (light) ----------
+  --bg:               var(--v-neutral-50);
+  --bg-elevated:      #fff;
+  --surface:          var(--v-neutral-100);
+  --surface-hover:    var(--v-neutral-200);
+  --surface-active:   var(--v-neutral-300);
+
+  // ---------- TIER 2 · Inverted surface (dark bands in a light page) ----------
+  --ink:              var(--v-neutral-900);
+  --ink-deep:         var(--v-neutral-950);
+  --on-ink:           var(--v-neutral-50);
+  --on-ink-muted:     var(--v-neutral-300);
+
+  // ---------- TIER 2 · Border ----------
+  --border-subtle:    var(--v-neutral-200);
+  --border:           var(--v-neutral-300);
+  --border-strong:    var(--v-neutral-400);
+
+  // ---------- TIER 2 · Text ----------
+  --text:             var(--v-neutral-900);
+  --text-secondary:   var(--v-neutral-600);
+  --text-muted:       var(--v-neutral-500);
+  --text-disabled:    var(--v-neutral-400);
+  --text-on-brand:    var(--v-neutral-900);
+
+  // ---------- TIER 2 · Spacing ----------
+  --space-3xs: 0.125rem;  --space-2xs: 0.25rem;  --space-xs: 0.5rem;
+  --space-sm:  0.75rem;   --space-md:  1rem;     --space-lg: 1.5rem;
+  --space-xl:  2rem;      --space-2xl: 3rem;     --space-3xl: 4rem;
+  --space-4xl: 6rem;      --space-5xl: 8rem;
+
+  // ---------- TIER 2 · Radius ----------
+  --radius-xs: 0.25rem;   --radius-sm: 0.5rem;   --radius-md: 0.75rem;
+  --radius-lg: 1rem;      --radius-xl: 1.5rem;   --radius-2xl: 2rem;
+  --radius-3xl: 2.75rem;  --radius-pill: 999px;  --radius-circle: 50%;
+
+  // ---------- TIER 2 · Elevation ----------
+  --shadow-xs:   0 1px 2px oklch(0 0 0 / 0.05);
+  --shadow-sm:   0 2px 6px -1px oklch(0 0 0 / 0.08);
+  --shadow-md:   0 6px 16px -4px oklch(0 0 0 / 0.10), 0 2px 6px -2px oklch(0 0 0 / 0.06);
+  --shadow-lg:   0 14px 36px -8px oklch(0 0 0 / 0.16), 0 6px 14px -6px oklch(0 0 0 / 0.08);
+  --shadow-xl:   0 28px 60px -12px oklch(0 0 0 / 0.22), 0 10px 24px -10px oklch(0 0 0 / 0.10);
+  --shadow-card: 0 18px 40px -14px oklch(0 0 0 / 0.30), 0 4px 10px -4px oklch(0 0 0 / 0.14);
+  --shadow-glow: 0 0 32px var(--brand-glow);
+
+  // ---------- TIER 2 · Typography ----------
+  --font-sans:       var(--font-family-body);
+  --tracking-tight:  -0.03em;
+  --tracking-snug:   -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+  --tracking-wider:  0.12em;
+  --tracking-widest: 0.2em;
+
+  // ---------- TIER 2 · Motion ----------
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 150ms;
+  --duration:      220ms;
+  --duration-slow: 420ms;
+
+  // ---------- TIER 2 · Layout ----------
+  --container:   1240px;
+  --container-narrow: 900px;
+  --gutter:      clamp(1rem, 4vw, 2.5rem);
+  --util-h:      40px;
+  --nav-h:       76px;
+  --header-h:    calc(var(--util-h) + var(--nav-h));
+
+  // Menu grid: `--menu-cols` is the number of top-level pages; the nav and
+  // footer Lava set it inline from the page tree, and 4 is the fallback (the
+  // count the concept was designed around). The column TEMPLATE itself is the
+  // Sass variable $menu-grid in _config.scss, not a custom property: a
+  // `--menu-grid` declared here would resolve var(--menu-cols) on :root and
+  // ignore the inline per-element count.
+  --menu-cols:   4;
+  --menu-gap:    var(--space-xl);
+}
+
+@media (max-width: #{$bp-lg}) {
+  :root { --menu-gap: 1.25rem; }
+}
+
+// The rem root, driven by the same token the fields editor owns.
+html {
+  font-size: var(--font-size-regular, 16px);
+}
+
+// ---------------------------------------------------------------------------
+// LIGHT MODE ONLY
+//
+// This site renders identically for every visitor; there is no dark theme and
+// no toggle. The concept's dark bands (utility bar, mega menu, Students,
+// Messages, footer) are intentional inversions inside a light page, styled
+// with the `--ink`/`--on-ink` tokens, not a dark mode.
+//
+// Setting <html theme="light"> in Site.Master is NOT enough: RockPage injects a
+// script on every page that overwrites the attribute from localStorage,
+// defaulting to "system" (which honours prefers-color-scheme). The reliable
+// approach is to neutralise core.css's dark scopes here. `:root[theme="..."]`
+// is specificity (0,2,0), which beats core's `[theme=dark]` (0,1,0) and its
+// `@media (prefers-color-scheme: dark) :root` block regardless of source order.
+// ---------------------------------------------------------------------------
+:root,
+:root[theme="dark"],
+:root[theme="system"] {
+  --color-interface-strongest: var(--base-interface-strongest);
+  --color-interface-stronger:  var(--base-interface-stronger);
+  --color-interface-strong:    var(--base-interface-strong);
+  --color-interface-medium:    var(--base-interface-medium);
+  --color-interface-soft:      var(--base-interface-soft);
+  --color-interface-softer:    var(--base-interface-softer);
+  --color-interface-softest:   var(--base-interface-softest);
+
+  --color-critical-strong: var(--base-critical);
+  --color-danger-strong:   var(--base-danger);
+  --color-info-strong:     var(--base-info);
+  --color-success-strong:  var(--base-success);
+  --color-warning-strong:  var(--base-warning);
+
+  --box-shadow: rgba(145, 158, 171, 0.2) 0px 0px 2px 0px, rgba(145, 158, 171, 0.12) 0px 12px 24px -4px;
+  --box-shadow-strong: rgba(145, 158, 171, 0.2) 0px 20px 25px -5px, rgba(145, 158, 171, 0.12) 0px 10px 10px -5px;
+  --popup-box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+}

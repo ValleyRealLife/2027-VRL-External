@@ -1,0 +1,78 @@
+{% comment %}
+    UTILITY BAR — for an HTML block in the Site.Master "Utility" zone.
+
+    Block content:   {% include '~~/Assets/Lava/UtilityBar.lava' %}
+
+    Renders the links row (Request care · Give · Login/My account) and the
+    care <dialog>. Styled by Styles/_utility-bar.scss and _care-modal.scss;
+    driven by Assets/Scripts/theme.js.
+
+    Care dialog: the trigger is a real link (baseline), upgraded by JS to open
+    the dialog. Each option carries data-care-frame — the page that holds the
+    Rock form — and JS loads it into the dialog's <iframe>, so the care and
+    prayer forms are plain Rock pages that also work on their own.
+
+    ROCK: point the hrefs / data-care-frame values at the real routes once the
+    pages exist. The login/account routes follow Rock's defaults.
+{% endcomment %}
+<div class="container utilbar__inner">
+    <div class="utilbar__links">
+        <a class="utilbar__link" href="/care" data-care-trigger>
+            <svg width="15" height="15" aria-hidden="true"><use href="#i-lifebuoy"/></svg>
+            Request care
+        </a>
+        <span class="utilbar__sep" aria-hidden="true"></span>
+        <a class="utilbar__link" href="/give">
+            <svg width="15" height="15" aria-hidden="true"><use href="#i-gift"/></svg>
+            Give
+        </a>
+        <span class="utilbar__sep" aria-hidden="true"></span>
+        {% if CurrentPerson %}
+        <a class="utilbar__link" href="/my-account">
+            <svg width="15" height="15" aria-hidden="true"><use href="#i-user-circle"/></svg>
+            <span>My account</span>
+        </a>
+        {% else %}
+        <a class="utilbar__link" href="/login?returnurl={{ 'Global' | Page:'Url' | EscapeDataString }}">
+            <svg width="15" height="15" aria-hidden="true"><use href="#i-user-circle"/></svg>
+            <span>Login</span>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<dialog class="care-modal" id="care-modal" aria-labelledby="care-title" data-view="options">
+    <button class="care-modal__close" type="button" data-care-close>
+        <span class="u-visually-hidden">Close</span>
+        <svg width="20" height="20" aria-hidden="true"><use href="#i-x"/></svg>
+    </button>
+
+    <div class="care-modal__inner">
+        <h2 id="care-title">How can we help?</h2>
+        <p>Someone from our care team reads every request. Tell us which you need and we'll take it from there.</p>
+        <div class="care-modal__options">
+            <a class="care-option" href="/care/request-help" data-care-frame="/care/request-help" data-care-title="Request help">
+                <span class="care-option__icon" aria-hidden="true"><svg width="30" height="30"><use href="#i-lifebuoy"/></svg></span>
+                <strong>Request help</strong>
+                <span>Meals, finances, a hospital visit, or a hard season you're walking through.</span>
+            </a>
+            <a class="care-option" href="/care/prayer" data-care-frame="/care/prayer" data-care-title="Pray for me">
+                <span class="care-option__icon" aria-hidden="true"><svg width="30" height="30"><use href="#i-heart"/></svg></span>
+                <strong>Pray for me</strong>
+                <span>Send a request to our prayer team. Share as much or as little as you want.</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="care-modal__frame">
+        <div class="care-modal__frame-head">
+            <button class="care-modal__back" type="button" data-care-back>
+                <span class="u-visually-hidden">Back to options</span>
+                <svg width="20" height="20" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+            </button>
+            <h2 data-care-frame-title>Request help</h2>
+        </div>
+        {% comment %} src is set by theme.js from the chosen option; empty until then so nothing loads behind the options view. {% endcomment %}
+        <iframe data-care-iframe title="Care request form" loading="lazy"></iframe>
+    </div>
+</dialog>

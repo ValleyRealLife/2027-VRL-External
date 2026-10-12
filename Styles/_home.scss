@@ -1,0 +1,888 @@
+// HOMEPAGE SECTIONS  (markup: Assets/Lava/Home.lava)
+//
+// Ported verbatim from Concepts/Home2027-v1.5.html by tools/port-concept.py —
+// the concept remains the design source for these one-off sections until each
+// is converted into Rock blocks. Edit here (not the concept) once the theme is
+// the source of truth.
+//
+// Sections, top to bottom:
+//   .stage      hero → Next Steps card hand-off (GSAP, scrubbed)
+//   .nextgen    Kids + Students (side by side ≥ 900px, stacked covers below)
+//   .messages   latest message + series rail
+//   .events     upcoming events rail (container-query cards, share dropdown)
+//
+// The "cover" motif: sections pin (position: sticky) and the next one slides
+// over them. --stick-top and --footer-h are set by Assets/Scripts/theme.js;
+// the GSAP choreography lives in Assets/Scripts/home.js.
+//
+// Breakpoints are written as literals here (899px / 900px), matching the
+// concept; $bp-md in _config.scss is the same value.
+
+@use "config" as *;
+
+/* ============================================================
+   SECTION: HERO + NEXT STEPS  (one continuous scroll handoff)
+   The four cards start fanned at the bottom of the hero, then
+   shuffle vertically — one flicking over the last — into the
+   Next Steps row. Scrubbed, so it reverses on the way back up.
+
+   Baseline (no JS / reduced motion): hero renders normally and
+   the cards sit in a static grid under the Next Steps heading.
+   ============================================================ */
+.stage { position: relative; }
+.js .stage { height: 340vh; }
+@media (prefers-reduced-motion: reduce) { .js .stage { height: auto; } }
+
+.stage__vp { position: relative; }
+.js .stage__vp {
+  position: sticky; top: 0;
+  height: 100vh; height: 100svh; min-height: 560px;
+  overflow: hidden;
+  display: grid; align-content: start;
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .stage__vp { position: static; height: auto; min-height: 0; overflow: visible; display: block; }
+}
+
+/* Soft green glow bleeding in from both edges (designer's comp) */
+.stage__vp::before, .stage__vp::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 26vw;
+  pointer-events: none; z-index: 0;
+}
+.stage__vp::before {
+  left: 0;
+  background: radial-gradient(70% 50% at 0% 40%, var(--brand-glow) 0%, oklch(from var(--brand) l c h / 0.10) 45%, transparent 72%);
+}
+.stage__vp::after {
+  right: 0;
+  background: radial-gradient(70% 50% at 100% 55%, var(--brand-glow) 0%, oklch(from var(--brand) l c h / 0.10) 45%, transparent 72%);
+}
+
+.hero {
+  position: relative; z-index: 2;
+  padding-top: calc(var(--header-h) + var(--space-3xl));
+  padding-bottom: var(--space-3xl);
+  text-align: center;
+}
+.js .hero { padding-top: calc(var(--header-h) + 5vh); padding-bottom: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .js .hero { padding-top: calc(var(--header-h) + var(--space-3xl)); padding-bottom: var(--space-3xl); }
+}
+.hero h1 {
+  /* Longest line is ~18 characters (was 11), so the size comes down;
+     Montserrat Black (900) wins the weight back. */
+  font-size: clamp(2.25rem, 6.2vw, 5.75rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 0.95;
+}
+/* Each phrase is its own line; on phones "Reaching the world" balances
+   onto two lines rather than leaving "world" alone. */
+.hero h1 > span:not(.u-visually-hidden) { display: block; text-wrap: balance; }
+/* Phones: three lines, so the widest is "One at a time" (~7.7em) —
+   size to the viewport so it fills the width without overflowing. */
+@media (max-width: 599px) { .hero h1 { font-size: 11.2vw; } }
+.hero__times {
+  margin-top: var(--space-lg);
+  font-size: clamp(0.75rem, 1.5vw, 0.9375rem);
+  font-weight: 500;
+  letter-spacing: var(--tracking-snug);
+  color: var(--text-secondary);
+  max-width: 60ch; margin-inline: auto;
+}
+.hero__times strong,
+.hero__times span { display: block; }
+.hero__times strong {
+  margin-bottom: 0.3rem;
+  color: var(--text); font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+}
+.hero__times span { line-height: 1.55; }
+.hero__cta { margin-top: var(--space-xl); }
+
+/* ---------- Next Steps heading (revealed as the cards land) ---------- */
+.steps-head {
+  position: relative; z-index: 2;
+  text-align: center;
+  padding-top: var(--space-3xl);
+}
+.js .steps-head {
+  position: absolute; inset: auto 0 auto 0;
+  top: calc(var(--header-h) + 2vh);   /* JS replaces this with a measured top */
+  padding-top: 0;
+  opacity: 0;
+  pointer-events: none;               /* overlays the hero while invisible */
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .steps-head { position: static; opacity: 1; padding-top: var(--space-3xl); }
+}
+
+/* ---------- The deck ---------- */
+.deck {
+  position: relative; z-index: 3;
+  margin-top: var(--space-2xl);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+  gap: var(--space-lg);
+}
+.js .deck {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  margin: 0; padding-inline: var(--gutter);
+  display: block; height: 100%;
+  /* The layer spans the whole stage and sits above the hero, so only
+     the cards take the pointer — otherwise it swallows the hero CTA. */
+  pointer-events: none;
+}
+.js .deck .step-card { pointer-events: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .js .deck { position: static; display: grid; height: auto; margin-top: var(--space-2xl); padding-inline: 0; }
+}
+
+/* ===== COMPONENT: step card ===== */
+.step-card {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--brand-deep);
+  text-decoration: none; color: #fff;
+  box-shadow: var(--shadow-card);
+  will-change: transform;
+}
+.js .deck .step-card {
+  position: absolute;
+  width: min(17%, 250px);   /* five across with gaps, inside the gutters */
+  left: 50%; top: 50%;
+  transform-origin: 50% 120%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .js .deck .step-card { position: relative; width: auto; left: auto; top: auto; }
+}
+.step-card img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+.step-card__scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, oklch(0.16 0.01 135 / 0.92) 0%, oklch(0.16 0.01 135 / 0.35) 45%, transparent 75%);
+}
+.step-card__body {
+  position: absolute; inset: auto 0 0 0;
+  padding: var(--space-lg) var(--space-md);
+  display: grid; justify-items: center; gap: var(--space-sm);
+  text-align: center;
+}
+.step-card__body h3 {
+  font-size: clamp(0.9375rem, 1.35vw, 1.25rem);
+  text-transform: uppercase;
+  text-shadow: 0 2px 12px oklch(0 0 0 / 0.5);
+}
+.step-card .btn { border-color: #fff; color: #fff; }
+.step-card:hover img { transform: scale(1.06); }
+.step-card:hover .btn { background: #fff; color: var(--text); }
+/* ROCK: swap the <img> for a <video muted loop playsinline> to get
+   the bumper clip on hover; poster stays as the still. */
+
+/* Glow that hands off into VRL Kids */
+.stage__handoff {
+  position: relative; z-index: 1;
+  height: 140px; margin-top: -40px;
+  background: radial-gradient(60% 100% at 50% 100%, var(--brand-glow) 0%, oklch(from var(--brand) l c h / 0.12) 45%, transparent 75%);
+  pointer-events: none;
+}
+
+/* ============================================================
+   SECTION: VRL KIDS
+   Lighter, rounder, brighter. Green gradient field, circular
+   crops, dashed wheels that rotate on scroll, gentle float.
+   ============================================================ */
+.kids {
+  position: relative; z-index: 1;
+  padding-block: clamp(4rem, 10vw, 8rem);
+  color: #fff;
+  /* Darker on the copy side, brightest behind the photos — keeps
+     white text at AA while the section still reads light and open. */
+  background:
+    radial-gradient(70% 65% at 82% 28%, var(--v-green-300) 0%, transparent 62%),
+    linear-gradient(104deg,
+      var(--v-green-800) 0%,
+      var(--v-green-700) 26%,
+      var(--v-green-600) 52%,
+      var(--v-green-500) 78%,
+      var(--v-green-400) 100%);
+  overflow: hidden;
+  /* Film grain, soft-light blended over the gradient (first layer in
+     each Kids background stack). Grey noise squeezed toward 50% so the
+     blend lifts and darkens only slightly. */
+  --kids-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0.55 0 0 0 0.22  0.55 0 0 0 0.22  0.55 0 0 0 0.22  0 0 0 0 1'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+/* Scribble texture: Assets/Images/KidsTexture.webp — 16:9, scribbles
+   spread evenly across the whole frame. Cover-fit, unrotated, at every
+   width: the scribbles stay the same size on phones and desktop.
+   Full strength behind the photos and title, easing back to about a
+   third behind the copy so body text stays easy to read. */
+.kids__texture {
+  position: absolute; inset: 0;
+  /* Anchored left: cover only shows a slice of the 16:9 image (~52%
+     of its width on desktop, ~30% on phones) and the image's middle
+     band is its sparsest, so centring left the section's edge thin. */
+  /* ?v= busts the cache: the server sends max-age=1yr, so a replaced
+     file keeps its old copy in browsers until the URL changes. */
+  background: url("../Assets/Images/KidsTexture.webp?v=2") left center / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, #000 50%, oklch(0 0 0 / 0.35) 80%);
+  mask-image: linear-gradient(to bottom, #000 50%, oklch(0 0 0 / 0.35) 80%);
+  opacity: 0.5;   /* overall strength — tune here, not in the file */
+  pointer-events: none;
+}
+.kids__inner {
+  position: relative;
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+@media (min-width: 900px) { .kids__inner { grid-template-columns: 1.05fr 1fr; } }
+.kids h2 {
+  font-size: clamp(3rem, 8vw, 6rem);
+  text-transform: uppercase;
+  font-weight: 400;
+  letter-spacing: var(--tracking-tight);
+}
+.kids h2 b { font-weight: 800; }
+.kids__kicker {
+  font-size: 0.8125rem; font-weight: 700;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: oklch(1 0 0 / 0.85);
+  margin-bottom: var(--space-xs);
+}
+.kids__copy {
+  margin-top: var(--space-lg);
+  max-width: 52ch;
+  font-size: 0.9375rem;
+  color: oklch(1 0 0 / 0.92);
+}
+.kids__actions { margin-top: var(--space-xl); }
+/* Solid white: brand green would vanish on the green field. */
+.kids .btn--solid { background: #fff; color: var(--v-green-900); border-color: #fff; box-shadow: var(--shadow-md); }
+.kids .btn--solid:hover { background: var(--v-green-950); color: #fff; border-color: var(--v-green-950); }
+
+/* Circular photo cluster — one composition at every width, scaled by
+   --kc-h (its height). The smaller circle sits up-left, the dominant
+   popout circle down-right, so they read as a diagonal, never a row.
+   The popout's subject rises above its circle into the headroom. */
+.kids__cluster {
+  --kc-h: min(64vw, 270px);            /* phones; desktop sets its own */
+  position: relative;
+  order: -1;                           /* images first, then title */
+  width: calc(var(--kc-h) * 1.4);
+  height: var(--kc-h);
+  margin-inline: auto;
+}
+.kid-photo { position: absolute; margin: 0; aspect-ratio: 1; }
+.kid-photo--small { width: calc(var(--kc-h) * 0.6);  left: 0;  top: 0; }
+.kid-photo--pop   { width: calc(var(--kc-h) * 0.82); right: 0; bottom: 0; }
+/* The disc is the photo circle, inset inside the dashed wheel. */
+.kid-photo__disc { position: absolute; inset: 8%; }
+.kid-photo__disc img {
+  position: absolute; max-width: none; height: auto;
+  /* drop-shadow follows the cut-out, including the popout subject */
+  filter: drop-shadow(0 16px 22px oklch(0 0 0 / 0.28));
+}
+/* Each file's circle measured in its own pixels, so the circle lands
+   exactly on the disc: KidCircle 804×819, circle 781 wide at (11,10).
+   KidPopout 1221×1438, circle 1199 wide, 11px in from the right and
+   12px up from the bottom. */
+.kid-photo--small img { width: 102.94%; left: -1.41%; top: -1.28%; }
+.kid-photo--pop   img { width: 101.83%; left: -0.92%; bottom: -1%; }
+/* Dashed wheel as SVG, so the dashes can be long with round ends.
+   pathLength=100, so dash + gap must divide 100 for a clean seam:
+   big wheel 20 dashes (5), small wheel 16 (6.25) so its gaps don't
+   crowd. Round caps eat ~one stroke-width of each gap, hence the
+   generous gap values. The stroke doesn't scale (px below). */
+.kid-photo__wheel {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  overflow: visible;
+  will-change: transform;
+}
+.kid-photo__wheel circle {
+  fill: none;
+  stroke: oklch(1 0 0 / 0.85);
+  stroke-width: 5px;
+  stroke-dasharray: 2.4 2.6;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+@media (min-width: 900px) { .kid-photo__wheel circle { stroke-width: 6px; } }
+.kid-photo--small .kid-photo__wheel circle { stroke-dasharray: 3.05 3.2; }
+
+/* VRL Kids wordmark (Assets/Images/VRLKids.webp) in place of type */
+.kids__title img { display: block; width: auto; height: clamp(2.25rem, 11vw, 3rem); margin-inline: auto; }
+@media (min-width: 900px) { .kids__title img { height: clamp(2.25rem, 3.2vw, 3rem); } }
+
+/* Kids fills the space under the header, so it pins flush with no strip
+   of page showing below it — and on phones it fits one screen, which
+   is what lets it pin in the same place as desktop. */
+.js .kids {
+  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100svh - var(--header-h));
+  display: grid; align-content: center;
+  grid-template-columns: minmax(0, 1fr);   /* track can't grow to the paragraph's max-content */
+}
+
+@media (max-width: 899px) {
+  .kids {
+    padding-block: var(--space-lg);
+    text-align: center;
+    /* Vertical on phones: bright and lime behind the photos, settling to
+       a cooler mid green behind the copy (white copy stays AA). */
+    background:
+      var(--kids-grain),
+      radial-gradient(90% 28% at 28% 6%, var(--v-green-300) 0%, transparent 70%),
+      radial-gradient(70% 24% at 92% 24%, oklch(0.82 0.16 112 / 0.75) 0%, transparent 70%),
+      radial-gradient(95% 32% at 0% 100%, oklch(0.47 0.12 145) 0%, transparent 70%),
+      linear-gradient(180deg,
+        var(--v-green-500) 0%,
+        var(--v-green-600) 30%,
+        var(--v-green-700) 52%,
+        var(--v-green-700) 100%);
+    background-blend-mode: soft-light, normal, normal, normal, normal;
+  }
+  .kids__inner {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: var(--space-xl);
+  }
+  .kids h2 { font-size: clamp(2.5rem, 12vw, 3.5rem); }
+  .kids__copy { margin-top: var(--space-sm); margin-inline: auto; max-width: 30ch; }
+  .kids__actions { margin-top: var(--space-lg); }
+}
+
+/* ============================================================
+   SECTION: VRL STUDENTS
+   Slides up over Kids: Kids sticks, Students rides over it.
+   Darker, grittier, torn-edge photo scraps.
+   ============================================================ */
+/* Sticky sections must stay positioned (never static) or their
+   absolutely-placed textures escape to the page.
+   --stick-top is set by JS to min(header height, viewport − section
+   height): short sections pin just under the fixed header, tall ones
+   (phones) scroll fully into view and pin by their bottom edge before
+   the next section covers them. */
+.js .nextgen, .js .kids, .js .students, .js .messages, .js .events {
+  position: sticky; top: var(--stick-top, 0px);
+}
+/* Dwell: each pinned section stays uncovered for this much scroll before
+   the next one starts to slide over it. The margin sits on the section
+   doing the covering. The footer's dwell lives on .footer-runway.
+   ROCK: tune per section by setting --cover-dwell on the next section. */
+.js .students, .js .messages, .js .events { margin-top: var(--cover-dwell, 60vh); }
+.js .students { --cover-dwell: 45vh; }   /* Kids → Students */
+
+/* Covering sections fill the space under the header (like Kids), so
+   nothing pinned underneath shows below them during a dwell. */
+.js .students, .js .messages, .js .events {
+  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100svh - var(--header-h));
+  display: grid; align-content: center;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.students {
+  position: relative; z-index: 2;
+  padding-block: clamp(4rem, 10vw, 8rem);
+  color: var(--on-ink);
+  /* Kids' noisy-gradient treatment in black and charcoal: soft grey
+     pools over a near-black ramp, grain on top (.students__grain). */
+  background:
+    radial-gradient(60% 45% at 82% 14%, oklch(0.31 0.012 135) 0%, transparent 70%),
+    radial-gradient(55% 40% at 8% 88%, oklch(0.25 0.012 135) 0%, transparent 70%),
+    radial-gradient(45% 32% at 30% 40%, oklch(0.21 0.010 135) 0%, transparent 70%),
+    linear-gradient(170deg,
+      var(--v-neutral-900) 0%,
+      var(--v-neutral-950) 60%,
+      oklch(0.07 0.006 135) 100%);
+  box-shadow: 0 -30px 60px -20px oklch(0 0 0 / 0.5);
+  overflow: hidden;
+}
+/* Film grain: white noise at low, varying alpha (soft-light, as on
+   Kids, barely registers on near-black). */
+.students__grain {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.2 0 0 0 -0.03'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.students__inner {
+  position: relative;
+  display: grid; gap: clamp(2rem, 5vw, 4rem);
+  align-items: center;
+}
+@media (min-width: 900px) { .students__inner { grid-template-columns: 1fr 1fr; } }
+.students__copy { text-align: center; }   /* title + button first, images last: the reverse of Kids */
+.students__kicker {
+  font-size: 0.8125rem; font-weight: 700;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--on-ink-muted);
+  margin-bottom: var(--space-xs);
+}
+.students h2 { font-size: clamp(2.75rem, 8vw, 6rem); text-transform: uppercase; }
+.students__body {
+  margin: var(--space-md) auto 0;
+  max-width: 30ch; font-size: 0.9375rem; color: var(--on-ink-muted);
+}
+.students__actions { margin-top: var(--space-xl); }
+
+/* Photo pile — four pre-framed photos at varied sizes in a loose
+   diamond: the stage shot on top, the others left, right and front.
+   Heights follow the frames' ~1.21 aspect; % of a 4:3 box.
+   It starts stacked and spreads into this layout as it scrolls in
+   (GSAP, scroll choreography) — the CSS here is the resting state,
+   and what reduced-motion visitors see. */
+.scraps {
+  position: relative;
+  width: min(100%, 32rem);
+  aspect-ratio: 4 / 3;
+  margin-inline: auto;
+}
+.scrap {
+  position: absolute; margin: 0;
+  will-change: transform;
+}
+.scrap img {
+  position: relative; display: block;
+  width: 100%; height: auto;
+  filter: drop-shadow(0 18px 22px oklch(0 0 0 / 0.5));   /* follows the torn edge */
+}
+.scrap--1 { width: 33%; left: 1%;  top: 24%; z-index: 1; transform: rotate(-6deg); }
+.scrap--2 { width: 38%; left: 31%; top: 0;   z-index: 2; transform: rotate(3deg); }
+.scrap--4 { width: 30%; left: 68%; top: 20%; z-index: 1; transform: rotate(6deg); }
+.scrap--3 { width: 27%; left: 37%; bottom: 0; z-index: 3; transform: rotate(-3deg); }
+
+
+/* ============================================================
+   NEXT GEN: Kids + Students side by side (desktop)
+   One band, one cover layer: the wrapper pins and Messages slides
+   over it. Each half is the short version — kicker, title, one line,
+   button — under a visual of matched height, so the titles align
+   across the seam. Phones: the wrapper drops out of layout
+   (display: contents) and the two sections behave as before.
+   ============================================================ */
+@media (max-width: 899px) { .nextgen { display: contents; } }
+@media (min-width: 900px) {
+  .nextgen {
+    --ng-visual-h: clamp(210px, min(38vh, 25vw), 350px);   /* tracks width too, so two photos always fit a half */
+    position: relative; z-index: 1;
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .js .nextgen {
+    min-height: calc(100vh - var(--header-h));
+    min-height: calc(100svh - var(--header-h));
+  }
+  /* The halves ride inside the wrapper: no pin, no dwell of their own */
+  .js .nextgen > .kids,
+  .js .nextgen > .students { position: relative; top: auto; margin-top: 0; min-height: 0; }
+  .nextgen > .kids,
+  .nextgen > .students {
+    padding-block: clamp(3rem, 7vh, 5.5rem);
+    display: grid; align-content: center;
+  }
+
+  .nextgen .kids__inner,
+  .nextgen .students__inner {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    gap: clamp(1.75rem, 4vh, 2.75rem);
+    max-width: 36rem;
+    text-align: center;
+  }
+
+  /* Kids: lime light pooling behind the photos, a warmer yellow-green
+     on the right, a cooler deep pool low left, all over a mid-green
+     ramp that keeps white copy at AA. Grain on top (soft-light). */
+  .nextgen .kids {
+    background:
+      var(--kids-grain),
+      radial-gradient(55% 38% at 30% 20%, var(--v-green-300) 0%, transparent 70%),
+      radial-gradient(45% 35% at 88% 30%, oklch(0.82 0.16 112 / 0.75) 0%, transparent 70%),
+      radial-gradient(60% 45% at 0% 100%, oklch(0.47 0.12 145) 0%, transparent 70%),
+      linear-gradient(180deg,
+        var(--v-green-500) 0%,
+        var(--v-green-600) 38%,
+        var(--v-green-700) 66%,
+        var(--v-green-700) 100%);
+    background-blend-mode: soft-light, normal, normal, normal, normal;
+  }
+  .nextgen .kids__cluster { --kc-h: var(--ng-visual-h); }
+  .nextgen .kids h2 { font-size: clamp(2.5rem, 3.9vw, 3.5rem); }
+  .nextgen .kids__copy { margin: var(--space-md) auto 0; max-width: 34ch; font-size: 1rem; }
+  .nextgen .kids__actions { margin-top: var(--space-lg); }
+
+  /* Students: the darker half. Its shadow falls across the seam onto
+     Kids — the cover motif, turned sideways — so the divide is clear. */
+  .nextgen .students { box-shadow: -28px 0 56px -24px oklch(0 0 0 / 0.6); }
+  .nextgen .students h2 { font-size: clamp(2.5rem, 3.9vw, 3.5rem); }
+  .nextgen .students__body { margin: var(--space-md) auto 0; max-width: 34ch; font-size: 1rem; }
+  .nextgen .students__actions { margin-top: var(--space-lg); }
+  .nextgen .scraps {
+    height: var(--ng-visual-h); width: auto;
+    aspect-ratio: 4 / 3; min-height: 0;
+  }
+}
+
+/* Solid-green placeholder block — stands in for transparent PNG/WEBP art.
+   ROCK: replace with the real transparent asset. */
+.ph-green {
+  display: grid; place-items: center;
+  width: 100%;
+  background: var(--v-green-600);
+  color: var(--v-green-950);
+  font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  text-align: center; padding: var(--space-sm);
+}
+/* ============================================================
+   SECTION: MESSAGES  (Netflix-inspired)
+   Moving background behind the whole band. "Watch now" fades
+   the UI out and hands the frame to the player.
+   ============================================================ */
+.messages {
+  position: relative; z-index: 5;
+  color: var(--on-ink);
+  background: var(--ink-deep);
+  overflow: hidden;
+  padding-block: clamp(4rem, 9vw, 7rem);
+  box-shadow: 0 -30px 60px -20px oklch(0 0 0 / 0.55);
+  border-top: 1px solid oklch(1 0 0 / 0.08);   /* seam so black-on-black still reads as a new layer */
+}
+.messages__bg {
+  position: absolute; inset: -6%;
+  pointer-events: none;
+}
+.messages__bg img { width: 100%; height: 100%; object-fit: cover; }
+.messages__bg::after {
+  content: ""; position: absolute; inset: 0;
+  background:
+    linear-gradient(to right, var(--ink-deep) 8%, oklch(from var(--ink-deep) l c h / 0.55) 48%, oklch(from var(--ink-deep) l c h / 0.2) 75%),
+    linear-gradient(to top, var(--ink-deep) 2%, transparent 45%);
+}
+/* Slow drift — the only always-on motion on the page, and it's
+   a background, which is why it earns its keep. */
+@media (prefers-reduced-motion: no-preference) {
+  .messages__bg img { animation: drift 38s var(--ease-in-out) infinite alternate; }
+}
+@keyframes drift {
+  from { transform: scale(1.06) translate3d(0, 0, 0); }
+  to   { transform: scale(1.14) translate3d(-3%, -2%, 0); }
+}
+
+.messages__inner { position: relative; }
+.messages__label {
+  font-size: 0.8125rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+}
+.messages__feature {
+  margin-top: var(--space-lg);
+  max-width: 520px;
+  transition: opacity var(--duration-slow) var(--ease-out),
+              transform var(--duration-slow) var(--ease-out);
+}
+.messages__art {
+  width: min(320px, 70%);
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.messages__art .ph-green { height: 100%; font-size: 1.25rem; letter-spacing: var(--tracking-wide); }
+.messages__desc {
+  margin-top: var(--space-lg);
+  font-size: 0.9375rem; color: var(--on-ink-muted);
+  max-width: 46ch;
+}
+.messages__feature .btn { margin-top: var(--space-lg); }
+
+/* Player takes over the band when "Watch now" is pressed */
+.messages__player {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--duration-slow) var(--ease-out), visibility 0s linear var(--duration-slow);
+}
+.messages[data-playing="true"] .messages__player { opacity: 1; visibility: visible; transition: opacity var(--duration-slow) var(--ease-out), visibility 0s; }
+.messages[data-playing="true"] .messages__feature,
+.messages[data-playing="true"] .messages__label,
+.messages[data-playing="true"] .series { opacity: 0; transform: translateY(12px); pointer-events: none; }
+.messages[data-playing="true"] .messages__bg { opacity: 0.25; }
+.messages__bg, .messages__label, .series {
+  transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
+.player {
+  width: min(960px, 100%);
+  aspect-ratio: 16 / 9;
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: #000;
+  box-shadow: var(--shadow-xl);
+}
+/* ROCK: replace .player__stage with the Rock media element / embed. */
+.player__stage { position: absolute; inset: 0; }
+.player__stage .ph-green { height: 100%; font-size: 1rem; }
+.player__bar {
+  position: absolute; inset: auto 0 0 0;
+  display: flex; align-items: center; gap: var(--space-md);
+  padding: var(--space-md);
+  background: linear-gradient(to top, oklch(0 0 0 / 0.85), transparent);
+  color: #fff;
+}
+.player__progress { flex: 1; height: 4px; border-radius: var(--radius-pill); background: oklch(1 0 0 / 0.3); overflow: hidden; }
+.player__progress span { display: block; height: 100%; width: 12%; background: var(--brand); }
+.player__close {
+  position: absolute; top: var(--space-md); right: var(--space-md);
+  width: 42px; height: 42px; border-radius: var(--radius-circle);
+  display: grid; place-items: center;
+  background: oklch(0 0 0 / 0.55); color: #fff; border: 1px solid oklch(1 0 0 / 0.4);
+}
+.player__close:hover { background: var(--brand); color: var(--text-on-brand); border-color: var(--brand); }
+
+/* ---------- Recent series strip ---------- */
+.series { position: relative; margin-top: clamp(2.5rem, 6vw, 4.5rem); }
+.series__head { display: flex; align-items: baseline; gap: var(--space-md); }
+.series__head h3 {
+  font-size: 0.8125rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+}
+.series__head a {
+  font-size: 0.6875rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--on-ink-muted); text-decoration: none;
+}
+.series__head a:hover { color: var(--brand); }
+.series__rail {
+  display: flex; gap: var(--space-md);
+  margin-top: var(--space-md);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: var(--space-sm);
+  scrollbar-width: thin;
+}
+.series__rail::-webkit-scrollbar { height: 6px; }
+.series__rail::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.25); border-radius: var(--radius-pill); }
+.series__item {
+  flex: 0 0 clamp(150px, 22vw, 210px);
+  scroll-snap-align: start;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
+}
+.series__item .ph-green { aspect-ratio: 16 / 10; }
+.series__item:hover { transform: translateY(-4px) scale(1.02); box-shadow: var(--shadow-lg); }
+
+.messages__more { display: none; }
+.messages__more a {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.8125rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--on-ink); text-decoration: none;
+}
+.messages__more a:hover { color: var(--brand); }
+.messages__more svg { transition: transform var(--duration) var(--ease-out); }
+.messages__more a:hover svg { transform: translateX(3px); }
+
+@media (max-width: 899px) {
+  .messages { text-align: center; }
+  .messages__label { font-size: clamp(2.25rem, 10vw, 3rem); line-height: 0.95; letter-spacing: var(--tracking-tight); }
+  .messages__feature { margin-inline: auto; }
+  .messages__art { margin-inline: auto; width: min(340px, 86%); }
+  .messages__desc { margin-inline: auto; }
+  .messages .series { display: none; }
+  .messages__more { display: block; margin-top: var(--space-lg); }
+}
+
+/* ============================================================
+   SECTION: UPCOMING EVENTS
+   Cards follow the design-system detail card: image, title,
+   blurb, meta rows, then a split action row — Learn more +
+   the share dropdown.
+   ============================================================ */
+.events {
+  position: relative; z-index: 6;
+  background: var(--bg);
+  box-shadow: 0 -30px 60px -20px oklch(0 0 0 / 0.4);
+  padding-block: clamp(3rem, 6vw, 4.5rem);   /* tighter, so it pins with its heading visible on a laptop */
+}
+.events__rail-wrap { position: relative; margin-top: clamp(2rem, 5vw, 3rem); }
+.events__rail {
+  display: flex; gap: var(--space-lg);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
+  padding: var(--space-xs) var(--gutter) var(--space-xl);
+  margin-inline: calc(var(--gutter) * -1);
+  scrollbar-width: none;
+}
+.events__rail::-webkit-scrollbar { display: none; }
+.events__nav {
+  position: absolute; top: 38%; transform: translateY(-50%); z-index: 2;
+  width: 48px; height: 48px; border-radius: var(--radius-circle);
+  display: none; place-items: center;
+  background: var(--bg-elevated); color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  transition: background var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
+}
+@media (min-width: 900px) { .events__nav { display: grid; } }
+.events__nav:hover { background: var(--brand); color: var(--text-on-brand); border-color: var(--brand); }
+.events__nav[disabled] { opacity: 0.3; pointer-events: none; }
+.events__nav--prev { left: -10px; }
+.events__nav--next { right: -10px; }
+/* Once the viewport is wide enough, the arrows clear the cards entirely */
+@media (min-width: 1400px) {
+  .events__nav--prev { left: calc((var(--gutter) + 26px) * -1); }
+  .events__nav--next { right: calc((var(--gutter) + 26px) * -1); }
+}
+
+/* ===== COMPONENT: event card (container-query aware) ===== */
+.event-card {
+  container-type: inline-size;
+  flex: 0 0 clamp(260px, 78vw, 300px);
+  scroll-snap-align: start;
+  display: flex; flex-direction: column;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: border-color var(--duration) var(--ease-out),
+              box-shadow var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out);
+}
+.event-card:hover { border-color: var(--border); box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+.event-card__thumb { position: relative; aspect-ratio: 16 / 9; overflow: hidden; }
+.event-card__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.event-card__date {
+  position: absolute; top: var(--space-sm); right: var(--space-sm);
+  min-width: 52px;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
+  text-align: center; line-height: 1.05;
+}
+.event-card__date .m { display: block; font-size: 0.5625rem; font-weight: 800; letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-secondary); }
+.event-card__date .d { display: block; font-size: 1.125rem; font-weight: 800; }
+.event-card__body { padding: var(--space-md); display: grid; gap: var(--space-sm); flex: 1; align-content: start; }
+.event-card__body h3 { font-size: 1.0625rem; text-transform: uppercase; letter-spacing: var(--tracking-snug); }
+.event-card__desc { font-size: 0.8125rem; color: var(--text-secondary); line-height: 1.5; }
+.event-card__meta { display: grid; gap: 0.3rem; margin-top: var(--space-2xs); }
+.event-card__meta li {
+  display: flex; align-items: flex-start; gap: 0.45rem;
+  font-size: 0.6875rem; font-weight: 600;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.event-card__meta svg { color: var(--brand-dim); flex-shrink: 0; margin-top: 1px; }
+.event-card__actions {
+  margin-top: auto;
+  padding: var(--space-md);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm);
+  border-top: 1px solid var(--border-subtle);
+}
+@container (min-width: 320px) { .event-card__body { padding: var(--space-lg); } }
+
+/* ===== COMPONENT: share dropdown (from the design system) ===== */
+.share { position: relative; }
+.share__btn {
+  width: 40px; height: 40px; border-radius: var(--radius-circle);
+  display: grid; place-items: center;
+  background: transparent; border: 0; color: var(--brand-dim);
+  transition: background var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
+}
+.share__btn:hover, .share__btn[aria-expanded="true"] { background: var(--brand-wash); color: var(--brand-text); }
+.share__menu {
+  position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 10;
+  min-width: 176px;
+  padding: var(--space-2xs);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: none;
+}
+.share__menu[data-open="true"] { display: block; }
+.share__item {
+  width: 100%;
+  display: flex; align-items: center; gap: var(--space-sm);
+  padding: 0.55rem 0.75rem;
+  background: none; border: 0; border-radius: var(--radius-sm);
+  font-size: 0.8125rem; font-weight: 600; text-align: left;
+  color: var(--text); text-decoration: none;
+}
+.share__item:hover { background: var(--surface); }
+.share__item svg { color: var(--text-muted); }
+.share__divider { height: 1px; margin: var(--space-2xs) 0; background: var(--border-subtle); }
+
+.events__all { display: flex; justify-content: center; margin-top: var(--space-md); }
+
+/* Stage falls back to a static hero + grid below 900px and for
+   reduced-motion. Mirrors the reduced-motion overrides above. */
+html.stage-static .stage { height: auto; }
+html.stage-static .stage__vp { position: static; height: auto; min-height: 0; overflow: visible; display: block; }
+html.stage-static .hero { padding-top: calc(var(--header-h) + var(--space-3xl)); padding-bottom: var(--space-3xl); }
+html.stage-static .steps-head { position: static; opacity: 1; padding-top: var(--space-3xl); }
+html.stage-static .deck {
+  position: static; display: grid; height: auto;
+  margin-top: var(--space-2xl); padding-inline: 0;
+  grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+}
+html.stage-static .deck .step-card { position: relative; width: auto; left: auto; top: auto; }
+/* (Kids/Students stay sticky in every mode — the cover motif is layout, not motion.) */
+
+/* Phones with motion allowed: same pinned hand-off as desktop, but the
+   deck is a horizontal rail placed under the heading (JS sets its top)
+   and it rises in from below the viewport instead of fanning. */
+@media (max-width: 899px) {
+  html.js:not(.stage-static) .stage { height: 250vh; }
+  html.js:not(.stage-static) .stage__vp { align-content: center; }
+  html.js:not(.stage-static) .hero { padding-top: var(--header-h); }
+  html.js:not(.stage-static) .deck {
+    display: flex; flex-wrap: nowrap;
+    bottom: auto; height: auto;
+    top: var(--deck-top, 60%);
+    /* Here the deck is only the rail, not a stage-sized layer over the
+       hero CTA, so it can take the pointer — the rail itself is the
+       scroller and won't swipe with pointer-events off. */
+    pointer-events: auto;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x pan-y;
+  }
+  html.js:not(.stage-static) .deck .step-card {
+    position: relative; left: auto; top: auto; width: auto;
+  }
+}
+
+/* On phones the deck becomes a swipe rail — one card at a time,
+   the way the designer's mobile comp reads it. Declared here so it
+   lands after the stage-static grid it needs to override. */
+@media (max-width: 899px) {
+  .deck,
+  html.stage-static .deck {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-md);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    padding-inline: var(--gutter);
+    scrollbar-width: none;
+  }
+  .deck::-webkit-scrollbar { display: none; }
+  .deck .step-card,
+  html.stage-static .deck .step-card {
+    flex: 0 0 clamp(210px, 68vw, 280px);
+    scroll-snap-align: center;
+    box-shadow: var(--shadow-lg);   /* the rail clips overflow; a tighter shadow fits inside it */
+  }
+  .deck .step-card__body h3 { font-size: 1.125rem; }   /* rail cards are wide; no need to shrink */
+  .deck, html.stage-static .deck { padding-block: var(--space-sm) var(--space-2xl); }
+}

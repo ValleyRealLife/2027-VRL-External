@@ -1,0 +1,19 @@
+// Build-time configuration: SCSS variables only, no CSS output.
+//
+// Breakpoints live here because a CSS custom property cannot be used inside
+// an @media condition. Every partial pulls these in with `@use "config" as *;`.
+//
+// The concept (Concepts/Home2027-v1.5.html) was built against these exact
+// widths; change them here and every partial follows.
+
+$bp-sm:  560px;   // phones → small tablets (utility bar compacts below this)
+$bp-md:  900px;   // layout switch: Kids/Students side by side, two-column sections
+$bp-nav: 1000px;  // desktop navigation: link row + mega menu replace the drawer
+$bp-lg:  1180px;  // menu grid tightens its gap below this
+$bp-xl:  1400px;  // events rail arrows clear the cards entirely
+
+// One column template shared by the nav row, the mega panel and the footer, so
+// sub-navigation aligns under its parent link: visit column, one column per
+// top-level page, aside column. Emitted literally into each rule so
+// var(--menu-cols) resolves on the element that carries the inline count.
+$menu-grid: minmax(190px, 1.1fr) repeat(var(--menu-cols, 4), minmax(0, 1fr)) minmax(180px, 0.95fr);

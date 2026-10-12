@@ -1,0 +1,49 @@
+// UTILITY BAR  (fixed, above the site header)
+//
+// Markup: Layouts/Site.Master renders the fixed `.utilbar` shell with a Rock
+// "Utility" zone inside it; an HTML block in that zone includes
+// Assets/Lava/UtilityBar.lava, which renders `.utilbar__inner`.
+//
+// Rock wraps the block in <div class="block-instance"><div class="block-content">.
+// The inner flex layout tolerates those wrappers: they are ordinary block
+// children, centred vertically by the bar.
+//
+// Stacking: the bar sits BELOW the site header (70 < 80) so the mobile drawer,
+// which lives inside the header's block, can cover it. The mega-menu scrim
+// starts at --header-h so it never overlaps the bar anyway.
+
+@use "config" as *;
+
+.utilbar {
+  position: fixed; inset: 0 0 auto 0; z-index: 70;
+  height: var(--util-h);
+  background: var(--ink-deep);
+  color: var(--on-ink);
+}
+// Rock nests the Lava several wrappers deep (zone, block, the HTML block's
+// update panel). Every wrapper between the bar and .utilbar__inner takes the
+// full height, so the links centre in the 40px bar whatever the wrappers are.
+.utilbar div:has(.utilbar__inner) { height: 100%; }
+.utilbar__inner {
+  height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  gap: var(--space-md);
+}
+.utilbar__links { display: flex; align-items: center; gap: var(--space-sm); }
+.utilbar__link {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  background: none; border: 0; padding: 0;
+  color: var(--on-ink);
+  font-size: 0.625rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  text-decoration: none; white-space: nowrap;
+  transition: color var(--duration) var(--ease-out);
+}
+.utilbar__link:hover { color: var(--brand); }
+.utilbar__sep { width: 1px; height: 16px; background: oklch(1 0 0 / 0.25); }
+
+@media (min-width: #{$bp-sm}) {
+  .utilbar__inner { justify-content: flex-end; }
+  .utilbar__links { gap: var(--space-lg); }
+  .utilbar__link { font-size: 0.6875rem; letter-spacing: var(--tracking-wider); }
+}

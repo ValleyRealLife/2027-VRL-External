@@ -1,0 +1,153 @@
+<%@ Master Language="C#" AutoEventWireup="true" Inherits="Rock.Web.UI.RockMasterPage" %>
+<%@ Import Namespace="System.Web.Optimization" %>
+<!DOCTYPE html>
+
+<script runat="server">
+
+    // keep code below to call base class init method
+
+    /// <summary>
+    /// Raises the <see cref="E:System.Web.UI.Control.Init" /> event.
+    /// </summary>
+    /// <param name="e">An <see cref="T:System.EventArgs" /> object that contains the event data.</param>
+    protected override void OnInit( EventArgs e )
+    {
+        base.OnInit( e );
+    }
+
+</script> 
+
+<%--
+    SITE SHELL — Valley Real Life 2027
+
+    Everything global lives here so no layout repeats it, and so the fixed
+    utility bar / header and the footer sit outside the layouts' <main> —
+    which is what lets the homepage's pinned "cover" sections and the footer
+    runway work. Each region is a Rock zone; the markup inside each zone comes
+    from a block whose Lava is in Assets/Lava:
+
+        Zone          Block        Lava
+        Utility       HTML         {% include '~~/Assets/Lava/UtilityBar.lava' %}
+        Navigation    Page Menu    {% include '~~/Assets/Lava/PageNav.lava' %}   (Root Page 41952, 2 levels)
+        Footer        HTML         {% include '~~/Assets/Lava/Footer.lava' %}    (needs the RockEntity Lava command)
+
+    The shells here deliberately carry no content: swap the Lava and the
+    whole region changes without touching this file.
+--%>
+
+<html lang="en" class="no-js">
+<head runat="server">
+
+    <meta charset="utf-8">
+    <title></title>
+
+    <script src="<%# System.Web.Optimization.Scripts.Url("~/Scripts/Bundles/RockJQueryLatest" ) %>"></script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <asp:ContentPlaceHolder ID="css" runat="server" />
+
+    <%-- Montserrat (the only webfont). A <link> starts the download earlier than a CSS @import would. --%>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" />
+
+    <%-- Rock v18 token system + this theme's component layer. Fingerprinted by Rock. --%>
+    <link rel="stylesheet" href="<%# ResolveRockUrl("~~/Styles/theme.css", true) %>" />
+
+    <%--
+        Theme scripts belong HERE, in the head — never in the body.
+
+        <%# %> is a DATABINDING expression: it only evaluates when DataBind() is
+        called on the containing control. Rock databinds the <head>, so
+        ResolveRockUrl works here; nothing databinds body markup, so the identical
+        syntax in the <body> silently renders src="".
+
+        `defer` guarantees execution after HTML parsing and before
+        DOMContentLoaded, so the script can safely touch the DOM.
+        Guarded by tools/check-master-bindings.mjs.
+    --%>
+    <script defer src="<%# ResolveRockUrl("~~/Assets/Scripts/theme.js", true) %>"></script>
+
+    <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
+
+</head>
+<body runat="server" id="body" class="site-body">
+
+    <script>
+        /* Capability flags, set before first paint so the enhanced layout never
+           flashes its no-JS baseline. Reduced motion gets the static hero. */
+        (function () {
+            var d = document.documentElement;
+            d.className = d.className.replace('no-js', 'js');
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('stage-static');
+        })();
+    </script>
+
+    <form id="form1" runat="server">
+
+        <a class="skip-link" href="#main">Skip to content</a>
+
+        <%-- Inline SVG icon sprite + the logo ink filter, once per page. --%>
+        <Rock:Lava ID="lavaIconSprite" runat="server">
+            {% include '~~/Assets/Lava/Partials/IconSprite.lava' %}
+        </Rock:Lava>
+
+        <%-- ===== UTILITY BAR (fixed, 40px) ===== --%>
+        <div class="utilbar" id="utilbar">
+            <Rock:Zone Name="Utility" runat="server" />
+        </div>
+
+        <%-- ===== SITE HEADER: nav row + mega menu + mobile drawer (fixed, under the utility bar) =====
+             data-menu: idle | open | closed (Esc latches "closed" until the pointer leaves)
+             data-solid: "false" while the homepage hero is under the bar (theme.js) --%>
+        <header class="site-header" id="siteHeader" data-menu="idle" data-solid="true" data-stuck="false">
+            <Rock:Zone Name="Navigation" runat="server" />
+        </header>
+
+        <asp:ContentPlaceHolder ID="feature" runat="server"></asp:ContentPlaceHolder>
+
+        <asp:ContentPlaceHolder ID="main" runat="server"></asp:ContentPlaceHolder>
+
+        <%-- ===== FOOTER (the main menu, reflected) ===== --%>
+        <footer class="site-footer" id="site-footer">
+            <Rock:Zone Name="Footer" runat="server" />
+        </footer>
+
+        <%-- controls for scriptmanager and update panel --%>
+        <asp:ScriptManager ID="sManager" runat="server"/>
+        <asp:UpdateProgress ID="updateProgress" runat="server" DisplayAfter="800">
+            <ProgressTemplate>
+                <div class="updateprogress-status">
+                    <div class="updateprogress-loader">
+                        <svg viewBox="0 0 135 140" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><rect y="10" width="15" height="120" rx="6"><animate attributeName="height" begin="0.5s" dur="1s" values="120;110;100;90;80;70;60;50;40;140;120" calcMode="linear" repeatCount="indefinite"/><animate attributeName="y" begin="0.5s" dur="1s" values="10;15;20;25;30;35;40;45;50;0;10" calcMode="linear" repeatCount="indefinite"/></rect><rect x="30" y="10" width="15" height="120" rx="6"><animate attributeName="height" begin="0.25s" dur="1s" values="120;110;100;90;80;70;60;50;40;140;120" calcMode="linear" repeatCount="indefinite"/><animate attributeName="y" begin="0.25s" dur="1s" values="10;15;20;25;30;35;40;45;50;0;10" calcMode="linear" repeatCount="indefinite"/></rect><rect x="60" width="15" height="140" rx="6"><animate attributeName="height" begin="0s" dur="1s" values="120;110;100;90;80;70;60;50;40;140;120" calcMode="linear" repeatCount="indefinite"/><animate attributeName="y" begin="0s" dur="1s" values="10;15;20;25;30;35;40;45;50;0;10" calcMode="linear" repeatCount="indefinite"/></rect><rect x="90" y="10" width="15" height="120" rx="6"><animate attributeName="height" begin="0.25s" dur="1s" values="120;110;100;90;80;70;60;50;40;140;120" calcMode="linear" repeatCount="indefinite"/><animate attributeName="y" begin="0.25s" dur="1s" values="10;15;20;25;30;35;40;45;50;0;10" calcMode="linear" repeatCount="indefinite"/></rect><rect x="120" y="10" width="15" height="120" rx="6"><animate attributeName="height" begin="0.5s" dur="1s" values="120;110;100;90;80;70;60;50;40;140;120" calcMode="linear" repeatCount="indefinite"/><animate attributeName="y" begin="0.5s" dur="1s" values="10;15;20;25;30;35;40;45;50;0;10" calcMode="linear" repeatCount="indefinite"/></rect></svg>
+                    </div>
+                </div>
+                <div class="updateprogress-bg modal-backdrop"></div>
+            </ProgressTemplate>
+        </asp:UpdateProgress>
+
+    </form>
+
+    <script>
+        Sys.Application.add_load(HandleBackForwardCache);
+        // Fixes an issue with the wait spinner caused by browser Back/Forward caching.
+        function HandleBackForwardCache() {
+            // Forcibly hide the wait spinner, and clear the pending request if the page is being reloaded from bfcache. (Currently WebKit only)
+            // Browsers that implement bfcache will otherwise trigger updateprogress because the pending request is still in the PageRequestManager state.
+            window.addEventListener('pageshow', function (e) {
+                if ( e.persisted ) {
+                    document.querySelector('#updateProgress').style.display = 'none';
+                    // Check if the page is in postback, and if so, reset the PageRequestManager state.
+                    if (Sys.WebForms.PageRequestManager.getInstance().get_isInAsyncPostBack()) {
+                        // Reset the PageRequestManager state. & Manually clear the request object
+                        Sys.WebForms.PageRequestManager.getInstance()._processingRequest = false;
+                        Sys.WebForms.PageRequestManager.getInstance()._request = null;
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>

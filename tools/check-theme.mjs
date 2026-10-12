@@ -112,5 +112,24 @@ for (const m of compiled.matchAll(/@import\b[^;]*;/g)) {
 }
 if (!importFailures) pass('every @import in compiled theme.css precedes the first style rule');
 
+// --- 4. icon sets present in the compiled Top region ----------------------------
+// Rock writes one @import per theme.json icon set into the Top region, and its
+// admin UI needs them. A bare sass compile wipes that region; tools/build.mjs
+// carries it over. Fail loudly if it is ever missing again.
+
+const ICON_SET_MARKER = { fontawesome: 'fontawesome-icon.css', tabler: 'tabler-icon.css' };
+const topStart = compiled.indexOf('/* CSS Overrides Top Start */');
+const topEnd = compiled.indexOf('/* CSS Overrides Top End */');
+const topRegion = topStart !== -1 && topEnd > topStart ? compiled.slice(topStart, topEnd) : '';
+let iconFailures = 0;
+for (const set of themeJson.availableIconSets ?? []) {
+  const marker = ICON_SET_MARKER[set];
+  if (marker && !topRegion.includes(marker)) {
+    fail(`theme.css: icon set "${set}" (${marker}) missing from the Top override region — build with \`npm run build\`, not a bare sass call`);
+    iconFailures++;
+  }
+}
+if (!iconFailures) pass(`icon set import(s) present in theme.css Top region: ${(themeJson.availableIconSets ?? []).join(', ')}`);
+
 console.log(failed ? `\n${failed} failure(s)` : '\nALL CHECKS PASSED');
 process.exit(failed ? 1 : 0);
