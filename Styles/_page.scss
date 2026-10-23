@@ -41,6 +41,8 @@
   margin: 0;
   color: var(--page-title-foreground);
   font-size: clamp(2rem, 6vw, 3.5rem);
+  font-weight: 800;   // chunky, matching the designer's headings (core.css sets semibold)
+  letter-spacing: -0.043em;   // = -2.4px (-0.15rem) at the full 56px desktop size; scales with the heading
   text-transform: uppercase;
 }
 .page-title-heading i { font-size: 0.6em; margin-right: 0.35em; vertical-align: 0.1em; }

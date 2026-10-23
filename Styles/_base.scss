@@ -61,7 +61,7 @@ body.is-locked { overflow: hidden; }
 // Visible focus is non-negotiable (theme regions; Rock's admin has its own).
 :where(#{$theme-scope}) :where(a, button, [tabindex], summary, input, select):where(#{$not-admin}):focus-visible,
 .care-modal:focus-visible {
-  outline: 3px solid var(--brand-dim);
+  outline: 3px solid var(--brand-text);   // green-700: 4.67:1 on white (green-600 was 2.84:1 on the page bg, below WCAG's 3:1)
   outline-offset: 3px;
   border-radius: var(--radius-xs);
 }
@@ -180,6 +180,15 @@ body.is-locked { overflow: hidden; }
 .today-line svg { color: var(--brand); flex-shrink: 0; }
 .today-line a { color: var(--on-ink); text-decoration: none; }
 .today-line a:hover { color: var(--brand); }
+
+// ===========================================================================
+// CLICKABLE CARDS  ([data-card] + one [data-card-link] inside)
+// The card's title is a real link (keyboard / screen readers); theme.js makes
+// a click anywhere else on the card follow it, except right after selecting
+// text, so card text stays copyable. Used instead of a stretched ::after
+// overlay, which made the text unselectable.
+// ===========================================================================
+[data-card] { cursor: pointer; }
 
 // ===========================================================================
 // CORE.CSS LINK HOVER/FOCUS

@@ -98,7 +98,7 @@
         {%- assign cardItemTeaser = event.Summary | StripHtml | Trim -%}
         {%- if cardItemTeaser == '' %}{% assign cardItemTeaser = event.Description | StripHtml | Trim %}{% endif %}
 
-        <li class="event-card">
+        <li class="event-card" data-card>
           <div class="event-card__thumb">
             <img src="{{ cardItemImage }}" alt="" />
             {%- if cardItemStart %}
@@ -109,7 +109,7 @@
             {%- if cardItemAffinity != '' %}
             <p class="event-card__tag">{{ cardItemAffinity }}</p>
             {%- endif %}
-            <h3><a class="event-card__link" href="{{ cardItemUrl }}">{{ cardItemName }}</a></h3>
+            <h3><a class="event-card__link" href="{{ cardItemUrl }}" data-card-link>{{ cardItemName }}</a></h3>
             {%- if cardItemTeaser != '' %}
             <p class="event-card__desc">{{ cardItemTeaser | Truncate:140 }}</p>
             {%- endif %}

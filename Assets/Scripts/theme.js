@@ -76,9 +76,6 @@
     var inZone = function (el) {
       return zones.some(function (z) { return el && z.contains(el); });
     };
-    var zoneHovered = function () {
-      return zones.some(function (z) { return z.matches(':hover'); });
-    };
     var onZoneEnter = function () {
       clearTimeout(menuTimer);
       if (header.getAttribute('data-menu') === 'open') return;
@@ -104,7 +101,15 @@
     header.addEventListener('focusout', function (e) {
       /* Esc latches 'closed'; leaving focus must not quietly reopen it. */
       if (header.getAttribute('data-menu') === 'closed') return;
-      if (!header.contains(e.relatedTarget) && !zoneHovered()) setMenu('idle');
+      /* Focus moving out of the bars (Tab into the page content) always
+         closes the menu, even if the mouse happens to rest over the header —
+         otherwise the panel and its scrim stay over the content the keyboard
+         user just reached. Moving into the utility bar (Shift+Tab) is still
+         inside the shared zone, so the menu stays open. */
+      if (!inZone(e.relatedTarget)) {
+        clearTimeout(menuTimer);
+        setMenu('idle');
+      }
     });
 
     /* Link ↔ column pairing. Hovering or focusing a top-level link lifts its
@@ -124,6 +129,45 @@
     };
     header.addEventListener('mouseover', hotFrom);
     header.addEventListener('focusin', hotFrom);
+
+    /* Keyboard order (desktop menu). The markup has the top-level links in
+       the nav row and their sub-pages in the panel's columns further down, so
+       plain Tab ran through every top-level link before reaching any
+       sub-page. Tab / Shift+Tab inside the header follow: logo → each
+       top-level link followed by its own column → everything else (Discover,
+       address, hours, office, social) in source order. The first and last
+       items match the source order, so leaving the header is the browser's
+       own Tab. Phones use the drawer, which is already in order. */
+    var desktopNav = window.matchMedia('(min-width: 1000px)');
+    var FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+    var isShown = function (el) {
+      return el.getClientRects().length > 0 && window.getComputedStyle(el).visibility !== 'hidden';
+    };
+    var navTabOrder = function () {
+      var all = Array.prototype.slice.call(header.querySelectorAll(FOCUSABLE)).filter(isShown);
+      var order = [];
+      var push = function (el) {
+        if (el && order.indexOf(el) === -1 && all.indexOf(el) !== -1) order.push(el);
+      };
+      push(header.querySelector('.nav__logo'));
+      header.querySelectorAll('.nav__link[data-page]').forEach(function (link) {
+        push(link);
+        var col = header.querySelector('.mega__col[data-col="' + link.getAttribute('data-page') + '"]');
+        if (col) col.querySelectorAll(FOCUSABLE).forEach(push);
+      });
+      all.forEach(push);
+      return order;
+    };
+    header.addEventListener('keydown', function (e) {
+      if (e.key !== 'Tab' || !desktopNav.matches) return;
+      var order = navTabOrder();
+      var i = order.indexOf(document.activeElement);
+      if (i === -1) return;
+      var next = order[i + (e.shiftKey ? -1 : 1)];
+      if (!next) return;   /* leaving the header: let the browser move on */
+      e.preventDefault();
+      next.focus();
+    });
 
     /* Exits that don't need a mouse or a keyboard. On a touch screen (e.g. a
        landscape iPad, which gets the desktop menu) a tap fires the hover that
@@ -269,6 +313,22 @@
       return;
     }
     if (!t.closest('.share')) closeAllShares();
+  });
+
+  // --- Clickable cards -------------------------------------------------------------
+  // [data-card] with one [data-card-link] inside (the title link). A click on
+  // the card follows that link, unless it landed on another control or the
+  // visitor has just selected text (so card text stays copyable). Ctrl/⌘-click
+  // opens a new tab, like a real link.
+  document.addEventListener('click', function (e) {
+    var card = e.target.closest('[data-card]');
+    if (!card || e.target.closest('a, button, input, select, textarea, label, summary')) return;
+    var selection = window.getSelection ? String(window.getSelection()) : '';
+    if (selection) return;
+    var link = card.querySelector('[data-card-link]');
+    if (!link) return;
+    if (e.metaKey || e.ctrlKey) { window.open(link.href, '_blank', 'noopener'); return; }
+    link.click();
   });
 
   // --- Esc closes whatever is open ------------------------------------------------

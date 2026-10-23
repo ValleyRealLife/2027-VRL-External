@@ -949,9 +949,8 @@ button.messages__art:hover .messages__art-play { transform: scale(1.08); backgro
    events page can keep the detail card above (meta rows, share). */
 .event-card { position: relative; }
 .event-card__link { color: inherit; text-decoration: none; }
-.event-card__link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
 .event-card:hover .event-card__link { color: var(--brand-text); }
-.event-card:focus-within { outline: 3px solid var(--brand-dim); outline-offset: 3px; }
+.event-card:focus-within { outline: 3px solid var(--brand-text); outline-offset: 3px; }
 .event-card__link:focus-visible { outline: none; }
 .event-card__tag {
   justify-self: start;

@@ -15,8 +15,10 @@
       Title        the page title
       Description  the page's Description field (Page Properties → Advanced)
       Button       page attribute CallToAction (optional text); "Explore" if
-                   empty. The whole card is one link; the button is a visual
-                   cue inside it, not a second link.
+                   empty. The title is the card's one real link; theme.js makes
+                   a click anywhere else on the card follow it (data-card), but
+                   not after selecting text, so the text stays copyable. The
+                   button is a visual cue, not a second link.
 
     Styled by Styles/_landing.scss.
 {% endcomment %}
@@ -35,14 +37,14 @@
         {%- assign ctaText = childPage | Attribute:'CallToAction' | Trim -%}
         {%- if ctaText == '' %}{% assign ctaText = defaultCta %}{% endif -%}
         {%- assign cardRemainder = cardCount | Modulo:2 %}
-    <article class="subpage-card{% if cardRemainder == 0 %} subpage-card--flip{% endif %}">
+    <article class="subpage-card{% if cardRemainder == 0 %} subpage-card--flip{% endif %}" data-card>
       <div class="subpage-card__media{% if imageGuid == '' %} subpage-card__media--empty{% endif %}">
         {%- if imageGuid != '' %}
         <img src="/GetImage.ashx?guid={{ imageGuid }}&w=1200&h=800&mode=crop" alt="" />
         {%- endif %}
       </div>
       <div class="subpage-card__body">
-        <h2 class="subpage-card__title"><a class="subpage-card__link" href="{{ childPage.Id | PageRoute }}">{{ childPage.PageTitle }}</a></h2>
+        <h2 class="subpage-card__title"><a class="subpage-card__link" href="{{ childPage.Id | PageRoute }}" data-card-link>{{ childPage.PageTitle }}</a></h2>
         {%- if childPage.Description != empty %}
         <p class="subpage-card__desc">{{ childPage.Description }}</p>
         {%- endif %}
