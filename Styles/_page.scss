@@ -47,6 +47,88 @@
 }
 .page-title-heading i { font-size: 0.6em; margin-right: 0.35em; vertical-align: 0.1em; }
 
+// ---------------------------------------------------------------------------
+// PAGE HEADER STYLES  (Layouts/FullWidth.aspx; PageHeaderStyle page attribute)
+// One markup, two looks:
+//   .page-head--simple-stripe  the plain gray band: title + description lead
+//   .page-head--side-image     (default) a white card overlapping the bottom of
+//                              a full-width gray stripe: title + description on
+//                              the left, PageImage on the right with the landing
+//                              cards' slanted edge
+// The stripe stops --head-overlap above the header's bottom edge (a hard-stop
+// gradient), so the card hangs over it without negative margins.
+// ---------------------------------------------------------------------------
+.page-head { margin: 0; color: var(--text); }
+.page-head__lead {
+  margin: var(--space-md) 0 0;
+  max-width: 60ch;
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+// SimpleStripe: the gray band, text only
+.page-head--simple-stripe {
+  background-color: var(--page-title-background);
+  padding-block: clamp(2rem, 6vw, 4rem);
+}
+.page-head--simple-stripe .page-title-heading { color: var(--page-title-foreground); }
+
+// SideImage
+.page-head--side-image {
+  --head-overlap: clamp(2rem, 5vw, 3.5rem);
+  padding-top: clamp(1.25rem, 4vw, 2.5rem);
+  background: linear-gradient(to bottom,
+    var(--page-title-background) calc(100% - var(--head-overlap)),
+    transparent calc(100% - var(--head-overlap)));
+}
+.page-head--side-image .page-head__card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-md);
+}
+.page-head--side-image .page-title-heading { color: var(--text); }
+.page-head--side-image .page-head__body {
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+}
+// Mobile: image on top, slanted along its bottom edge (as the landing cards)
+.page-head__media {
+  order: -1;
+  position: relative;
+  aspect-ratio: 2 / 1;
+  background: var(--brand-deep);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 84%);
+}
+.page-head__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.page-head__media--empty {
+  background:
+    radial-gradient(70% 80% at 75% 20%, var(--v-green-50) 0%, transparent 70%),
+    linear-gradient(225deg, var(--v-green-100) 0%, var(--v-green-200) 60%, var(--v-green-300) 100%);
+}
+
+@media (min-width: #{$bp-md}) {
+  .page-head--side-image .page-head__card {
+    grid-template-columns: minmax(0, 60fr) minmax(0, 40fr);
+    min-height: clamp(240px, 22vw, 300px);
+  }
+  .page-head--side-image .page-head__body {
+    align-self: center;
+    padding: var(--space-xl) var(--space-lg) var(--space-xl) clamp(1.5rem, 4vw, 3.5rem);
+  }
+  .page-head__media {
+    order: 0;
+    aspect-ratio: auto;
+    height: 100%;
+    // Image right: its left edge slants in toward the bottom (wider at the top)
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 30% 100%);
+  }
+}
+
 .breadcrumb-container { padding-block: var(--space-sm); font-size: 0.8125rem; color: var(--text-secondary); }
 .breadcrumb-container .breadcrumb { margin: 0; padding: 0; background: none; }
 .breadcrumb-container a { color: var(--brand-text); text-decoration: none; }

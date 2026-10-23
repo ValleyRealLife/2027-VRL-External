@@ -27,7 +27,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `theme.json` | Tells Rock this is a NextGen theme; the fields shown in the admin theme editor |
 | `Layouts/Site.Master` | The site shell: global alert, utility bar, header and footer zones, fonts, scripts, icon sprite |
 | `Layouts/Homepage.aspx` | Homepage: the Main zone plus the homepage-only scripts (GSAP, `home.js`) |
-| `Layouts/FullWidth.aspx` | Interior pages: page title band + Feature, Main, Section A–D zones in the 1240px container |
+| `Layouts/FullWidth.aspx` | Interior pages: page header (SideImage by default, or SimpleStripe, per the `PageHeaderStyle` page attribute) + Feature, Main, Section A–D zones in the 1240px container |
 | `Layouts/Landing.aspx` | Section landing pages: title band with the page description, Feature / Main / Section A zones |
 | `Layouts/Blank.aspx`, `Dialog.aspx`, `Error.aspx` | Rock's required utility layouts (from the reference template) |
 | `Assets/Lava/UtilityBar.lava` | HTML block include: Request care · Give · Login, plus the care dialog |
@@ -61,6 +61,8 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 | Main (homepage only, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/Home.lava' %}` · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Home block) | HTML Content | content: `{% include '~~/Assets/Lava/HomeMessages.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Messages block, last in the zone) | HTML Content | content: `{% include '~~/Assets/Lava/HomeEvents.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration: 0 while iterating |
+
+**Page header style:** create a Page attribute `PageHeaderStyle` (Single-Select, values `SideImage^Side image,SimpleStripe^Simple stripe`, default `SideImage`) under Admin Tools → Entity Attributes (entity type: Page). FullWidth pages use SideImage when it's empty: a card with the title, the page Description and the `PageImage` overlapping a gray stripe. SimpleStripe is the plain gray band.
 
 **Excluding the alert from a page:** create a Page attribute `ExcludeGlobalAlert` (Boolean, shown as a checkbox, default unchecked) under Admin Tools → Entity Attributes (entity type: Page). Check it on pages that shouldn't show the alert, such as the login page; `Site.Master` then doesn't render the banner there. Visitors who dismiss the alert won't see it again for the rest of their browser session, but a different message shows again.
 

@@ -12,6 +12,11 @@
     (with fluid gutters) as every other section of the site. Only the Feature
     zone is full-bleed, for hero-style blocks.
 
+    Page header: the PageHeaderStyle page attribute picks SideImage (the
+    default: a card with the title, description and PageImage overlapping a
+    gray stripe, styled like the landing cards) or SimpleStripe (the plain gray
+    band). Both show the page Description as a lead line when it's set.
+
     Mobile first: one column everywhere; Section B/C/D become thirds at 900px.
     `.page` carries the offset for the fixed header (the homepage hero does
     its own).
@@ -25,10 +30,33 @@
             <% var page = PageCache.Get( ( ( RockPage ) Page ).PageId ); %>
             <% var showPageTitle = page.PageDisplayTitle; %>
             <% var showPageBreadcrumbs = page.PageDisplayBreadCrumb; %>
+            <%
+                // Page header style: the PageHeaderStyle page attribute (SideImage |
+                // SimpleStripe); SideImage when empty. One markup for both (Rock's
+                // PageTitle control can only appear once); the modifier class does the rest.
+                var headerStyleValue = page.GetAttributeValue( "PageHeaderStyle" );
+                var headerStyle = string.Equals( ( headerStyleValue ?? "" ).Trim(), "SimpleStripe", StringComparison.OrdinalIgnoreCase ) ? "simple-stripe" : "side-image";
+                var pageDescription = ( page.Description ?? "" ).Trim();
+                var pageImageGuid = ( page.GetAttributeValue( "PageImage" ) ?? "" ).Trim();
+            %>
             <% if(showPageTitle) { %>
-                <header class="page-title-band">
+                <header class="page-head page-head--<%= headerStyle %>">
                     <div class="container">
-                        <h1 class="page-title-heading"><Rock:PageIcon ID="PageIcon" runat="server" /> <Rock:PageTitle ID="PageTitle" runat="server" /></h1>
+                        <div class="page-head__card">
+                            <div class="page-head__body">
+                                <h1 class="page-title-heading"><Rock:PageIcon ID="PageIcon" runat="server" /> <Rock:PageTitle ID="PageTitle" runat="server" /></h1>
+                                <% if ( pageDescription != "" ) { %>
+                                    <p class="page-head__lead"><%= System.Web.HttpUtility.HtmlEncode( pageDescription ) %></p>
+                                <% } %>
+                            </div>
+                            <% if ( headerStyle == "side-image" ) { %>
+                                <div class="page-head__media<%= pageImageGuid == "" ? " page-head__media--empty" : "" %>">
+                                    <% if ( pageImageGuid != "" ) { %>
+                                        <img src="/GetImage.ashx?guid=<%= System.Web.HttpUtility.UrlEncode( pageImageGuid ) %>&amp;w=1400&amp;h=900&amp;mode=crop" alt="" />
+                                    <% } %>
+                                </div>
+                            <% } %>
+                        </div>
                     </div>
                 </header>
             <% } %>
