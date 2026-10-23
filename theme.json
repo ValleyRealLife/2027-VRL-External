@@ -19,8 +19,10 @@
         { "type": "image", "name": "Site Logo",       "variable": "logo-image",
           "description": "Reserved. The header and footer currently render Assets/Images/vrl_logo.png directly (see Assets/Lava/PageNav.lava) so the ink filter can be applied; this field is not consumed yet. If you rename the theme folder, update this default path too.",
           "default": "~/Themes/2027 VRL External/Assets/Images/vrl_logo.png" },
-        { "type": "literal", "name": "Site Logo Height",       "variable": "logo-height", "default": "34px" },
-        { "type": "literal", "name": "Site Logo Aspect Ratio", "variable": "logo-aspect", "default": "694 / 168" }
+        { "type": "literal", "name": "Site Logo Height",       "variable": "logo-height", "default": "clamp(28px, 1.2vw + 22px, 34px)",
+          "description": "Target logo height. The logo is sized by the width this works out to, so it keeps its proportions and never stretches. Any CSS length works; the default is fluid, 28px on phones up to 34px from 1000px wide." },
+        { "type": "literal", "name": "Site Logo Aspect Ratio", "variable": "logo-aspect", "default": "694 / 168",
+          "description": "Width / height of the logo file (vrl_logo.png is 694 × 168). Change only if the logo file changes." }
       ]
     },
     {

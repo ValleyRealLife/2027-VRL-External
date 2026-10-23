@@ -28,19 +28,23 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Layouts/Site.Master` | The site shell: utility bar, header and footer zones, fonts, scripts, icon sprite |
 | `Layouts/Homepage.aspx` | Homepage: the Main zone plus the homepage-only scripts (GSAP, `home.js`) |
 | `Layouts/FullWidth.aspx` | Interior pages: page title band + Feature, Main, Section A–D zones in the 1240px container |
+| `Layouts/Landing.aspx` | Section landing pages: title band with the page description, Feature / Main / Section A zones |
 | `Layouts/Blank.aspx`, `Dialog.aspx`, `Error.aspx` | Rock's required utility layouts (from the reference template) |
 | `Assets/Lava/UtilityBar.lava` | HTML block include: Request care · Give · Login, plus the care dialog |
 | `Assets/Lava/PageNav.lava` | Page Menu template: nav row, mega menu and mobile drawer from one block |
-| `Assets/Lava/Home.lava` | HTML block include: the homepage content, hardcoded from the concept for now (generated, see below) |
+| `Assets/Lava/Home.lava` | HTML block include: the hero / Next Steps and Kids + Students sections, hardcoded from the concept for now |
+| `Assets/Lava/HomeMessages.lava` | HTML block include: Messages (live Resi player or the latest message + play in place, the 7 previous series, blurred series background), via entity commands |
+| `Assets/Lava/HomeEvents.lava` | HTML block include: the homepage's What's Happening cards (live events via a `{% sql %}` query adapted from the Connect theme) + the footer runway |
 | `Assets/Lava/Footer.lava` | HTML block include: the menu reflected (reads the page tree), visit info, bar |
-| `Assets/Lava/Partials/IconSprite.lava` | The inline SVG icon sprite + logo ink filter, included once by `Site.Master` (generated, see below) |
+| `Assets/Lava/SubpageList.lava` | HTML block include for Landing pages: the current page's children as alternating image cards (`PageImage`, optional `CallToAction` page attributes) |
+| `Assets/Lava/Partials/IconSprite.lava` | The inline SVG icon sprite + logo ink filter, included once by `Site.Master` |
 | `Assets/Scripts/theme.js` | Site-wide behaviour: header, mega menu, drawer, care dialog, cover sections, footer reveal |
-| `Assets/Scripts/home.js` | Homepage only: events rail, Messages player, GSAP choreography (generated) |
+| `Assets/Scripts/home.js` | Homepage only: events rail, Messages player, GSAP choreography |
 | `Styles/theme.scss` | Entry point: Rock's marker comments, partial order, `core.css` import |
 | `Styles/_tokens.scss` | Rock base tokens (must match `theme.json`) + the VRL tiers + light-mode lock |
 | `Styles/_base.scss` … `_page.scss` | One partial per region: base, utility bar, header, care modal, footer, interior page |
-| `Styles/_home.scss` | Homepage section styles (generated) |
-| `tools/` | `check-theme.mjs`, `check-master-bindings.mjs` (gates) and `port-concept.py` (generator) |
+| `Styles/_home.scss` | Homepage section styles |
+| `tools/` | `build.mjs` (the theme build), `check-theme.mjs` and `check-master-bindings.mjs` (gates) |
 | `Resources/RockNextgenThemeTemplate/` | The boilerplate NextGen starter theme, kept as reference only |
 
 ### Rock setup
@@ -53,6 +57,8 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 | Navigation | Page Menu | Root Page: 41952 · Number of Levels: 2 · Template: `{% include '~~/Assets/Lava/PageNav.lava' %}` |
 | Footer | HTML Content | content: `{% include '~~/Assets/Lava/Footer.lava' %}` · Enabled Lava Commands: **RockEntity** |
 | Main (homepage only, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/Home.lava' %}` · Cache Duration: 0 while iterating |
+| Main (homepage only, Page level, after the Home block) | HTML Content | content: `{% include '~~/Assets/Lava/HomeMessages.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 while iterating |
+| Main (homepage only, Page level, after the Messages block, last in the zone) | HTML Content | content: `{% include '~~/Assets/Lava/HomeEvents.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration: 0 while iterating |
 
 Give the app pool write access to the theme folder (Rock saves theme-editor choices into `theme.css`), then restart Rock so it registers the theme. Non-page details in the nav and footer (address, service times, office and playground hours, social links, the Discover and Privacy links) are hardcoded in `PageNav.lava` and `Footer.lava` for now, duplicated between the two, until they are pulled from schedules, campus and global attributes.
 
@@ -71,9 +77,9 @@ npm run watch      # rebuilds on every save
 
 If you change a default colour or font, change it in both `theme.json` and `Styles/_tokens.scss`; `npm run check` tells you if they drift.
 
-### Regenerating from the concept
+### The concept and the theme
 
-`Styles/_home.scss`, `Assets/Lava/Home.lava`, `Assets/Scripts/home.js` and `Assets/Lava/Partials/IconSprite.lava` are produced from the concept by `tools/port-concept.py` (`npm run port`). While the concept remains the design source for the homepage sections, make section edits there and re-run the port; once the theme becomes the source of truth, stop running it and edit the generated files directly. The files in `Concepts/` are never modified by the build.
+`Styles/_home.scss`, `Assets/Lava/Home.lava`, `Assets/Scripts/home.js` and `Assets/Lava/Partials/IconSprite.lava` were first ported from the concept by a script. The theme is now the source of truth: edit these files directly. The concept files in `Concepts/` stay as the design reference and are never modified.
 
 Created by Kjell Nygren
 [Github repository for this theme](https://github.com/ValleyRealLife/2027-VRL-External)

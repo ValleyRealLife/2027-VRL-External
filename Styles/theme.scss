@@ -39,6 +39,7 @@
 //   care-modal    the care <dialog>        (Assets/Lava/UtilityBar.lava)
 //   footer        footer + runway          (Assets/Lava/Footer.lava)
 //   page          interior page layout     (Layouts/FullWidth.aspx)
+//   landing       landing page + subpage cards (Layouts/Landing.aspx, Assets/Lava/SubpageList.lava)
 //   home          homepage sections        (Assets/Lava/Home.lava)
 
 /* CSS Overrides Top Start */
@@ -51,7 +52,16 @@
 @use "care-modal";
 @use "footer";
 @use "page";
+@use "landing";
 @use "home";
+
+// Rock's HTML editor (Summernote): its toolbar icon font and the rules that
+// hide the raw <textarea> and lay out the editing area. Rock's admin UI needs
+// it on every page an editor can open on — Rock's own RockNextGen theme
+// imports it first, the starter template didn't, and without it the "Edit
+// HTML" dialog shows a bare textarea and icon-less toolbar. Before core.css so
+// Rock's .note-* adjustments in core.css win. Guarded by tools/check-theme.mjs.
+@import "../../../Styles/summernote/summernote.min.css";
 
 // Rock v18 design tokens + BS3-compatible component surface.
 // Path is relative to RockWeb root: Themes/<Name>/Styles/ -> ../../../Styles/

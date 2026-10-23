@@ -1,3 +1,6 @@
 node_modules/
 .DS_Store
 Styles/.theme.build.css
+
+# Rock file-type storage (staff uploads via a Rock File Type); site content, not theme code
+Assets/Images/Theme_Images/

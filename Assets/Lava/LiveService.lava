@@ -1,0 +1,1413 @@
+{%- comment -%}
+  VRL Live Stream — v4 design system.
+  All visuals scoped under .ls so the block is portable inside the
+  existing vrl.church theme. Lava data logic is unchanged.
+
+  Optional enhancements (guarded, block works without them):
+    https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js
+    https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Flip.min.js
+  Load both in the layout to animate the theater-mode resize.
+{%- endcomment -%}
+
+{{ 'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap' | AddCssLink }}
+
+//- Make this a case that will link to the embed depending on schedule? I wish we could add attributes to schedules.
+{% assign ResiEmbedId = '692bc6a6-70a1-4fa1-af72-e1a7e7290763' %}
+{% assign isLive = 'yes'%}
+{% assign today = 'Now' | Date:'MMMM d, yyyy' %}
+{% assign now = 'Now' | Date:'yyyy-MM-dd' %}
+
+{%- comment -%}
+  ── Modal form pages ─────────────────────────────────────
+  Rock pages holding each workflow form (web UI removed).
+  Loaded into a modal; also the no-JS fallback link.
+  ROCK: swap in the real page URLs.
+{%- endcomment -%}
+{% assign connectFormUrl = '/watch/live/cta?cta=connect&WorkflowTypeId=391&ConnectionPoint=2279' %}
+{% assign prayerFormUrl  = '/watch/live/cta?cta=prayer' %}
+
+{%- comment -%}
+  ── Switches ─────────────────────────────────────────────
+  showTheaterToggle: theater-mode button under the player.
+  showConnectButton: small "Connect with us" button above the
+  player's top-left corner (service window only).
+{%- endcomment -%}
+{% assign showTheaterToggle = false %}
+{% assign showConnectButton = true %}
+
+{%- comment -%}
+  Collapse button in the meta panel's bottom-right corner
+  (JS only). Collapsed, the panel shows only the title.
+{%- endcomment -%}
+{% assign showCollapseToggle = true %}
+
+{%- comment -%}
+  Desktop layout for the meta panel.
+  true:  panel sits under a full-width player, fully expanded.
+  false: panel sits beside the player, matched to its height.
+{%- endcomment -%}
+{% assign detailsStacked = true %}
+
+{%- comment -%}
+  Details layout button (desktop + JS only).
+  "Wide player" button under the player moves the panel from
+  beside the player to below it, fully expanded, and the
+  player goes full width (YouTube theater style).
+  Shelved for now — flip to true to bring it back.
+{%- endcomment -%}
+{% assign showDetailsToggle = false %}
+
+{%- comment -%}
+  ── Service window ───────────────────────────────────────
+  Meta panel only shows during the service window (server
+  time). Times are 24-hour HHmm: 745 = 7:45am, 1215 = 12:15pm.
+  ROCK: replace with a schedule check later.
+{%- endcomment -%}
+{% assign streamDay       = 'Sunday' %}
+{% assign streamStartTime = 745 %}
+{% assign streamEndTime   = 1215 %}
+
+{% contentchannelitem where:'ContentChannelId == 5' sort:'StartDateTime' %}
+    {% for item in contentchannelitemItems %}
+        {% assign itemStart = item.StartDateTime | Date:'yyyy-MM-dd' %}
+        {% if itemStart >= now %}
+            {% assign sermonItem = item %}
+            {% break %}
+        {% endif %}
+    {% endfor %}
+
+    {% assign sermonTitle = sermonItem.Title %}
+    {% assign sermonDate = sermonItem.StartDateTime | Date:'MMMM d, yyyy' %}
+    {% assign sermonDescription = sermonItem.Content %}
+    {% assign sermonSpeaker = sermonItem | Attribute: 'Speaker' %}
+    {% assign sermonSeriesItem = sermonItem.ParentItems | First %}
+    {% assign sermonSeriesName = sermonSeriesItem.ContentChannelItem.Title %}
+    {% assign sermonSeriesUrl = '/page/1118?Item=' | Append: sermonSeriesItem.ContentChannelItem.Id %}
+    {% assign seriesImage = sermonSeriesItem.ContentChannelItem | Attribute:'SeriesImage','RawValue' %}
+
+{% endcontentchannelitem %}
+
+{%- comment -%} ── Derived visibility ── {%- endcomment -%}
+{% assign nowDay  = 'Now' | Date:'dddd' %}
+{% assign nowTime = 'Now' | Date:'HHmm' | AsInteger %}
+
+{%- comment -%} Inside the window: player + meta. Outside: off-air placeholder. {%- endcomment -%}
+{% assign inServiceWindow = false %}
+{% if nowDay == streamDay and nowTime >= streamStartTime and nowTime <= streamEndTime %}
+    {% assign inServiceWindow = true %}
+{% endif %}
+
+{% assign showMeta = false %}
+{% if inServiceWindow and sermonTitle != empty %}{% assign showMeta = true %}{% endif %}
+
+{% assign showActions = false %}
+{% if showTheaterToggle %}{% assign showActions = true %}{% endif %}
+
+{% assign showAside = false %}
+{% if showMeta or showActions %}{% assign showAside = true %}{% endif %}
+
+<section class="ls{% if detailsStacked %} ls--wide{% endif %}" aria-labelledby="ls-heading">
+
+    <!-- ══════════════════════════════════════════════════════
+         STAGE — dark band, green edge glow (homepage hero recipe)
+
+         With meta:  player | glass meta panel (+ optional buttons)
+         Solo:       player full width (no meta outside the
+                     service window or when nothing is scheduled)
+         Mobile:     everything stacks under the player
+         ══════════════════════════════════════════════════════ -->
+    <div class="ls-stage">
+        <div class="ls-inner">
+
+            {% if inServiceWindow %}
+                {% unless showMeta %}<h1 id="ls-heading" class="ls-sr-only">Watch live</h1>{% endunless %}
+            {% endif %}
+
+            {% if inServiceWindow and showConnectButton %}
+            <!-- Plain link without JS; upgraded to a dialog with JS (same as the Get connected card) -->
+            <div class="ls-connect-bar">
+                <a href="{{ connectFormUrl }}" class="ls-connect" data-ls-open="ls-connect-modal">
+                    <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572"/><path d="M12 6l-3.293 3.293a1 1 0 0 0 0 1.414l.543 .543c.69 .69 1.81 .69 2.5 0l1 -1a3.182 3.182 0 0 1 4.5 0l2.25 2.25"/><path d="M12.5 15.5l2 2"/><path d="M15 13l2 2"/></svg>
+                    <span>Connect with us</span>
+                </a>
+            </div>
+            {% endif %}
+
+            <div class="ls-feature{% unless showMeta %} ls-feature--solo{% endunless %}">
+
+                {% if isLive == 'no' %}
+                <div class="ls-toolbar">
+                    <p class="ls-toolbar__prev">Previous message</p>
+                    <p class="ls-toolbar__next">
+                        <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M16 3v4M8 3v4M4 11h16M11 15h1M12 15v3"/></svg>
+                        Next live stream: Sunday, Apr 6 at 9:00 AM
+                    </p>
+                </div>
+                {% endif %}
+
+                <div class="ls-theater{% unless inServiceWindow %} ls-theater--offair{% endunless %}">
+                    {% if inServiceWindow %}
+                    {%- comment -%}
+                      Resi params: iframe + autoplay + mute + visible controls + unmute button.
+                      Don't use background=1 — it hides the controls AND
+                      disables audio. Browsers only allow autoplay when muted,
+                      so mute=1 is required for autoplay to work; the unmute button is how
+                      viewers turn sound on.
+                    {%- endcomment -%}
+                    <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="true" class="resi-video-frame"
+                        title="Valley Real Life live stream"
+                        src="https://control.resi.io/webplayer/video.html?id={{ ResiEmbedId }}&iframe=1&autoplay=1&mute=1&controls=1&showUnmuteButton=1"></iframe>
+                    <script defer type="text/javascript" src="https://control.resi.io/webplayer/page.min.js"></script>
+                    {% else %}
+                    <!-- Off air: shown outside the service window instead of the player -->
+                    <div class="ls-offair">
+                        <span class="ls-offair__icon" aria-hidden="true">
+                            <svg class="ls-icon" viewBox="0 0 24 24"><path d="M18.364 19.364a9 9 0 1 0 -12.728 0"/><path d="M15.536 16.536a5 5 0 1 0 -7.072 0"/><path d="M11 13a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/></svg>
+                        </span>
+                        <h1 id="ls-heading" class="ls-offair__title">
+                            {%- if nowDay == streamDay and nowTime < streamStartTime -%}
+                                We'll see you this morning
+                            {%- elsif nowDay == streamDay -%}
+                                See you next {{ streamDay }}
+                            {%- else -%}
+                                We'll see you {{ streamDay }}
+                            {%- endif -%}
+                        </h1>
+                        <p class="ls-offair__text">Our services stream live here every {{ streamDay }} morning. Until then, we'd love to meet you in person.</p>
+                        <a href="/locations" class="ls-btn ls-btn--primary">Plan your visit</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if showDetailsToggle and showMeta %}
+                <!-- Desktop + JS only: details beside ⇄ below the player -->
+                <div class="ls-layout-bar">
+                    <button type="button" class="ls-layout-toggle" aria-pressed="false" aria-controls="ls-info">
+                        <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 8-4 4 4 4"/><path d="m17 8 4 4-4 4"/><path d="M3 12h18"/></svg>
+                        <span>Wide player</span>
+                    </button>
+                </div>
+                {% endif %}
+
+                {% if showAside %}
+                <div class="ls-aside">
+
+                    {% if showMeta %}
+                    <div class="ls-info{% if showCollapseToggle %} ls-info--collapsible{% endif %}" id="ls-info">
+                        <div class="ls-info__content" id="ls-info-content">
+                            <div class="ls-info__head">
+                                <h1 id="ls-heading" class="ls-info__title">{{ sermonTitle }}</h1>
+                                {% if showCollapseToggle %}
+                                <!-- JS only: collapse the panel down to the title -->
+                                <button type="button" class="ls-collapse-toggle"
+                                        aria-expanded="true" aria-controls="ls-info-body"
+                                        aria-label="Hide details" title="Hide details">
+                                    <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6 -6l6 6"/></svg>
+                                </button>
+                                {% endif %}
+                            </div>
+
+                            {%- comment -%}
+                              Speaker + date — hidden for now (it's a live stream,
+                              so the date is always today). Styles are kept; remove
+                              this comment wrapper to bring them back.
+                            <ul class="ls-info__meta" role="list">
+                                {% if sermonSpeaker != empty %}
+                                <li>
+                                    <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg>
+                                    <span>{{ sermonSpeaker }}</span>
+                                </li>
+                                {% endif %}
+                                <li>
+                                    <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg>
+                                    <span>{{ today }}</span>
+                                </li>
+                            </ul>
+                            {%- endcomment -%}
+
+                            <div class="ls-info__body" id="ls-info-body">
+                                {% if sermonDescription != empty %}<div class="ls-info__desc">{{ sermonDescription }}</div>{% endif %}
+
+                                {% if sermonSeriesName != empty %}
+                                <a href="{{ sermonSeriesUrl }}" class="ls-info__series">
+                                    <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l-8 4l8 4l8 -4l-8 -4"/><path d="M4 12l8 4l8 -4"/><path d="M4 16l8 4l8 -4"/></svg>
+                                    <span class="ls-info__series-label">Series</span>
+                                    <span class="ls-info__series-name">{{ sermonSeriesName }}</span>
+                                    <svg class="ls-icon ls-info__series-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6l-6 6"/></svg>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if showActions %}
+                    <div class="ls-actions">
+                        {% if showTheaterToggle and showMeta %}
+                        <!-- Icon-only; desktop + JS only -->
+                        <button type="button" class="ls-btn ls-btn--ghost ls-btn--icon ls-theater-toggle"
+                                aria-pressed="false" aria-controls="ls-info"
+                                aria-label="Theater mode" title="Theater mode">
+                            <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 8-4 4 4 4"/><path d="m17 8 4 4-4 4"/><path d="M3 12h18"/></svg>
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                </div>
+                {% endif %}
+
+            </div><!-- /.ls-feature -->
+
+        </div>
+    </div><!-- /.ls-stage (green stripe on its bottom edge) -->
+
+
+    <!-- ══════════════════════════════════════════════════════
+         WHAT'S NEXT — light band
+         ══════════════════════════════════════════════════════ -->
+    <div class="ls-band">
+        <div class="ls-inner">
+
+            <div class="ls-band__head">
+                <h2 class="ls-h2">What's next</h2>
+            </div>
+
+            <ul class="ls-rail" role="list">
+
+                <li class="ls-rail__item">
+                    <a href="{{ connectFormUrl }}" class="ls-card ls-card--featured" data-ls-open="ls-connect-modal">
+                        <span class="ls-card__icon" aria-hidden="true">
+                            <svg class="ls-icon" viewBox="0 0 24 24"><path d="M10 13a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M8 21v-1a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1"/><path d="M15 5a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M17 10h2a2 2 0 0 1 2 2v1"/><path d="M5 5a2 2 0 1 0 4 0 2 2 0 0 0-4 0"/><path d="M3 13v-1a2 2 0 0 1 2-2h2"/></svg>
+                        </span>
+                        <span class="ls-card__title">Get connected</span>
+                        <span class="ls-card__desc">New here? Tell us a little about you and we'll help you find a next step.</span>
+                        <span class="ls-card__cta">Say hello</span>
+                    </a>
+                </li>
+
+                <li class="ls-rail__item">
+                    <a href="/locations" class="ls-card" target="_blank">
+                        <span class="ls-card__icon" aria-hidden="true">
+                            <svg class="ls-icon" viewBox="0 0 24 24"><path d="M9 11a3 3 0 1 0 6 0 3 3 0 0 0-6 0"/><path d="M17.657 16.657 13.414 20.9a2 2 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/></svg>
+                        </span>
+                        <span class="ls-card__title">Join us in person</span>
+                        <span class="ls-card__desc">Find service times and directions for Sunday.</span>
+                        <span class="ls-card__cta">Plan your visit</span>
+                    </a>
+                </li>
+
+                <li class="ls-rail__item">
+                    <a href="{{ prayerFormUrl }}" class="ls-card" data-ls-open="ls-prayer-modal">
+                        <span class="ls-card__icon" aria-hidden="true">
+                            <svg class="ls-icon" viewBox="0 0 24 24"><path d="M11 5a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/><path d="M7 20h8l-4-4v-7l4 3 2-2"/></svg>
+                        </span>
+                        <span class="ls-card__title">Prayer request</span>
+                        <span class="ls-card__desc">Share what's on your heart. We'd love to pray with you.</span>
+                        <span class="ls-card__cta">Send a request</span>
+                    </a>
+                </li>
+
+                <li class="ls-rail__item">
+                    <!-- Give: a plain card whose CTA is the Simple Donation
+                         widget button. .ls-stretch spreads the button's hit
+                         area over the whole card so it behaves like the
+                         others. -->
+                    <div class="ls-card ls-card--widget">
+                        <span class="ls-card__icon" aria-hidden="true">
+                            <svg class="ls-icon" viewBox="0 0 24 24"><path d="M19.5 12.572 12 20l-7.5-7.428A5 5 0 1 1 12 6.006a5 5 0 1 1 7.5 6.572"/></svg>
+                        </span>
+                        <span class="ls-card__title">Give now</span>
+                        <span class="ls-card__desc">Support the ministry of Valley Real Life online.</span>
+                        {[ simplemerlinwidget widgetkey:'01JB2RYN938GRYZTXJKXWM9RV9' buttonclasses:'ls-card__cta ls-stretch' primarycolor:'#9BC93C' ]}
+                    </div>
+                </li>
+
+            </ul>
+
+        </div>
+    </div><!-- /.ls-band -->
+
+
+    <!-- ══════════════════════════════════════════════════════
+         FEATURED EVENTS — fixed-column grid, fills left to right.
+         Final tile is an image-less glass "view all" link.
+         ══════════════════════════════════════════════════════ -->
+    <div class="ls-band ls-band--events">
+        <div class="ls-inner">
+
+            <div class="ls-band__head">
+                <h2 class="ls-h2">Featured events</h2>
+            </div>
+
+            <ul class="ls-events" role="list">
+                {% calendarevents calendarid:'1' audienceids:'150' %}
+                    {% assign seenIds = '0' %}
+                    {% assign eventCounter = 1 %}
+
+                    {% for item in EventScheduledInstances %}
+                        {% if eventCounter > 6 %}{% break %}{% endif %}
+
+                        {% assign thisId = item.EventItemOccurrence.EventItem.Id | ToString %}
+                        {% assign alreadySeen = seenIds | Split:'-' | Contains:thisId %}
+
+                        {% unless alreadySeen %}
+                            {% assign seenIds = seenIds | Append:'-' | Append:thisId %}
+                            <li>
+                                <a href="/get-involved/events/details?EventOccurrenceId={{ item.EventItemOccurrence.Id }}&date={{ item.DateTime | Date:'yyyy-MM-ddTHH:mm:ss' }}"
+                                   class="ls-event" target="_blank">
+                                    <img src="/GetImage.ashx?guid={{ item.EventItemOccurrence.EventItem.Photo.Guid }}&width=630&height=270&mode=crop"
+                                         alt="{{ item.EventItemOccurrence.EventItem.Name }}" loading="lazy" width="630" height="270">
+                                </a>
+                            </li>
+                            {% assign eventCounter = eventCounter | Plus:1 %}
+                        {% endunless %}
+                    {% endfor %}
+                {% endcalendarevents %}
+
+                <li>
+                    <a href="/get-involved/events" class="ls-event ls-event--more">
+                        <span class="ls-event__kicker">There's always more</span>
+                        <span class="ls-event__label">
+                            View all events
+                            <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M13 18l6-6"/><path d="M13 6l6 6"/></svg>
+                        </span>
+                    </a>
+                </li>
+            </ul>
+
+        </div>
+    </div><!-- /.ls-band--events -->
+
+
+    <!-- ══════════════════════════════════════════════════════
+         MODALS — native <dialog>; iframes load on first open.
+         Sources come from the variables at the top.
+         ══════════════════════════════════════════════════════ -->
+    <dialog id="ls-connect-modal" class="ls-modal" aria-label="Get connected">
+        <button type="button" class="ls-modal__close" data-ls-close aria-label="Close">
+            <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <iframe data-src="{{ connectFormUrl }}" title="Get connected form"></iframe>
+    </dialog>
+
+    <dialog id="ls-prayer-modal" class="ls-modal" aria-label="Prayer request">
+        <button type="button" class="ls-modal__close" data-ls-close aria-label="Close">
+            <svg class="ls-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+        <iframe data-src="{{ prayerFormUrl }}" title="Prayer request form"></iframe>
+    </dialog>
+
+</section>
+
+{% javascript %}
+(function () {
+    function init() {
+        var root = document.querySelector('.ls');
+        if (!root) return;
+        root.classList.add('ls--js');
+
+        var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var hasGsap = !!window.gsap;
+        var hasFlip = hasGsap && !!window.Flip;
+        if (hasFlip) gsap.registerPlugin(Flip);
+
+        /* ── Dialogs ───────────────────────────────────────── */
+        if (typeof HTMLDialogElement === 'function') {
+            root.querySelectorAll('[data-ls-open]').forEach(function (trigger) {
+                var dialog = document.getElementById(trigger.getAttribute('data-ls-open'));
+                if (!dialog) return;
+                trigger.setAttribute('aria-haspopup', 'dialog');
+                trigger.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var frame = dialog.querySelector('iframe[data-src]');
+                    if (frame) { frame.src = frame.dataset.src; frame.removeAttribute('data-src'); }
+                    dialog.__trigger = trigger;
+                    dialog.showModal();
+                    document.documentElement.style.overflow = 'hidden';
+                });
+            });
+
+            root.querySelectorAll('.ls-modal').forEach(function (dialog) {
+                dialog.querySelectorAll('[data-ls-close]').forEach(function (btn) {
+                    btn.addEventListener('click', function () { dialog.close(); });
+                });
+                dialog.addEventListener('click', function (e) {
+                    if (e.target === dialog) dialog.close();   // backdrop
+                });
+                dialog.addEventListener('close', function () {
+                    document.documentElement.style.overflow = '';
+                    if (dialog.__trigger) dialog.__trigger.focus();
+                });
+            });
+        }
+
+        /* ── Theater mode ────────────────────────────────────
+           Only wired up when the toggle is rendered (see the
+           showTheaterToggle switch). Without it, theater mode
+           can never be stuck on from a stored preference. */
+        var toggle  = root.querySelector('.ls-theater-toggle');
+        var theater = root.querySelector('.ls-theater');
+        var actions = root.querySelector('.ls-actions');
+        var KEY = 'vrl-ls-theater';
+
+        function store(on) { try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (e) {} }
+        function stored()  { try { return localStorage.getItem(KEY) === '1'; } catch (e) { return false; } }
+
+        function setMode(on, animate) {
+            var targets = [theater, actions].filter(Boolean);
+            var state = (animate && !reduce && hasFlip) ? Flip.getState(targets) : null;
+            root.classList.toggle('ls--theater', on);
+            toggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+            if (state) Flip.from(state, { duration: 0.5, ease: 'power3.inOut' });
+        }
+
+        if (toggle && theater) {
+            setMode(stored(), false);
+            toggle.addEventListener('click', function () {
+                var on = toggle.getAttribute('aria-pressed') !== 'true';
+                setMode(on, true);
+                store(on);
+            });
+        }
+
+        /* ── Details toggles ─────────────────────────────────
+           CSS owns every end state; GSAP only tweens between them.
+             Desktop (.ls--wide):      "Wide player" button moves the
+                                       panel under a full-width player (Flip).
+             All (.ls--collapsed):     corner button collapses the panel
+                                       to the title (height px ⇄ auto).
+           Wide is remembered; collapse resets each visit so a new
+           message's description is always seen first. */
+        var layoutBtn   = root.querySelector('.ls-layout-toggle');
+        var layoutBar   = root.querySelector('.ls-layout-bar');
+        var collapseBtn = root.querySelector('.ls-collapse-toggle');
+        var infoAside   = root.querySelector('.ls-aside');
+        var infoContent = root.querySelector('.ls-info__content');
+        var infoBody    = root.querySelector('.ls-info__body');
+        var WIDE_KEY = 'vrl-ls-wide';
+        var detailsBusy = false;
+
+        function saveFlag(k, on) { try { localStorage.setItem(k, on ? '1' : '0'); } catch (e) {} }
+
+        function setWide(on) {
+            root.classList.toggle('ls--wide', on);
+            layoutBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        }
+
+        function setCollapsed(on) {
+            var label = on ? 'Show details' : 'Hide details';
+            root.classList.toggle('ls--collapsed', on);
+            collapseBtn.setAttribute('aria-expanded', on ? 'false' : 'true');
+            collapseBtn.setAttribute('aria-label', label);
+            collapseBtn.title = label;
+        }
+
+        function toggleWide(on) {
+            if (!hasFlip || reduce) { setWide(on); return; }
+            detailsBusy = true;
+            var state = Flip.getState([theater, layoutBar, infoAside]);
+            setWide(on);
+            // Text re-wraps as the panel changes shape; hide that, then fade back in
+            gsap.set(infoContent, { autoAlpha: 0 });
+            Flip.from(state, {
+                duration: 0.55,
+                ease: 'power3.inOut',
+                onComplete: function () {
+                    gsap.to(infoContent, { autoAlpha: 1, duration: 0.25, clearProps: 'opacity,visibility' });
+                    detailsBusy = false;
+                }
+            });
+        }
+
+        /* Collapse tweens the body between its measured pixel height
+           and 0, then clears inline styles so CSS (height: auto) takes
+           over again. Opacity leads on the way out and trails on the
+           way in, so text never shows clipped mid-line.
+           GSAP when the page has it; otherwise the browser's own Web
+           Animations API, so the height always animates. */
+        var COLLAPSE_DUR = 0.6;
+
+        function toggleCollapse(on) {
+            if (reduce || !infoBody) { setCollapsed(on); return; }
+            if (!hasGsap) {
+                if (typeof infoBody.animate !== 'function') { setCollapsed(on); return; }
+                toggleCollapseNative(on);
+                return;
+            }
+            detailsBusy = true;
+            gsap.killTweensOf(infoBody);
+            function done() {
+                gsap.set(infoBody, { clearProps: 'height,paddingTop,overflow,flex,opacity,visibility' });
+                detailsBusy = false;
+            }
+            if (on) {
+                collapseBtn.setAttribute('aria-expanded', 'false');   // icon flips with the motion
+                gsap.set(infoBody, { height: infoBody.offsetHeight, overflow: 'hidden', flex: 'none' });
+                gsap.timeline({ onComplete: function () { setCollapsed(true); done(); } })
+                    .to(infoBody, { autoAlpha: 0, duration: 0.25, ease: 'power1.out' }, 0)
+                    .to(infoBody, { height: 0, paddingTop: 0, duration: COLLAPSE_DUR, ease: 'power2.inOut' }, 0);
+            } else {
+                setCollapsed(false);
+                var padTop = gsap.getProperty(infoBody, 'paddingTop');
+                gsap.set(infoBody, { height: 0, paddingTop: 0, overflow: 'hidden', flex: 'none', autoAlpha: 0 });
+                gsap.timeline({ onComplete: done })
+                    .to(infoBody, { height: 'auto', paddingTop: padTop, duration: COLLAPSE_DUR, ease: 'power2.inOut' }, 0)
+                    .to(infoBody, { autoAlpha: 1, duration: 0.35, ease: 'power1.in' }, 0.2);
+            }
+        }
+
+        function toggleCollapseNative(on) {
+            detailsBusy = true;
+            var ms = COLLAPSE_DUR * 1000;
+            var ease = 'cubic-bezier(.45, 0, .55, 1)';           // ≈ power2.inOut
+            var s = infoBody.style;
+
+            // Measure the open state (height: auto) in pixels
+            if (!on) setCollapsed(false);
+            else collapseBtn.setAttribute('aria-expanded', 'false');
+            var openH = infoBody.offsetHeight;
+            var openPad = parseFloat(getComputedStyle(infoBody).paddingTop) || 0;
+            var open = { height: openH + 'px', paddingTop: openPad + 'px' };
+            var shut = { height: '0px', paddingTop: '0px' };
+
+            s.overflow = 'hidden';
+            s.flex = 'none';
+            var size = infoBody.animate(on ? [open, shut] : [shut, open], { duration: ms, easing: ease, fill: 'forwards' });
+            infoBody.animate(on ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 0 }, { opacity: 1 }],
+                on ? { duration: 250, easing: 'ease-out', fill: 'forwards' }
+                   : { duration: 350, delay: 200, easing: 'ease-in', fill: 'backwards' });
+
+            size.onfinish = function () {
+                if (on) setCollapsed(true);
+                infoBody.getAnimations().forEach(function (a) { a.cancel(); });
+                s.overflow = '';
+                s.flex = '';
+                detailsBusy = false;
+            };
+        }
+
+        if (layoutBtn && layoutBar && infoAside && infoContent) {
+            // Stored choice wins; otherwise keep the server default (detailsStacked)
+            var storedWide = null;
+            try { storedWide = localStorage.getItem(WIDE_KEY); } catch (e) {}
+            setWide(storedWide === null ? root.classList.contains('ls--wide') : storedWide === '1');
+            layoutBtn.addEventListener('click', function () {
+                if (detailsBusy) return;
+                var on = !root.classList.contains('ls--wide');
+                toggleWide(on);
+                saveFlag(WIDE_KEY, on);
+            });
+        }
+
+        if (collapseBtn) {
+            // Phones start collapsed (title only) so the page below is reachable
+            if (window.matchMedia('(max-width: 699px)').matches) setCollapsed(true);
+            collapseBtn.addEventListener('click', function () {
+                if (detailsBusy) return;
+                toggleCollapse(!root.classList.contains('ls--collapsed'));
+            });
+        }
+
+        /* ── Entrance ──────────────────────────────────────── */
+        if (hasGsap && !reduce) {
+            gsap.from(theater, { y: 24, autoAlpha: 0, duration: 0.7, ease: 'power3.out' });
+            var aside = root.querySelector('.ls-aside');
+            if (aside) gsap.from(aside, { y: 16, autoAlpha: 0, duration: 0.6, delay: 0.2, ease: 'power3.out' });
+        }
+    }
+
+    // Rock may register this script before the block renders
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+{% endjavascript %}
+
+{% stylesheet %}
+/* ============================================================
+   TOKENS — scoped to .ls; v4 primitives flattened to hex
+   ============================================================ */
+.ls {
+    --ls-brand:        #9BC93C;  /* v-green-500 */
+    --ls-brand-bright: #C7F04D;  /* v-green-300 */
+    --ls-brand-text:   #5E8419;  /* v-green-700 — AA on light */
+
+    --ls-ink:          #1B1D18;  /* v-neutral-900 */
+    --ls-ink-2:        #26291F;  /* v-neutral-800 */
+    --ls-ink-3:        #383C2E;  /* v-neutral-700 */
+    --ls-ink-4:        #4B4F42;  /* v-neutral-600 */
+    --ls-paper:        #FAFAF8;  /* v-neutral-50  */
+    --ls-paper-2:      #F1F1EE;  /* v-neutral-100 */
+    --ls-line:         #E3E3DE;  /* v-neutral-200 */
+    --ls-text:         #1B1D18;
+    --ls-text-2:       #4B4F42;  /* v-neutral-600 */
+    --ls-on-ink:       #F1F1EE;
+    --ls-on-ink-2:     #C7C7C0;
+
+    --ls-glow:         rgb(155 201 60 / .38);
+    --ls-glow-soft:    rgb(155 201 60 / .10);
+
+    --ls-font:         "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --ls-space-xs:  .5rem;  --ls-space-sm: .75rem; --ls-space-md: 1rem;
+    --ls-space-lg:  1.5rem; --ls-space-xl: 2rem;   --ls-space-2xl: 3rem;
+    --ls-space-3xl: 4rem;
+
+    --ls-radius-sm: .5rem; --ls-radius-md: .75rem; --ls-radius-lg: 1rem; --ls-radius-xl: 1.5rem;
+
+    --ls-shadow-md: 0 6px 16px -4px rgb(0 0 0 / .30), 0 2px 6px -2px rgb(0 0 0 / .18);
+    --ls-shadow-xl: 0 28px 60px -12px rgb(0 0 0 / .50), 0 10px 24px -10px rgb(0 0 0 / .28);
+
+    --ls-ease:     cubic-bezier(.22, 1, .36, 1);
+    --ls-dur:      220ms;
+    --ls-dur-slow: 400ms;
+
+    --ls-stripe:            5px;
+    --ls-btn-h:             3rem;
+    --ls-container:         1180px;
+    --ls-container-theater: 1680px;
+    --ls-aside-w:           22rem;
+    --ls-theater-w:         min(100%, calc((100svh - 12rem) * 16 / 9));
+
+    font-family: var(--ls-font);
+    color: var(--ls-text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Local reset. :where() keeps it at single-class specificity so it
+   beats the host theme's element rules but loses to components. */
+.ls *, .ls *::before, .ls *::after { box-sizing: border-box; }
+.ls :where(p, h1, h2, h3, ul) { margin: 0; }
+.ls :where(ul) { padding: 0; list-style: none; }
+.ls :where(img) { display: block; max-width: 100%; }
+.ls :where(a) { color: inherit; }
+
+/* Font lock — the host theme sets its own heading face. Every
+   heading and control in the block is forced to Montserrat. */
+.ls :where(h1, h2, h3, h4, h5, h6, button, input, select, textarea),
+.ls .ls-h2,
+.ls .ls-info__title {
+    font-family: var(--ls-font);
+    text-transform: none;
+}
+
+.ls-icon { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.ls-sr-only {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.ls-inner {
+    max-width: var(--ls-container);
+    margin-inline: auto;
+    padding-inline: var(--ls-space-md);
+}
+@media (min-width: 700px) { .ls-inner { padding-inline: var(--ls-space-xl); } }
+
+.ls :focus-visible {
+    outline: 3px solid var(--ls-brand);
+    outline-offset: 3px;
+}
+
+/* ============================================================
+   BUTTONS — rounded rectangle; primary, ghost (on dark), icon
+   ============================================================ */
+.ls-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: .5em;
+    min-width: 0;
+    min-height: var(--ls-btn-h);
+    padding: .75rem 1.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--ls-radius-md);
+    font: 700 1rem/1.2 var(--ls-font);
+    letter-spacing: 0;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--ls-dur) var(--ls-ease),
+                border-color var(--ls-dur) var(--ls-ease),
+                color var(--ls-dur) var(--ls-ease),
+                transform var(--ls-dur) var(--ls-ease);
+}
+.ls-btn:hover { transform: translateY(-1px); }
+
+.ls-btn--primary { background: var(--ls-brand); color: var(--ls-ink); }
+.ls-btn--primary:hover { background: var(--ls-brand-bright); }
+
+.ls-btn--ghost {
+    background: rgb(38 41 31 / .72);
+    border-color: var(--ls-ink-4);
+    color: var(--ls-on-ink);
+}
+.ls-btn--ghost:hover { border-color: var(--ls-brand); }
+.ls-btn--ghost[aria-pressed="true"] { border-color: var(--ls-brand); color: var(--ls-brand); }
+
+.ls-btn--icon {
+    flex: none;
+    width: var(--ls-btn-h);
+    padding: 0;
+}
+.ls-btn--icon .ls-icon { width: 1.375rem; height: 1.375rem; }
+
+/* ============================================================
+   STAGE — full-bleed dark band with edge glow + green stripe.
+   ROCK: if the zone is already full-width, drop width/margin.
+   ============================================================ */
+.ls-stage {
+    position: relative;
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
+    overflow: clip;
+    background: var(--ls-ink);
+    color: var(--ls-on-ink);
+    padding-block: var(--ls-space-xl) var(--ls-space-2xl);
+    border-bottom: var(--ls-stripe) solid var(--ls-brand);
+    isolation: isolate;
+}
+@media (min-width: 900px) { .ls-stage { padding-block: var(--ls-space-2xl) var(--ls-space-3xl); } }
+
+.ls-stage::before,
+.ls-stage::after {
+    content: "";
+    position: absolute; top: 0; bottom: 0;
+    width: clamp(160px, 26vw, 420px);
+    pointer-events: none;
+    z-index: 0;
+}
+.ls-stage::before {
+    left: 0;
+    background: radial-gradient(70% 55% at 0% 38%, var(--ls-glow) 0%, var(--ls-glow-soft) 45%, transparent 72%);
+}
+.ls-stage::after {
+    right: 0;
+    background: radial-gradient(70% 55% at 100% 58%, var(--ls-glow) 0%, var(--ls-glow-soft) 45%, transparent 72%);
+}
+.ls-stage > .ls-inner { position: relative; z-index: 1; }
+
+/* ── Feature grid (mobile/tablet): stacked ─────────────── */
+.ls-feature {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "toolbar" "player" "bar" "aside";
+}
+.ls-toolbar    { grid-area: toolbar; }
+.ls-theater    { grid-area: player; }
+.ls-layout-bar { grid-area: bar; display: none; }   /* desktop + JS only */
+.ls-aside      { grid-area: aside; min-width: 0; }
+
+/* ── Toolbar (not-live labels only) ────────────────────── */
+.ls-toolbar {
+    display: flex; flex-wrap: wrap; align-items: center;
+    justify-content: space-between;
+    gap: var(--ls-space-xs) var(--ls-space-lg);
+    margin-bottom: var(--ls-space-md);
+    font-size: .9375rem;
+    color: var(--ls-on-ink-2);
+}
+.ls-toolbar__prev { font-weight: 600; }
+.ls-toolbar__next { display: inline-flex; align-items: center; gap: .4em; }
+
+/* ── Player ─────────────────────────────────────────────── */
+.ls-theater {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--ls-radius-lg);
+    overflow: hidden;
+    background: #000;
+    box-shadow: var(--ls-shadow-xl), 0 0 0 1px rgb(255 255 255 / .06);
+}
+@media (min-width: 700px) { .ls-theater { border-radius: var(--ls-radius-xl); } }
+.ls-theater iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* ── Off air: placeholder in place of the player ──────────
+   Keeps the player's 16:9 footprint as a minimum, but can
+   grow taller on small screens so the text never clips.    */
+.ls-theater--offair {
+    display: grid;
+    place-items: center;
+    overflow: visible;
+    background:
+        radial-gradient(60% 80% at 50% 0%, var(--ls-glow-soft), transparent 70%),
+        var(--ls-ink-2);
+}
+.ls-offair {
+    display: flex; flex-direction: column; align-items: center;
+    gap: var(--ls-space-sm);
+    max-width: 34rem;
+    padding: var(--ls-space-xl) var(--ls-space-lg);
+    text-align: center;
+}
+.ls-offair__icon {
+    display: grid; place-items: center;
+    width: 3rem; height: 3rem;
+    margin-bottom: var(--ls-space-xs);
+    border-radius: var(--ls-radius-md);
+    background: rgb(155 201 60 / .16);
+    color: var(--ls-brand);
+}
+.ls-offair__icon .ls-icon { width: 1.5rem; height: 1.5rem; }
+.ls-offair__title {
+    font: 800 clamp(1.5rem, 1.1rem + 2vw, 2.25rem)/1.15 var(--ls-font);
+    letter-spacing: -.02em;
+    color: #fff;
+}
+.ls-offair__text { color: var(--ls-on-ink-2); line-height: 1.7; }
+.ls-offair .ls-btn { margin-top: var(--ls-space-sm); }
+/* Theme a:hover / a:visited outrank a single class */
+.ls-offair .ls-btn:is(:link, :visited, :hover, :focus, :active) { color: var(--ls-ink); text-decoration: none; }
+
+/* ── Connect with us: small tag above the player ───────────
+   Same family as the series tag (tinted green, solid on hover),
+   with a soft glow so it reads as an invitation. Full-width
+   block on mobile, compact at the top-left from 700px.      */
+.ls-connect-bar { margin-bottom: var(--ls-space-sm); }
+.ls-connect {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    width: 100%;
+    padding: .5rem .85rem;
+    border-radius: var(--ls-radius-sm);
+    background: rgb(155 201 60 / .14);
+    border: 1px solid rgb(155 201 60 / .38);
+    box-shadow: 0 0 18px -6px var(--ls-glow);
+    font: 700 .875rem/1.3 var(--ls-font);
+    text-decoration: none;
+    transition: background var(--ls-dur) var(--ls-ease),
+                border-color var(--ls-dur) var(--ls-ease),
+                color var(--ls-dur) var(--ls-ease),
+                transform var(--ls-dur) var(--ls-ease);
+}
+/* Theme a:hover / a:visited outrank a single class */
+.ls .ls-connect:is(:link, :visited) { color: var(--ls-brand); text-decoration: none; }
+/* Hover deepens the tint and brightens the text, no full fill */
+.ls .ls-connect:is(:hover, :focus-visible) {
+    background: rgb(155 201 60 / .24);
+    border-color: rgb(155 201 60 / .65);
+    color: var(--ls-brand-bright);
+    transform: translateY(-1px);
+}
+.ls-connect .ls-icon { width: 1.05rem; height: 1.05rem; }
+@media (min-width: 700px) {
+    .ls-connect {
+        display: inline-flex;
+        width: auto;
+        padding: .4rem .75rem .4rem .65rem;
+    }
+}
+
+/* ── Meta + actions (mobile: stacked under player) ──────── */
+.ls-aside {
+    display: flex; flex-direction: column;
+    gap: var(--ls-space-lg);
+    margin-top: var(--ls-space-lg);
+}
+
+/* Glass panel — on mobile too, for separation and padding */
+.ls-info {
+    position: relative;              /* anchor for the details toggle */
+    padding: var(--ls-space-md);
+    border-radius: var(--ls-radius-lg);
+    background: rgb(38 41 31 / .72);
+    border: 1px solid var(--ls-ink-3);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+}
+
+/* Fixed sizes, not fluid — a growing title wraps to extra lines */
+.ls .ls-info__title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    color: #fff;
+}
+@media (min-width: 700px) { .ls .ls-info__title { font-size: 1.5rem; } }
+
+.ls-info__body { padding-top: var(--ls-space-md); }  /* padding, not margin, so the fold animation is exact */
+
+.ls-info__desc {
+    max-width: 65ch;
+    color: var(--ls-on-ink-2);
+    line-height: 1.7;
+}
+.ls-info__desc p { margin: 0 0 .75em; }
+.ls-info__desc p:last-child { margin-bottom: 0; }
+
+/* Series: a labelled tag at the bottom of the panel */
+.ls-info__series {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;          /* don't stretch in the desktop flex column */
+    gap: .45rem;
+    max-width: 100%;
+    padding: .4rem .6rem .4rem .65rem;
+    border-radius: var(--ls-radius-sm);
+    background: rgb(155 201 60 / .12);
+    border: 1px solid rgb(155 201 60 / .28);
+    color: var(--ls-brand);
+    font: 600 .875rem/1.3 var(--ls-font);
+    text-decoration: none;
+    transition: background var(--ls-dur) var(--ls-ease),
+                border-color var(--ls-dur) var(--ls-ease),
+                color var(--ls-dur) var(--ls-ease);
+}
+.ls-info__desc + .ls-info__series { margin-top: var(--ls-space-md); }
+/* Hover deepens the tint and brightens the text, no full fill */
+.ls-info__series:hover {
+    background: rgb(155 201 60 / .22);
+    border-color: rgb(155 201 60 / .6);
+    color: var(--ls-brand-bright);
+}
+.ls-info__series .ls-icon { width: 1rem; height: 1rem; }
+.ls-info__series-label {
+    color: var(--ls-on-ink-2);
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    transition: color var(--ls-dur) var(--ls-ease);
+}
+.ls-info__series:hover .ls-info__series-label { color: var(--ls-on-ink); }
+.ls-info__series-name { min-width: 0; }
+.ls-info__series-arrow { transition: transform var(--ls-dur) var(--ls-ease); }
+.ls-info__series:hover .ls-info__series-arrow { transform: translateX(2px); }
+
+/* Speaker + date: one short line each (markup currently commented out) */
+.ls-info__meta {
+    display: grid;
+    gap: .35rem;
+    margin: var(--ls-space-sm) 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--ls-on-ink-2);
+    font-size: .9375rem;
+}
+.ls-info__meta li { display: flex; align-items: center; gap: .55rem; }
+.ls-info__meta .ls-icon { width: 1.05rem; height: 1.05rem; color: var(--ls-brand); opacity: .85; }
+
+/* ── Collapse toggle (JS only) ─────────────────────────────
+   Icon-only, to the right of the title. Collapsed, only the
+   title shows. Chevron up = collapse, down = expand.
+   The height tween lives in the JS; this is the end state.   */
+.ls-info__head {
+    display: flex;
+    align-items: flex-start;         /* button lines up with the title's top edge */
+    gap: var(--ls-space-sm);
+}
+.ls-info__head .ls-info__title { flex: 1; min-width: 0; }
+.ls-collapse-toggle {
+    display: none;
+    flex: none;
+    place-items: center;
+    width: 2.25rem; height: 2.25rem;
+    padding: 0;
+    border-radius: var(--ls-radius-md);
+    border: 1px solid var(--ls-ink-3);
+    background: rgb(255 255 255 / .06);
+    color: var(--ls-on-ink);
+    cursor: pointer;
+    transition: border-color var(--ls-dur) var(--ls-ease),
+                background var(--ls-dur) var(--ls-ease),
+                color var(--ls-dur) var(--ls-ease);
+}
+.ls-collapse-toggle:hover {
+    border-color: var(--ls-brand);
+    background: rgb(155 201 60 / .16);
+    color: #fff;
+}
+.ls-collapse-toggle .ls-icon {
+    width: 1.125rem; height: 1.125rem;
+    transition: transform var(--ls-dur-slow) var(--ls-ease);
+}
+.ls-collapse-toggle[aria-expanded="false"] .ls-icon { transform: rotate(180deg); }
+
+.ls--js .ls-collapse-toggle { display: grid; }
+
+.ls--collapsed .ls-info__body { display: none; }
+
+/* ── Layout toggle (desktop + JS only) ─────────────────────
+   Sits under the player's bottom-right corner, where video
+   players put their theater button.                         */
+.ls-layout-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    min-height: 2.25rem;
+    padding: .35rem .8rem;
+    border-radius: var(--ls-radius-md);
+    border: 1px solid var(--ls-ink-4);
+    background: rgb(255 255 255 / .04);
+    color: var(--ls-on-ink);
+    font: 600 .8125rem/1.2 var(--ls-font);
+    cursor: pointer;
+    transition: border-color var(--ls-dur) var(--ls-ease),
+                background var(--ls-dur) var(--ls-ease),
+                color var(--ls-dur) var(--ls-ease);
+}
+.ls-layout-toggle:hover { border-color: var(--ls-brand); color: #fff; }
+.ls-layout-toggle[aria-pressed="true"] {
+    border-color: var(--ls-brand);
+    background: rgb(155 201 60 / .16);
+    color: var(--ls-brand);
+}
+.ls-layout-toggle .ls-icon { width: 1.125rem; height: 1.125rem; }
+
+/* ============================================================
+   DESKTOP ≥1100px
+   With meta: right column matches the player's height; glass
+   panel fills it, buttons (if enabled) sit below.
+   Stacked (.ls--wide): panel under a full-width player. This
+   is the default, set by the detailsStacked switch.
+   Solo: player spans the container, any buttons sit below it.
+   ============================================================ */
+@media (min-width: 1100px) {
+    .ls-feature {
+        grid-template-columns: minmax(0, 1fr) var(--ls-aside-w);
+        grid-template-areas: "toolbar toolbar" "player aside" "bar .";
+        column-gap: var(--ls-space-lg);
+    }
+
+    .ls-aside {
+        margin-top: 0;
+        gap: var(--ls-space-sm);
+        contain: size;               /* row height comes from the player */
+        align-self: stretch;
+    }
+
+    .ls-info {
+        display: flex; flex-direction: column;
+        flex: 1; min-height: 0;
+        padding: var(--ls-space-lg);
+        border-radius: var(--ls-radius-xl);
+    }
+    .ls-info__content,
+    .ls-info__body {
+        display: flex; flex-direction: column;
+        flex: 1; min-height: 0;
+    }
+    .ls-info__desc {
+        flex: 1; min-height: 0;
+        overflow-y: auto;
+        padding-right: .25rem;
+        font-size: .9375rem;
+        scrollbar-width: thin;
+        scrollbar-color: var(--ls-ink-3) transparent;
+    }
+    .ls-info__series { margin-top: auto; }   /* pinned to the bottom */
+    .ls--collapsed .ls-info { flex: none; }  /* side-by-side: shrink to the title */
+
+    .ls--js .ls-layout-bar {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: var(--ls-space-sm);
+    }
+
+    /* ── Stacked (default): panel under a full-width player ── */
+    .ls--wide .ls-feature {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "toolbar" "player" "bar" "aside";
+    }
+    .ls--wide .ls-aside { contain: none; margin-top: var(--ls-space-md); }
+    .ls--wide .ls-info__desc { flex: none; overflow: visible; padding-right: 0; }
+
+    .ls--js .ls-theater-toggle { display: inline-flex; }
+    .ls-actions .ls-btn--primary { flex: 1 1 0; }
+
+    /* ── Solo (no meta) ───────────────────────────────────── */
+    .ls-feature--solo {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "toolbar" "player" "aside";
+    }
+    .ls-feature--solo .ls-aside { contain: none; margin-top: var(--ls-space-md); }
+    .ls-feature--solo .ls-actions { justify-content: flex-end; }
+    .ls-feature--solo .ls-actions .ls-btn--primary { flex: none; }
+
+    /* ── Theater mode ─────────────────────────────────────── */
+    .ls--theater .ls-stage { padding-block: var(--ls-space-lg) var(--ls-space-2xl); }
+    .ls--theater .ls-stage > .ls-inner { max-width: var(--ls-container-theater); }
+    .ls--theater .ls-feature {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "toolbar" "player" "aside";
+    }
+    .ls--theater .ls-theater,
+    .ls--theater .ls-aside {
+        width: var(--ls-theater-w);
+        justify-self: center;
+    }
+    .ls--theater .ls-aside { contain: none; margin-top: var(--ls-space-md); }
+    .ls--theater .ls-info { display: none; }
+    .ls--theater .ls-actions { justify-content: flex-end; }
+    .ls--theater .ls-actions .ls-btn--primary { flex: none; }
+}
+
+/* ============================================================
+   LIGHT BANDS — What's next + Featured events
+   Both use .ls-band__head so heading spacing always matches.
+   ============================================================ */
+.ls-band {
+    background: var(--ls-paper);
+    padding-block: var(--ls-space-2xl);
+}
+.ls-band--events {
+    background: var(--ls-paper-2);
+    border-top: 1px solid var(--ls-line);
+}
+@media (min-width: 900px) { .ls-band { padding-block: var(--ls-space-3xl); } }
+
+.ls-band__head { margin-bottom: var(--ls-space-lg); }
+.ls-h2 {
+    font-size: clamp(1.375rem, 1rem + 1.4vw, 1.75rem);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.2;
+    color: var(--ls-text);
+}
+
+/* ── Shared rail behavior (mobile) ─────────────────────── */
+.ls-rail,
+.ls-events {
+    display: flex;
+    gap: var(--ls-space-md);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--ls-space-md);
+    margin-inline: calc(var(--ls-space-md) * -1);
+    padding-inline: var(--ls-space-md);
+    padding-block: .25rem var(--ls-space-xs);  /* room for hover lift */
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+.ls-rail::-webkit-scrollbar,
+.ls-events::-webkit-scrollbar { display: none; }
+
+/* ── What's next: 4 cards ──────────────────────────────── */
+.ls-rail__item { flex: 0 0 min(78vw, 280px); scroll-snap-align: start; display: flex; }
+@media (min-width: 900px) {
+    .ls-rail {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: var(--ls-space-lg);
+        overflow: visible;
+        margin-inline: 0; padding: 0;
+    }
+}
+
+.ls-card {
+    position: relative;              /* anchor for .ls-stretch */
+    display: flex; flex-direction: column; gap: .5rem;
+    width: 100%;
+    padding: var(--ls-space-lg);
+    border-radius: var(--ls-radius-lg);
+    background: #fff;
+    border: 1px solid var(--ls-line);
+    color: var(--ls-text);
+    text-decoration: none;
+    transition: border-color var(--ls-dur) var(--ls-ease), transform var(--ls-dur) var(--ls-ease), box-shadow var(--ls-dur) var(--ls-ease);
+}
+/* The theme's a:hover / a:visited rules outrank a single class,
+   and an underline on a card-sized link bleeds into every line
+   of text inside it. Pin the link states explicitly.         */
+.ls-card:is(:link, :visited, :hover, :focus, :active) {
+    color: var(--ls-text);
+    text-decoration: none;
+}
+.ls-event:is(:link, :visited, :hover, :focus, :active) { text-decoration: none; }
+.ls-card:hover {
+    border-color: var(--ls-brand);
+    transform: translateY(-2px);
+    box-shadow: var(--ls-shadow-md);
+}
+.ls-card__icon {
+    display: grid; place-items: center;
+    width: 2.75rem; height: 2.75rem;
+    border-radius: var(--ls-radius-md);
+    background: rgb(155 201 60 / .16);
+    color: var(--ls-brand-text);
+    margin-bottom: .35rem;
+}
+.ls-card__icon .ls-icon { width: 1.5rem; height: 1.5rem; }
+.ls-card__title { font-weight: 700; font-size: 1.0625rem; letter-spacing: -.01em; }
+.ls-card__desc { color: var(--ls-text-2); line-height: 1.6; flex: 1; font-size: .9375rem; }
+/* CTA: a thick line in the text color draws in left → right on hover.
+   Drawn with a background gradient (not a pseudo-element) so it
+   doesn't collide with .ls-stretch::after on the Give card.    */
+.ls-card__cta {
+    align-self: flex-start;
+    margin-top: .5rem;
+    padding-bottom: .3rem;
+    font-weight: 700; font-size: .875rem;
+    color: var(--ls-brand-text);
+    text-decoration: none;
+    background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0% 3px;
+    transition: background-size var(--ls-dur-slow) var(--ls-ease);
+}
+.ls-card:hover .ls-card__cta,
+.ls-card:focus-visible .ls-card__cta { background-size: 100% 3px; }
+
+/* ── Featured card (Get connected) ─────────────────────────
+   Same white card, lifted with a soft brand-green glow so the
+   primary next step stands out without changing the rail.   */
+.ls-card--featured {
+    border-color: var(--ls-brand);
+    box-shadow: 0 0 0 1px var(--ls-brand),
+                0 10px 30px -10px var(--ls-glow),
+                0 0 24px -4px var(--ls-glow-soft);
+}
+.ls-card--featured:hover {
+    box-shadow: 0 0 0 1px var(--ls-brand),
+                0 14px 36px -10px var(--ls-glow),
+                0 0 32px -2px var(--ls-glow-soft),
+                var(--ls-shadow-md);
+}
+
+/* ── Give card: widget button styled as the card CTA ───────
+   The widget ships its own button styling (and may inline the
+   primary color), so these few declarations use !important to
+   make its button read like the other cards' text CTAs.     */
+.ls-card--widget .ls-card__cta {
+    display: inline-block;
+    align-self: flex-start;
+    width: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding-bottom: .3rem !important;
+    background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0% 3px !important;
+    box-shadow: none !important;
+    color: var(--ls-brand-text) !important;
+    text-decoration: none !important;
+    transition: background-size var(--ls-dur-slow) var(--ls-ease);
+    font: 700 .875rem/1.4 var(--ls-font) !important;
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+    text-align: left;
+    cursor: pointer;
+}
+.ls-card--widget:hover .ls-card__cta,
+.ls-card--widget:focus-within .ls-card__cta { background-size: 100% 3px !important; }
+/* Stretch the widget button's hit area over the whole card */
+.ls-stretch::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: var(--ls-radius-lg);
+}
+.ls-card--widget:focus-within {
+    border-color: var(--ls-brand);
+    box-shadow: 0 0 0 3px var(--ls-brand);
+}
+.ls-card--widget .ls-stretch:focus-visible { outline: none; }
+
+/* ── Featured events ────────────────────────────────────────
+   Mobile: snap rail. Tablet: 2 columns. Desktop: 3 columns.
+   Fixed columns, left-to-right fill: every tile is the same
+   size and a short last row stays left-aligned.             */
+.ls-events > li { flex: 0 0 min(82vw, 360px); scroll-snap-align: start; }
+@media (min-width: 700px) {
+    .ls-events {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--ls-space-lg);
+        overflow: visible;
+        margin-inline: 0; padding: 0;
+    }
+}
+@media (min-width: 1000px) {
+    .ls-events { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.ls-event {
+    display: block;
+    aspect-ratio: 7 / 3;
+    border-radius: var(--ls-radius-lg);
+    overflow: hidden;
+    background: var(--ls-line);
+    box-shadow: var(--ls-shadow-md);
+    text-decoration: none;
+    transition: transform var(--ls-dur) var(--ls-ease), border-color var(--ls-dur) var(--ls-ease), background var(--ls-dur) var(--ls-ease);
+}
+.ls-event img { width: 100%; height: 100%; object-fit: cover; }
+.ls-event:hover { transform: translateY(-2px); }
+
+/* "View all" tile — empty glass, same footprint as an event */
+.ls-event--more {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: .35rem;
+    padding: var(--ls-space-md);
+    text-align: center;
+    background: rgb(255 255 255 / .55);
+    border: 1px solid rgb(255 255 255 / .9);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .8), 0 2px 10px -4px rgb(0 0 0 / .12);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+    color: var(--ls-text);
+}
+.ls-event--more:hover {
+    background: rgb(255 255 255 / .8);
+    border-color: var(--ls-brand);
+}
+.ls-event__kicker { font-size: .9375rem; color: var(--ls-text-2); }
+.ls-event__label {
+    display: inline-flex; align-items: center; gap: .4em;
+    font-weight: 700; font-size: 1.0625rem;
+    color: var(--ls-brand-text);
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+.ls-modal {
+    width: min(92vw, 960px);
+    height: min(88vh, 900px);
+    padding: 0;
+    border: 0;
+    border-radius: var(--ls-radius-xl);
+    background: #fff;
+    box-shadow: var(--ls-shadow-xl);
+    overflow: hidden;
+    font-family: var(--ls-font);
+}
+.ls-modal::backdrop { background: rgb(27 29 24 / .72); }
+.ls-modal iframe { width: 100%; height: 100%; border: 0; }
+.ls-modal__close {
+    position: absolute; top: .75rem; right: .75rem; z-index: 1;
+    display: grid; place-items: center;
+    width: 2.5rem; height: 2.5rem;
+    border: 0; border-radius: 50%;
+    background: var(--ls-paper-2);
+    color: var(--ls-text);
+    cursor: pointer;
+    transition: background var(--ls-dur) var(--ls-ease);
+}
+.ls-modal__close:hover { background: var(--ls-line); }
+.ls-modal[open] { animation: ls-modal-in var(--ls-dur-slow) var(--ls-ease); }
+@keyframes ls-modal-in {
+    from { transform: translateY(20px) scale(.97); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    .ls *, .ls *::before, .ls *::after,
+    .ls-modal[open] { animation: none !important; transition: none !important; }
+    .ls-card:hover, .ls-btn:hover, .ls-event:hover,
+    .ls .ls-connect:is(:hover, :focus-visible),
+    .ls-info__series:hover .ls-info__series-arrow { transform: none; }
+}
+{% endstylesheet %}

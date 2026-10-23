@@ -1,0 +1,60 @@
+{% comment %}
+    SUBPAGE LIST — for an HTML block in the Main zone of a page using the
+    Landing layout (Layouts/Landing.aspx).
+
+    Block content:            {% include '~~/Assets/Lava/SubpageList.lava' %}
+    Enabled Lava Commands:    RockEntity
+
+    Lists the current page's child pages, in nav order, as alternating image
+    cards (image left, then right, …). Pages set to never show in navigation
+    are skipped, the same rule the footer uses.
+
+    Per child page:
+      Image        page attribute PageImage (an image); without one, the panel
+                   shows a brand-green gradient instead
+      Title        the page title
+      Description  the page's Description field (Page Properties → Advanced)
+      Button       page attribute CallToAction (optional text); "Explore" if
+                   empty. The whole card is one link; the button is a visual
+                   cue inside it, not a second link.
+
+    Styled by Styles/_landing.scss.
+{% endcomment %}
+{%- assign defaultCta = 'Explore' -%}
+{%- assign cardCount = 0 -%}
+{%- comment -%} The current page's id: CurrentPage, or the Page filter as a fallback {%- endcomment -%}
+{%- assign parentPageId = CurrentPage.Id -%}
+{%- if parentPageId == null or parentPageId == '' %}{% assign parentPageId = 'Global' | Page:'Id' %}{% endif -%}
+
+{%- capture cardsHtml -%}
+{% page where:'ParentPageId == {{ parentPageId }}' sort:'Order' %}
+    {%- for childPage in pageItems -%}
+        {%- if childPage.DisplayInNavWhen == 'Never' %}{% continue %}{% endif -%}
+        {%- assign cardCount = cardCount | Plus:1 -%}
+        {%- assign imageGuid = childPage | Attribute:'PageImage','RawValue' | Trim -%}
+        {%- assign ctaText = childPage | Attribute:'CallToAction' | Trim -%}
+        {%- if ctaText == '' %}{% assign ctaText = defaultCta %}{% endif -%}
+        {%- assign cardRemainder = cardCount | Modulo:2 %}
+    <article class="subpage-card{% if cardRemainder == 0 %} subpage-card--flip{% endif %}">
+      <div class="subpage-card__media{% if imageGuid == '' %} subpage-card__media--empty{% endif %}">
+        {%- if imageGuid != '' %}
+        <img src="/GetImage.ashx?guid={{ imageGuid }}&w=1200&h=800&mode=crop" alt="" />
+        {%- endif %}
+      </div>
+      <div class="subpage-card__body">
+        <h2 class="subpage-card__title"><a class="subpage-card__link" href="{{ childPage.Id | PageRoute }}">{{ childPage.PageTitle }}</a></h2>
+        {%- if childPage.Description != empty %}
+        <p class="subpage-card__desc">{{ childPage.Description }}</p>
+        {%- endif %}
+        <span class="btn btn--primary subpage-card__cta" aria-hidden="true">{{ ctaText }}</span>
+      </div>
+    </article>
+    {%- endfor -%}
+{% endpage %}
+{%- endcapture -%}
+
+{%- if cardCount > 0 %}
+<div class="subpages">
+  {{ cardsHtml }}
+</div>
+{%- endif %}

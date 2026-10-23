@@ -70,7 +70,7 @@
 // copies cross-fade, because a filter can't transition.
 .nav__logo img {
   grid-area: 1 / 1;
-  height: var(--logo-height, 34px); width: auto;
+  width: $logo-width; height: auto;
   transition: opacity var(--bar-swap); will-change: opacity;
 }
 .nav__logo-ink { filter: url(#logo-ink); }
@@ -95,7 +95,8 @@
 }
 .nav__link:hover::after,
 .nav__link:focus-visible::after,
-.nav__link.is-current::after { transform: scaleX(1); }
+.nav__link.is-current::after,
+.nav__link.is-hot::after { transform: scaleX(1); }   // is-hot: its column is hovered (theme.js)
 
 .nav__actions { display: flex; align-items: center; gap: var(--space-sm); justify-self: end; }
 .nav__burger {
@@ -175,6 +176,10 @@
     max-height: 80vh;
     visibility: visible;
     transition: max-height var(--duration-slow) var(--ease-out), visibility 0s;
+    // Short screens (a landscape iPad is 768px tall): scroll inside the panel
+    // rather than clip it, so the touch close button is always reachable.
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 }
 
@@ -186,7 +191,8 @@
 }
 
 // Hovering or focusing a parent link lifts its column of children. The link
-// and column share a page id (data-page / data-col); theme.js adds .is-hot.
+// and column share a page id (data-page / data-col); theme.js adds .is-hot to
+// both, and keeps it while the pointer is over the column itself.
 .mega__col.is-hot a { color: var(--on-ink); }
 
 .mega__col h3 a { text-decoration: none; }
@@ -204,6 +210,7 @@
   transition: color var(--duration) var(--ease-out);
 }
 .mega__col a:hover { color: var(--brand); }
+.mega .mega__col a { font-weight: 700; }   // header sub items bold; footer columns keep 500
 
 // Visit block (shared markup: Assets/Lava/Partials/VisitInfo.lava)
 .mega__visit h2 {
@@ -228,6 +235,27 @@
   text-transform: uppercase; color: var(--on-ink-muted);
 }
 .mega__times strong { display: block; color: var(--on-ink); margin-bottom: 0.4rem; }
+
+// Close button: only on devices without hover (touch screens), where nothing
+// else closes the panel. theme.js also closes it on any tap outside the bars.
+.mega__foot { display: none; }
+@media (hover: none) {
+  .mega__foot {
+    display: flex; justify-content: center;
+    padding: 0 var(--gutter) var(--space-xl);
+  }
+}
+.mega__close {
+  display: inline-flex; align-items: center; gap: var(--space-xs);
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid oklch(1 0 0 / 0.25);
+  background: oklch(1 0 0 / 0.06);
+  color: var(--on-ink);
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+}
+.mega__close:is(:hover, :focus-visible) { border-color: var(--brand); color: var(--brand); }
 
 // Menu aside (today's hours, office, social)
 .mega__aside { display: grid; gap: var(--space-lg); align-content: start; }
@@ -296,7 +324,7 @@
   padding-inline: var(--gutter);
   flex-shrink: 0;
 }
-.mobilenav__top .logo { height: var(--logo-height, 34px); width: auto; }
+.mobilenav__top .logo { width: $logo-width; height: auto; }
 .mobilenav__close {
   width: 44px; height: 44px; display: grid; place-items: center;
   background: none; border: 0; color: var(--on-ink);
@@ -329,7 +357,7 @@
 .mobilenav__sub { padding: 0 0 var(--space-md); text-align: center; }
 .mobilenav__sub li + li { margin-top: 0.75rem; }
 .mobilenav__sub a {
-  font-size: 0.8125rem; font-weight: 500;
+  font-size: 0.8125rem; font-weight: 700;
   letter-spacing: var(--tracking-wide); text-transform: uppercase;
   color: var(--on-ink-muted); text-decoration: none;
 }

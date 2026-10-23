@@ -1,0 +1,140 @@
+// LANDING PAGES  (layout: Layouts/Landing.aspx · cards: Assets/Lava/SubpageList.lava)
+//
+// A section's landing page: the header band gains a lead line (the page
+// description), and the child pages list as alternating image cards with a
+// slanted image edge.
+//
+// Mobile first: image on top (slant along its bottom edge), text below.
+// From $bp-md: image and text side by side; the image alternates sides and
+// its inner edge is slanted, so the cards zig-zag down the page.
+//
+// These cards live in interior-page content, which keeps core.css's
+// typography (no theme reset there; see $theme-scope), so every rule below
+// sets its own margins, colours and link states.
+
+@use "config" as *;
+
+// ---------------------------------------------------------------------------
+// Header band lead
+// ---------------------------------------------------------------------------
+.landing-band__lead {
+  margin: var(--space-md) 0 0;
+  max-width: 60ch;
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+// ---------------------------------------------------------------------------
+// Card list
+// ---------------------------------------------------------------------------
+.subpages {
+  display: grid;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+}
+
+.subpage-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration) var(--ease-out),
+              border-color var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out);
+}
+.subpage-card:hover { box-shadow: var(--shadow-lg); border-color: var(--border); transform: translateY(-3px); }
+.subpage-card:focus-within { outline: 3px solid var(--brand-dim); outline-offset: 3px; }
+
+// Image panel. The slant is a clip-path, so the card's own background shows
+// through the cut. Mobile: slanted along the bottom edge.
+.subpage-card__media {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  background: var(--brand-deep);
+  clip-path: polygon(0 0, 100% 0, 100% 84%, 0 100%);
+}
+.subpage-card__media img {
+  display: block;
+  width: 100%; height: 100%; object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+.subpage-card:hover .subpage-card__media img { transform: scale(1.04); }
+
+// No PageImage: a soft, light green field — a placeholder, so it stays quiet
+// next to real photography (tints from the top of the v-green scale)
+.subpage-card__media--empty {
+  background:
+    radial-gradient(70% 80% at 25% 20%, var(--v-green-50) 0%, transparent 70%),
+    linear-gradient(135deg, var(--v-green-100) 0%, var(--v-green-200) 60%, var(--v-green-300) 100%);
+}
+
+.subpage-card__body {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+}
+
+.subpage-card__title {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.6vw, 2.25rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: var(--tracking-tight);
+  text-transform: uppercase;
+  color: var(--text);
+}
+// The title link is stretched over the whole card (one click target). Link
+// states are set explicitly: core.css's a / a:hover colours would win here.
+.subpage-card__link,
+.subpage-card__link:is(:hover, :focus, :visited) { color: inherit; text-decoration: none; }
+.subpage-card__link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.subpage-card__link:focus-visible { outline: none; }   // the card shows focus instead
+
+.subpage-card__desc {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.subpage-card__cta { margin-top: var(--space-xs); }
+.subpage-card:hover .subpage-card__cta { background: var(--brand-bright); box-shadow: var(--shadow-glow); }
+
+// ---------------------------------------------------------------------------
+// Side by side, alternating, from the medium breakpoint
+// ---------------------------------------------------------------------------
+@media (min-width: #{$bp-md}) {
+  .subpage-card {
+    grid-template-columns: minmax(0, 46fr) minmax(0, 54fr);
+    min-height: clamp(220px, 22vw, 280px);
+  }
+  .subpage-card__media {
+    aspect-ratio: auto;
+    height: 100%;
+    // Image left: its right edge slants out toward the bottom
+    clip-path: polygon(0 0, 78% 0, 100% 100%, 0 100%);
+  }
+  .subpage-card__body {
+    justify-content: center;
+    padding: var(--space-xl) clamp(1.5rem, 3vw, 2.5rem) var(--space-xl) var(--space-md);
+  }
+  // Button sits at the outer corner, away from the image
+  .subpage-card__cta { align-self: flex-end; margin-top: auto; }
+
+  // Flipped (every second card): image right, slanting the other way
+  .subpage-card--flip { grid-template-columns: minmax(0, 54fr) minmax(0, 46fr); }
+  .subpage-card--flip .subpage-card__media {
+    order: 2;
+    clip-path: polygon(22% 0, 100% 0, 100% 100%, 0 100%);
+  }
+  .subpage-card--flip .subpage-card__body {
+    padding: var(--space-xl) var(--space-md) var(--space-xl) clamp(1.5rem, 3vw, 2.5rem);
+  }
+  .subpage-card--flip .subpage-card__cta { align-self: flex-start; }
+}

@@ -42,27 +42,49 @@ window.VRLHome = { version: '1.5' };
     syncRail();
   }
 
-  if (document.getElementById('messages')) {
-    /* ---------- messages: watch now ---------- */
-    var messages = document.getElementById('messages');
-    var player = messages.querySelector('.messages__player');
-    messages.querySelector('[data-watch]').addEventListener('click', function () {
+  /* ---------- messages: play in place ----------
+     Latest-message state only (markup: Assets/Lava/HomeMessages.lava). The
+     Rock media player is rendered up front, hidden; playing fades the UI
+     out, shows the player and starts it; closing pauses it. Rock's player
+     wraps either a Vimeo iframe or a <video>, so both are handled. */
+  var messages = document.getElementById('messages');
+  var player = messages && messages.querySelector('.messages__player');
+  if (player) {
+    var lastTrigger = null;
+
+    var command = function (method) {
+      var video = player.querySelector('video');
+      if (video) {
+        var r = video[method]();
+        if (r && r.catch) r.catch(function () {});   /* autoplay refused: the player's own play button remains */
+        return;
+      }
+      var frame = player.querySelector('iframe');
+      if (frame && frame.contentWindow) frame.contentWindow.postMessage(JSON.stringify({ method: method }), '*');
+    };
+    var open = function (trigger) {
+      lastTrigger = trigger;
       messages.setAttribute('data-playing', 'true');
       player.setAttribute('aria-hidden', 'false');
-      messages.querySelector('[data-watch-close]').focus();
-      /* ROCK: start playback on the Rock media element here. */
-    });
-    messages.querySelector('[data-watch-close]').addEventListener('click', function () {
+      var closeBtn = messages.querySelector('[data-watch-close]');
+      if (closeBtn) closeBtn.focus();
+      setTimeout(function () { command('play'); }, reduced.matches ? 0 : 300);   /* after the fade */
+    };
+    var close = function () {
+      if (messages.getAttribute('data-playing') !== 'true') return;
+      command('pause');
       messages.setAttribute('data-playing', 'false');
       player.setAttribute('aria-hidden', 'true');
-      messages.querySelector('[data-watch]').focus();
-    });
+      if (lastTrigger) lastTrigger.focus();
+    };
 
+    messages.querySelectorAll('[data-watch]').forEach(function (btn) {
+      btn.addEventListener('click', function () { open(btn); });
+    });
+    var closeBtn = messages.querySelector('[data-watch-close]');
+    if (closeBtn) closeBtn.addEventListener('click', close);
     document.addEventListener('keydown', function (e) {
-      if (e.key !== 'Escape' || messages.getAttribute('data-playing') !== 'true') return;
-      messages.setAttribute('data-playing', 'false');
-      player.setAttribute('aria-hidden', 'true');
-      messages.querySelector('[data-watch]').focus();
+      if (e.key === 'Escape') close();
     });
   }
 })();
@@ -74,8 +96,17 @@ window.VRLHome = { version: '1.5' };
    3. Helium-balloon drift on the Kids photos
    4. Students photo pile spreads from a stack as it scrolls in
    Skipped entirely under 900px and for prefers-reduced-motion.
+
+   Starts as soon as the DOM is ready (this file is deferred, after the
+   GSAP scripts), not on window load: load waits for every image on the
+   page, and until the choreography places the Next Steps cards they would
+   sit stacked mid-hero. ScrollTrigger re-measures on load by itself. The
+   cards stay hidden until html.stage-ready is set below (_home.scss).
    ============================================================ */
-window.addEventListener('load', function () {
+(function (start) {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+})(function () {
   if (!window.gsap || !window.ScrollTrigger) {
     /* CDN unavailable — hand the stage back to the static layout. */
     document.documentElement.classList.add('stage-static');
@@ -121,7 +152,7 @@ window.addEventListener('load', function () {
     tl.to(hero, { autoAlpha: 0, y: -80, duration: 0.2, ease: 'none' }, 0)
       .to(stepsHead, { opacity: 1, y: 0, duration: 0.24, ease: 'power2.out' }, 0.18)
       .to(deck, { y: 0, duration: 0.42, ease: 'power2.out' }, 0.12)
-      .to({}, { duration: 0.14 });
+      .to({}, { duration: 0.06 });   /* short hold once landed (was 0.14) */
 
     return function cleanup() {
       ScrollTrigger.removeEventListener('refreshInit', placeDeck);
@@ -133,7 +164,7 @@ window.addEventListener('load', function () {
 
   /* ---------- Desktop: the fan spreads into the row ---------- */
   mm.add('(min-width: 900px) and (prefers-reduced-motion: no-preference)', function () {
-    var cards = gsap.utils.toArray('#deck .step-card');
+    var cards = gsap.utils.toArray('#deck .nextstep-card');
     var mid = (cards.length - 1) / 2;   /* centre slot, whatever the card count */
 
     /* Heading + landed row are centred as one block in the space under
@@ -275,4 +306,6 @@ window.addEventListener('load', function () {
     });
   });
 
+  /* Cards are now placed (or the static layout applies): show them. */
+  document.documentElement.classList.add('stage-ready');
 });

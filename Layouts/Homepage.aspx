@@ -47,10 +47,12 @@
     </main>
 
     <script>
-        /* Safety net: if GSAP or home.js failed to load, hand the stage back to
-           the static hero + grid so nothing is left mid-animation. */
+        /* Safety net: if GSAP or home.js failed to load, or the choreography
+           never finished setting up (no html.stage-ready), hand the stage back
+           to the static hero + grid so nothing is left hidden or mid-animation. */
         window.addEventListener('load', function () {
-            if (!window.gsap || !window.ScrollTrigger || !window.VRLHome) {
+            var root = document.documentElement;
+            if (!window.gsap || !window.ScrollTrigger || !window.VRLHome || !root.classList.contains('stage-ready')) {
                 document.documentElement.classList.add('stage-static');
             }
         });

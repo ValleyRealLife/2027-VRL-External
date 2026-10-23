@@ -1,0 +1,239 @@
+{% comment %}
+    HOMEPAGE: MESSAGES — for an HTML block in the homepage's Main zone,
+    between the Home.lava block and the HomeEvents.lava block.
+
+    Block content:            {% include '~~/Assets/Lava/HomeMessages.lava' %}
+    Enabled Lava Commands:    RockEntity
+    Cache Duration:           0 while iterating (later: short, so the live
+                              window and a new message show up promptly)
+
+    Two states, picked server-side from the live window below:
+      LIVE      Resi player inline (muted autoplay, unmute button), a link
+                to the live page and to the current series.
+      NOT LIVE  The current message: thumbnail (the play button), title,
+                date · speaker, description, current series link. Playing it
+                fades the section's UI out and the Rock media player takes
+                over the band (Assets/Scripts/home.js).
+    Both: the 7 previous series as a rail, and a blurred copy of the current
+    series graphic as the band's background.
+
+    DATA (entity commands):
+      Messages  content channel 5. Current = latest item whose start date
+                has passed, that hasn't expired, AND that has a VimeoMedia
+                value — items missing their video are skipped, so a message
+                only appears once it can be watched. Speaker attribute,
+                VimeoMedia media element (thumbnail + player).
+      Series    content channel 4, the messages' parent channel. The current
+                series is the current message's parent; the rail is the 7
+                newest started series, excluding the current one.
+
+    Links to series pages are placeholders (`seriesPlaceholderUrl`) until the
+    series detail pages exist; they'll use the item slug.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign messagesChannelId = 5 -%}
+{%- assign seriesChannelId = 4 -%}
+{%- assign railSize = 7 -%}
+{%- assign livePageUrl = 'https://www.vrl.church/watch/live' -%}
+{%- assign seriesPlaceholderUrl = '#' -%}
+{%- comment -%} ROCK: the message archive page, once it exists {%- endcomment -%}
+{%- assign archivePlaceholderUrl = '#' -%}
+{%- assign resiEmbedId = '692bc6a6-70a1-4fa1-af72-e1a7e7290763' -%}
+
+{%- comment -%}
+    ===== LIVE WINDOW =====
+    Services are live Sundays 7:45am–12:15pm (server time). Times are
+    24-hour HHmm integers: 745 = 7:45am, 1215 = 12:15pm.
+    ROCK: replace with a schedule check later (same as LiveService.lava).
+{%- endcomment -%}
+{%- assign liveDay = 'Sunday' -%}
+{%- assign liveStartTime = 745 -%}
+{%- assign liveEndTime = 1215 -%}
+{%- assign nowDay = 'Now' | Date:'dddd' -%}
+{%- assign nowTime = 'Now' | Date:'HHmm' | AsInteger -%}
+{%- assign isLive = false -%}
+{%- if nowDay == liveDay and nowTime >= liveStartTime and nowTime <= liveEndTime -%}
+    {%- assign isLive = true -%}
+{%- endif -%}
+
+{%- comment -%} ===== CURRENT MESSAGE + ITS SERIES ===== {%- endcomment -%}
+{%- assign messageItem = null -%}
+{%- assign seriesItem = null -%}
+{%- assign hasMedia = false -%}
+{% contentchannelitem where:'ContentChannelId == 5' sort:'StartDateTime desc' limit:'25' %}
+    {%- for item in contentchannelitemItems -%}
+        {%- assign minutesUntilStart = 'Now' | DateDiff:item.StartDateTime,'m' -%}
+        {%- if minutesUntilStart > 0 %}{% continue %}{% endif -%}
+        {%- if item.ExpireDateTime != null and item.ExpireDateTime != empty -%}
+            {%- assign minutesUntilExpire = 'Now' | DateDiff:item.ExpireDateTime,'m' -%}
+            {%- if minutesUntilExpire < 0 %}{% continue %}{% endif -%}
+        {%- endif -%}
+        {%- comment -%} No video attached (VimeoMedia empty): not eligible as the current message {%- endcomment -%}
+        {%- assign itemMediaGuid = item | Attribute:'VimeoMedia','RawValue' | Trim -%}
+        {%- if itemMediaGuid == '' %}{% continue %}{% endif -%}
+        {%- assign messageItem = item -%}
+        {%- break -%}
+    {%- endfor -%}
+{% endcontentchannelitem %}
+
+{%- if messageItem -%}
+    {%- for association in messageItem.ParentItems -%}
+        {%- if association.ContentChannelItem.ContentChannelId == seriesChannelId -%}
+            {%- assign seriesItem = association.ContentChannelItem -%}
+            {%- break -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {%- assign messageTitle = messageItem.Title -%}
+    {%- assign messageDate = messageItem.StartDateTime | Date:'MMMM d, yyyy' -%}
+    {%- assign messageSpeaker = messageItem | Attribute:'Speaker' -%}
+    {%- assign messageDesc = messageItem.Content | StripHtml | Trim | Truncate:160 -%}
+
+    {%- comment -%} VimeoMedia media element: player id + thumbnail (4th size, as in VRL24_SermonDetail.lava) {%- endcomment -%}
+    {%- assign messageMedia = messageItem | Attribute:'VimeoMedia','Object' -%}
+    {%- comment -%}
+        Fallback: the attribute's raw value is the media element's GUID. If
+        'Object' comes back empty on entity-command items, load it directly.
+    {%- endcomment -%}
+    {%- if messageMedia == '' or messageMedia == null -%}
+        {%- assign messageMediaGuid = messageItem | Attribute:'VimeoMedia','RawValue' | Trim -%}
+        {%- if messageMediaGuid != '' -%}
+            {% mediaelement where:'Guid == "{{ messageMediaGuid }}"' limit:'1' %}
+                {%- assign messageMedia = mediaelementItems | First -%}
+            {% endmediaelement %}
+        {%- endif -%}
+    {%- endif -%}
+    {%- assign messageThumb = '' -%}
+    {%- assign hasMedia = false -%}
+    {%- if messageMedia != '' and messageMedia != null -%}
+        {%- assign hasMedia = true -%}
+        {%- assign thumbData = messageMedia.ThumbnailDataJson | FromJSON -%}
+        {%- assign thumbCount = thumbData | Size -%}
+        {%- if thumbCount > 3 -%}
+            {%- assign messageThumb = thumbData[3].Link -%}
+        {%- elsif thumbCount > 0 -%}
+            {%- assign lastThumb = thumbData | Last -%}
+            {%- assign messageThumb = lastThumb.Link -%}
+        {%- endif -%}
+    {%- endif -%}
+{%- endif -%}
+
+{%- assign seriesTitle = '' -%}
+{%- assign seriesImageGuid = '' -%}
+{%- if seriesItem -%}
+    {%- assign seriesTitle = seriesItem.Title -%}
+    {%- assign seriesImageGuid = seriesItem | Attribute:'SeriesImage','RawValue' -%}
+{%- endif -%}
+{%- comment -%} No Vimeo thumbnail: fall back to the series graphic {%- endcomment -%}
+{%- if messageThumb == '' and seriesImageGuid != '' -%}
+    {%- capture messageThumb %}/GetImage.ashx?guid={{ seriesImageGuid }}&w=960&h=540&mode=crop{% endcapture -%}
+{%- endif -%}
+
+{%- comment -%} ===== PREVIOUS SERIES (rail) ===== {%- endcomment -%}
+{%- assign railCount = 0 -%}
+{%- capture railHtml -%}
+{% contentchannelitem where:'ContentChannelId == 4' sort:'StartDateTime desc' limit:'20' %}
+    {%- for railItem in contentchannelitemItems -%}
+        {%- if railCount >= railSize %}{% break %}{% endif -%}
+        {%- if seriesItem and railItem.Id == seriesItem.Id %}{% continue %}{% endif -%}
+        {%- assign railMinutesUntilStart = 'Now' | DateDiff:railItem.StartDateTime,'m' -%}
+        {%- if railMinutesUntilStart > 0 %}{% continue %}{% endif -%}
+        {%- assign railImageGuid = railItem | Attribute:'SeriesImage','RawValue' -%}
+        {%- if railImageGuid == '' %}{% continue %}{% endif -%}
+        {%- assign railCount = railCount | Plus:1 %}
+        <a class="series__item" href="{{ seriesPlaceholderUrl }}">
+          <img src="/GetImage.ashx?guid={{ railImageGuid }}&w=480&h=270&mode=crop" width="480" height="270" alt="{{ railItem.Title | Escape }}" />
+        </a>
+    {%- endfor -%}
+{% endcontentchannelitem %}
+{%- endcapture -%}
+
+<!-- ============================================================
+     SECTION: MESSAGES
+     ============================================================ -->
+<section class="messages" data-cover id="messages" data-state="{% if isLive %}live{% else %}latest{% endif %}" data-playing="false" aria-labelledby="messages-title">
+  <div class="messages__bg" aria-hidden="true">
+    {%- if seriesImageGuid != '' %}
+    <img src="/GetImage.ashx?guid={{ seriesImageGuid }}&w=960" alt="" />
+    {%- endif %}
+  </div>
+
+  <div class="container messages__inner">
+    {%- if isLive %}
+    <h2 class="messages__label" id="messages-title"><span class="messages__live-dot" aria-hidden="true"></span>Live now</h2>
+
+    <div class="messages__feature messages__feature--live">
+      <div class="messages__live">
+        {%- comment -%}
+          Resi: autoplay requires mute=1; showUnmuteButton is how people turn
+          sound on. Don't use background=1 (it hides controls and audio).
+        {%- endcomment %}
+        <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="true" class="resi-video-frame"
+          title="Valley Real Life live stream"
+          src="https://control.resi.io/webplayer/video.html?id={{ resiEmbedId }}&iframe=1&autoplay=1&mute=1&controls=1&showUnmuteButton=1"></iframe>
+        <script defer src="https://control.resi.io/webplayer/page.min.js"></script>
+      </div>
+      <div class="messages__actions">
+        <a class="btn btn--primary" href="{{ livePageUrl }}">Watch on the live page</a>
+        {%- if seriesTitle != '' %}
+        <a class="messages__series-link" href="{{ seriesPlaceholderUrl }}"><span>Current series</span> {{ seriesTitle }}</a>
+        {%- endif %}
+      </div>
+    </div>
+
+    {%- elsif messageItem %}
+    <h2 class="messages__label" id="messages-title">Latest message</h2>
+
+    <div class="messages__feature">
+      {%- if hasMedia %}
+      <button class="messages__art" type="button" data-watch>
+        {%- if messageThumb != '' %}<img src="{{ messageThumb }}" alt="" />{% endif %}
+        <span class="messages__art-play" aria-hidden="true"><svg width="22" height="22"><use href="#i-play"/></svg></span>
+        <span class="u-visually-hidden">Play {{ messageTitle }}</span>
+      </button>
+      {%- elsif messageThumb != '' %}
+      <div class="messages__art"><img src="{{ messageThumb }}" alt="" /></div>
+      {%- endif %}
+
+      <div class="messages__body">
+        <h3 class="messages__title">{{ messageTitle }}</h3>
+        <p class="messages__meta">{{ messageDate }}{% if messageSpeaker != empty %} · {{ messageSpeaker }}{% endif %}</p>
+        {%- if messageDesc != '' %}
+        <p class="messages__desc">{{ messageDesc }}</p>
+        {%- endif %}
+        {%- if seriesTitle != '' %}
+        <a class="messages__series-link" href="{{ seriesPlaceholderUrl }}"><span>Series</span> {{ seriesTitle }}</a>
+        {%- endif %}
+      </div>
+    </div>
+
+    {%- else %}
+    <h2 class="messages__label" id="messages-title">Messages</h2>
+    <p class="messages__desc">New messages are on their way. Check back soon.</p>
+    {%- endif %}
+
+    {%- if railCount > 0 %}
+    <div class="series">
+      <h3 class="series__title">Recent series</h3>
+      <div class="series__rail">
+        {{ railHtml }}
+      </div>
+      <a class="series__all" href="{{ archivePlaceholderUrl }}">View all messages</a>
+    </div>
+    {%- endif %}
+  </div>
+
+  {%- unless isLive %}{% if hasMedia %}
+  <!-- Playing: the player takes over the band; the UI above fades out -->
+  <div class="messages__player" aria-hidden="true">
+    <div class="messages__player-frame">
+      {[ mediaplayer media:'{{ messageMedia.Id }}' autoresumeindays:'14' combineplaystatisticsindays:'14' hidecontrolsstopped:'true' controls:'play-large,play,progress,current-time,duration,mute,volume,settings,airplay,fullscreen' ]}{[ endmediaplayer ]}
+    </div>
+    <button class="messages__player-close" type="button" data-watch-close>
+      <span class="u-visually-hidden">Close player</span>
+      <svg width="20" height="20" aria-hidden="true"><use href="#i-x"/></svg>
+    </button>
+  </div>
+  {%- endif %}{% endunless %}
+</section>

@@ -1,0 +1,162 @@
+{% comment %}
+    HOMEPAGE: WHAT'S HAPPENING — for an HTML block in the homepage's Main
+    zone, placed AFTER the HTML block that includes Home.lava.
+
+    Block content:            {% include '~~/Assets/Lava/HomeEvents.lava' %}
+    Enabled Lava Commands:    Sql
+    Cache Duration:           0 while iterating (later: short, events change)
+
+    DATA SOURCE (for now): one SQL query, adapted from the Connect theme's
+    HomepageFeaturedEvents.lava. For each active event item on calendar 1 with
+    audience 150, it returns the next future occurrence, soonest first, capped
+    at `maxCards`, plus the summary/description and the event's other
+    audiences (the affinity tag). ROCK: this is the one place to change when
+    the data model moves off the events calendar — the cards below only read
+    `cardItem*` values.
+
+    Card: thumbnail, date tag, affinity tag, title, description, "View details".
+    The title link is stretched over the whole card, so each card is ONE link;
+    the "View details" button is a visual cue inside it, not a second link.
+    Affinity tag = the event's audiences other than `audienceId`
+    (e.g. "Men & Women"); omitted when there are none.
+
+    The footer runway must stay the LAST element of the Main zone's last block,
+    so it lives here, at the end. (Sticky cover sections pin within one parent;
+    _home.scss flattens the Main zone's Rock wrappers outside edit mode so the
+    sections from both blocks share it.)
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign calendarId = 1 -%}
+{%- assign audienceId = 150 -%}
+{%- assign maxCards = 9 -%}
+{%- assign fallbackImageGuid = 'ea573748-2354-4f4a-875d-b8d2dfa30e5d' -%}
+{%- comment -%} Used when an event has no Details URL of its own (from the Connect theme). {%- endcomment -%}
+{%- assign detailsPageUrl = 'https://www.vrl.church/get-involved/events/details' -%}
+
+{%- comment -%} ===== DATA SOURCE ===== {%- endcomment -%}
+{% sql return:'events' securityenabled:'false' %}
+    SELECT TOP ({{ maxCards }})
+        eio.[Id] AS [OccurrenceId],
+        ei.[Name] AS [EventName],
+        eio.[NextStartDateTime],
+        ei.[DetailsUrl],
+        ei.[Summary],
+        ei.[Description],
+        bf.[Guid] AS [PhotoGuid],
+        STUFF((
+            SELECT ' & ' + dv.[Value]
+            FROM [EventItemAudience] a2
+            INNER JOIN [DefinedValue] dv ON dv.[Id] = a2.[DefinedValueId]
+            WHERE a2.[EventItemId] = ei.[Id] AND a2.[DefinedValueId] <> {{ audienceId }}
+            ORDER BY dv.[Order]
+            FOR XML PATH(''), TYPE
+        ).value('.', 'nvarchar(max)'), 1, 3, '') AS [Affinity]
+    FROM (
+        /* All future occurrences, numbered per event: row 1 is the next one */
+        SELECT
+            [Id],
+            [EventItemId],
+            [NextStartDateTime],
+            ROW_NUMBER() OVER (PARTITION BY [EventItemId] ORDER BY [NextStartDateTime] ASC) AS [rn]
+        FROM [EventItemOccurrence]
+        WHERE [NextStartDateTime] >= GETDATE()
+    ) eio
+    INNER JOIN [EventItem] ei ON eio.[EventItemId] = ei.[Id]
+    INNER JOIN [EventItemAudience] eia ON ei.[Id] = eia.[EventItemId]
+    LEFT JOIN [BinaryFile] bf ON ei.[PhotoId] = bf.[Id]
+    WHERE eio.[rn] = 1
+      AND ei.[IsActive] = 1
+      AND eia.[DefinedValueId] = {{ audienceId }}
+      AND EXISTS (
+          SELECT 1 FROM [EventCalendarItem] eci
+          WHERE eci.[EventItemId] = ei.[Id] AND eci.[EventCalendarId] = {{ calendarId }}
+      )
+    ORDER BY eio.[NextStartDateTime] ASC
+{% endsql %}
+{%- assign cardCount = events | Size -%}
+
+{%- capture cardsHtml -%}
+    {%- for event in events -%}
+        {%- comment -%} Values the card reads {%- endcomment -%}
+        {%- assign cardItemName = event.EventName -%}
+        {%- assign cardItemStart = event.NextStartDateTime -%}
+        {%- assign cardItemAffinity = event.Affinity | Default:'' -%}
+
+        {%- if event.DetailsUrl and event.DetailsUrl != '' -%}
+            {%- assign cardItemUrl = event.DetailsUrl -%}
+        {%- else -%}
+            {%- capture cardItemUrl %}{{ detailsPageUrl }}?EventOccurrenceId={{ event.OccurrenceId }}&date={{ event.NextStartDateTime | Date:'yyyy-MM-ddTHH:mm:ss' }}{% endcapture -%}
+        {%- endif -%}
+
+        {%- if event.PhotoGuid != null -%}
+            {%- capture cardItemImage %}/GetImage.ashx?guid={{ event.PhotoGuid }}&w=640&h=360&mode=crop{% endcapture -%}
+        {%- else -%}
+            {%- capture cardItemImage %}/GetImage.ashx?guid={{ fallbackImageGuid }}&w=640&h=360&mode=crop{% endcapture -%}
+        {%- endif -%}
+
+        {%- assign cardItemTeaser = event.Summary | StripHtml | Trim -%}
+        {%- if cardItemTeaser == '' %}{% assign cardItemTeaser = event.Description | StripHtml | Trim %}{% endif %}
+
+        <li class="event-card">
+          <div class="event-card__thumb">
+            <img src="{{ cardItemImage }}" alt="" />
+            {%- if cardItemStart %}
+            <p class="event-card__date"><span class="m">{{ cardItemStart | Date:'MMM' }}</span><span class="d">{{ cardItemStart | Date:'d' }}</span></p>
+            {%- endif %}
+          </div>
+          <div class="event-card__body">
+            {%- if cardItemAffinity != '' %}
+            <p class="event-card__tag">{{ cardItemAffinity }}</p>
+            {%- endif %}
+            <h3><a class="event-card__link" href="{{ cardItemUrl }}">{{ cardItemName }}</a></h3>
+            {%- if cardItemTeaser != '' %}
+            <p class="event-card__desc">{{ cardItemTeaser | Truncate:140 }}</p>
+            {%- endif %}
+          </div>
+          <div class="event-card__actions">
+            <span class="btn btn--primary btn--sm" aria-hidden="true">View details</span>
+          </div>
+        </li>
+    {%- endfor -%}
+{%- endcapture -%}
+
+<!-- ============================================================
+     SECTION: UPCOMING EVENTS
+     ============================================================ -->
+<section class="events" data-cover aria-labelledby="events-title">
+  <div class="container">
+    <div class="section-head">
+      <h2 id="events-title">What's happening</h2>
+      <p>Find your place to connect</p>
+    </div>
+
+    {%- if cardCount == 0 %}
+    <p class="events__empty">There are no upcoming events right now. Check back soon.</p>
+    {%- else %}
+    <div class="events__rail-wrap">
+      <button class="events__nav events__nav--prev" type="button" data-rail-prev>
+        <span class="u-visually-hidden">Scroll events left</span>
+        <svg width="22" height="22" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+      </button>
+
+      <ul class="events__rail" id="events-rail" tabindex="0" aria-label="What's happening — upcoming events, scrollable">
+        {{ cardsHtml }}
+      </ul>
+
+      <button class="events__nav events__nav--next" type="button" data-rail-next>
+        <span class="u-visually-hidden">Scroll events right</span>
+        <svg width="22" height="22" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+      </button>
+    </div>
+    {%- endif %}
+
+    <p class="events__all"><a class="btn btn--outline" href="/events">View all events</a></p>
+  </div>
+</section>
+
+<!-- Footer runway: position: sticky can't hold a section past the end of its
+     parent, so the runway extends the Main zone by the footer's height + a
+     dwell and the footer slides back up over Events. Empty and hidden without
+     JS. KEEP THIS THE LAST ELEMENT OF THE MAIN ZONE (i.e. of this file). -->
+<div class="footer-runway" aria-hidden="true"></div>

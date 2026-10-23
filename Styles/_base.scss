@@ -29,22 +29,38 @@ body {
 }
 body.is-locked { overflow: hidden; }
 
-// `color: inherit` on headings and paragraphs is load-bearing: core.css gives
-// every h1–h6 `color: var(--color-interface-stronger)` and every <p>
-// `color: var(--color-interface-strong)` (both near-black), which made text in
-// the dark bands (mega menu, drawer, footer) unreadable. The design lets text
-// take its colour from the band it sits in.
-h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 800; line-height: 1.04; letter-spacing: var(--tracking-tight); color: inherit; }
-p { margin: 0; color: inherit; }
-img, svg, video { display: block; max-width: 100%; }
-img { height: auto; }
-button { font: inherit; cursor: pointer; }
-a { color: inherit; }
-ul, ol { margin: 0; padding: 0; list-style: none; }
 ::selection { background: var(--brand); color: var(--text-on-brand); }
 
-// Visible focus is non-negotiable.
-:where(a, button, [tabindex], summary, input, select, dialog):focus-visible {
+// ---------------------------------------------------------------------------
+// SCOPED ELEMENT RESET
+// The concept's reset (headings, paragraphs, links, lists, block-level media)
+// applies ONLY inside the theme's own regions ($theme-scope) and never inside
+// Rock's admin UI ($not-admin): modals such as the HTML editor render inside
+// the page, and zone/block config bars sit inside the zones. Everywhere else —
+// interior-page content, admin dialogs — keeps core.css's typography, so
+// paragraphs keep their spacing, lists keep bullets, links stay link-coloured.
+//
+// Specificity is held at (0,0,1) with :where(), the same as core.css's element
+// rules (which these beat by coming later), so component rules like
+// `.mega__visit h2` (0,1,1) still win over the reset.
+//
+// `color: inherit` on headings and paragraphs is load-bearing: core.css gives
+// every h1–h6 and <p> a near-black colour, which made text in the dark bands
+// unreadable. The design lets text take its colour from the band it sits in.
+// ---------------------------------------------------------------------------
+:where(#{$theme-scope}) :is(h1, h2, h3, h4, h5, h6):where(#{$not-admin}) {
+  margin: 0; font-weight: 800; line-height: 1.04; letter-spacing: var(--tracking-tight); color: inherit;
+}
+:where(#{$theme-scope}) p:where(#{$not-admin}) { margin: 0; color: inherit; }
+:where(#{$theme-scope}) :is(img, svg, video):where(#{$not-admin}) { display: block; max-width: 100%; }
+:where(#{$theme-scope}) img:where(#{$not-admin}) { height: auto; }
+:where(#{$theme-scope}) button:where(#{$not-admin}) { font: inherit; cursor: pointer; }
+:where(#{$theme-scope}) a:where(#{$not-admin}) { color: inherit; }
+:where(#{$theme-scope}) :is(ul, ol):where(#{$not-admin}) { margin: 0; padding: 0; list-style: none; }
+
+// Visible focus is non-negotiable (theme regions; Rock's admin has its own).
+:where(#{$theme-scope}) :where(a, button, [tabindex], summary, input, select):where(#{$not-admin}):focus-visible,
+.care-modal:focus-visible {
   outline: 3px solid var(--brand-dim);
   outline-offset: 3px;
   border-radius: var(--radius-xs);
@@ -103,11 +119,18 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 // ===========================================================================
 // COMPONENT: BUTTONS
-// `.btn` is also Bootstrap's class, so Rock blocks that render
-// <a class="btn btn-primary"> pick up the pill. The BS modifier names are
-// aliased to the concept's BEM modifiers so both render the same.
+// The theme's pill applies only to buttons carrying a BEM modifier
+// (`btn btn--primary`, `btn btn--outline btn--sm`, …). Rock's admin UI and
+// Rock blocks use Bootstrap's `btn btn-primary` / `btn-default` / `btn-sm`,
+// which keep core.css's styling — restyling those leaked the pill into the
+// HTML editor toolbar and its Save/Cancel buttons. To give a Rock block the
+// theme look, add a BEM modifier to its button markup.
+//
+// `:where(.btn)` keeps each rule at the specificity it had as plain `.btn` /
+// `.btn--x`, so single-class layout rules (e.g. `.nav__cta { display: none }`)
+// still override the button's display.
 // ===========================================================================
-.btn {
+:where(.btn)[class*="btn--"] {
   display: inline-flex; align-items: center; justify-content: center;
   gap: var(--space-xs);
   padding: 0.75rem 1.75rem;
@@ -123,22 +146,16 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
               transform var(--duration) var(--ease-out),
               box-shadow var(--duration) var(--ease-out);
 }
-.btn--primary,
-.btn-primary { background: var(--brand); color: var(--text-on-brand); border-color: transparent; }
-.btn--primary:hover, .btn--primary:focus,
-.btn-primary:hover, .btn-primary:focus { background: var(--brand-bright); color: var(--text-on-brand); box-shadow: var(--shadow-glow); text-decoration: none; }
-.btn--outline,
-.btn-default { border-color: currentColor; background: transparent; }
-.btn--outline:hover,
-.btn-default:hover { background: var(--text); color: var(--bg-elevated); border-color: var(--text); text-decoration: none; }
-.on-ink .btn--outline:hover { background: var(--on-ink); color: var(--ink); border-color: var(--on-ink); }
-.btn--ghost { background: oklch(1 0 0 / 0.1); color: var(--on-ink); border-color: oklch(1 0 0 / 0.35); }
-.btn--ghost:hover { background: var(--on-ink); color: var(--ink); }
-.btn--lg,
-.btn-lg { padding: 0.875rem 2.375rem; font-size: 0.9375rem; letter-spacing: var(--tracking-wider); }
-.btn--sm,
-.btn-sm, .btn-xs { padding: 0.5rem 1.125rem; font-size: 0.75rem; }
-.btn:active { transform: translateY(1px); }
+:where(.btn).btn--primary { background: var(--brand); color: var(--text-on-brand); border-color: transparent; }
+:where(.btn).btn--primary:is(:hover, :focus) { background: var(--brand-bright); color: var(--text-on-brand); box-shadow: var(--shadow-glow); text-decoration: none; }
+:where(.btn).btn--outline { border-color: currentColor; background: transparent; }
+:where(.btn).btn--outline:hover { background: var(--text); color: var(--bg-elevated); border-color: var(--text); text-decoration: none; }
+.on-ink :where(.btn).btn--outline:hover { background: var(--on-ink); color: var(--ink); border-color: var(--on-ink); }
+:where(.btn).btn--ghost { background: oklch(1 0 0 / 0.1); color: var(--on-ink); border-color: oklch(1 0 0 / 0.35); }
+:where(.btn).btn--ghost:hover { background: var(--on-ink); color: var(--ink); }
+:where(.btn).btn--lg { padding: 0.875rem 2.375rem; font-size: 0.9375rem; letter-spacing: var(--tracking-wider); }
+:where(.btn).btn--sm { padding: 0.5rem 1.125rem; font-size: 0.75rem; }
+:where(.btn)[class*="btn--"]:active { transform: translateY(1px); }
 
 // ===========================================================================
 // COMPONENT: social row  (mega menu aside, mobile drawer, footer)
@@ -176,10 +193,10 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .skip-link:focus { color: var(--text-on-brand); }
 .care-option:is(:hover, :focus),
 .share__item:is(:hover, :focus) { color: var(--text); }
-.step-card:is(:hover, :focus) { color: #fff; }
+.nextstep-card:is(:hover, :focus) { color: #fff; }
 .series__item:is(:hover, :focus) { color: inherit; }
-.btn--outline:focus, .btn-default:focus { color: inherit; }
-.btn--ghost:focus { color: var(--on-ink); }
+:where(.btn).btn--outline:focus { color: inherit; }
+:where(.btn).btn--ghost:focus { color: var(--on-ink); }
 .mobilenav__single { color: inherit; }
 .mobilenav__single:is(:hover, :focus) { color: var(--brand); }
 

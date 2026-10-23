@@ -54,7 +54,7 @@
 .page-feature { position: relative; }
 
 // Main content
-.page-content { padding-block: clamp(2rem, 5vw, 4rem); }
+.page-content { padding-block: clamp(1.25rem, 3vw, 2rem) clamp(2rem, 5vw, 4rem); }   // lighter on top: the title band already separates
 .page-content > * + * { margin-top: var(--space-xl); }
 
 // Zones B/C/D: one column on phones, thirds from the medium breakpoint.
@@ -66,6 +66,34 @@
 // view mode, but the grid wrapper would still take its margin. (:empty won't
 // do — the whitespace between the zone tags counts as content.)
 .page-grid:not(:has(*)) { display: none; }
+
+// ===========================================================================
+// ROCK EDIT MODE
+// Rock's page admin toggles `zone-highlight` / `block-highlight` on <body>
+// when zone or block editing is switched on (Scripts/Rock/Admin/pageAdmin.js).
+// Normally the utility bar and header are fixed over the page, and the
+// homepage's Main zone starts at the very top behind them, so every zone's
+// config controls stacked in the same corner. While editing:
+//   • the utility bar and header join the normal flow, so each zone's controls
+//     sit at the top of its own region;
+//   • the pinned cover sections and the footer runway switch off, so the
+//     homepage is a plain stack of blocks.
+// Switching editing off restores everything without a reload.
+// ===========================================================================
+body:is(.zone-highlight, .block-highlight) {
+  --footer-h: 0px;   // cancels the runway pull-up (theme.js sets it on <html>)
+}
+body:is(.zone-highlight, .block-highlight) :is(.utilbar, .site-header) {
+  position: relative;
+  inset: auto;
+}
+body:is(.zone-highlight, .block-highlight) .page { padding-top: 0; }
+body:is(.zone-highlight, .block-highlight) [data-cover] {
+  position: relative;
+  top: auto;
+  margin-top: 0;
+}
+body:is(.zone-highlight, .block-highlight) .footer-runway { display: none; }
 
 // ===========================================================================
 // ROCK CHROME

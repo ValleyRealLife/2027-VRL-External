@@ -17,3 +17,18 @@ $bp-xl:  1400px;  // events rail arrows clear the cards entirely
 // top-level page, aside column. Emitted literally into each rule so
 // var(--menu-cols) resolves on the element that carries the inline count.
 $menu-grid: minmax(190px, 1.1fr) repeat(var(--menu-cols, 4), minmax(0, 1fr)) minmax(180px, 0.95fr);
+
+// Logo width, computed from the target height × aspect ratio (tokens in
+// _tokens.scss / theme.json) so the image is sized by width with
+// `height: auto` and can never stretch. The fallback ratio is interpolated so
+// Sass emits `694 / 168` literally instead of dividing it.
+$logo-width: calc(var(--logo-height, 34px) * (var(--logo-aspect, #{"694 / 168"})));
+
+// Where the theme's element reset (_base.scss) applies: the theme's own
+// regions only. Interior-page content (.page) deliberately keeps core.css's
+// typography so rich text from Rock blocks reads normally.
+$theme-scope: ".utilbar, .site-header, .site-footer, .home, .care-modal";
+
+// …and never inside Rock's admin UI, even when it renders within those
+// regions (the HTML editor modal, zone/block config bars, edit-mode chrome).
+$not-admin: ':not(.modal, .modal *, .config-bar, .config-bar *, [class*="-configuration"], [class*="-configuration"] *)';

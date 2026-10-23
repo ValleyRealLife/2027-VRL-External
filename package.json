@@ -6,8 +6,7 @@
   "scripts": {
     "build": "node tools/build.mjs",
     "watch": "node tools/build.mjs --watch",
-    "check": "node tools/check-theme.mjs && node tools/check-master-bindings.mjs",
-    "port": "python3 -I tools/port-concept.py Concepts/Home2027-v1.5.html ."
+    "check": "node tools/check-theme.mjs && node tools/check-master-bindings.mjs"
   },
   "devDependencies": {
     "sass": "^1.102.0"

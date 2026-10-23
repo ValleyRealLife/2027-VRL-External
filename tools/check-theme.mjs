@@ -131,5 +131,16 @@ for (const set of themeJson.availableIconSets ?? []) {
 }
 if (!iconFailures) pass(`icon set import(s) present in theme.css Top region: ${(themeJson.availableIconSets ?? []).join(', ')}`);
 
+// --- 5. Rock's HTML editor stylesheet ------------------------------------------
+// Rock's admin "Edit HTML" dialog (Summernote) renders inside the public page
+// and depends on Styles/summernote/summernote.min.css for its toolbar icons and
+// editing area. Rock's own themes import it; without it the editor is broken.
+
+if (/summernote(\.min)?\.css/.test(compiled.slice(0, compiled.indexOf('{') === -1 ? undefined : compiled.indexOf('{')))) {
+  pass('Summernote (HTML editor) stylesheet imported before the first rule');
+} else {
+  fail('theme.css: Styles/summernote/summernote.min.css is not imported — Rock\'s HTML editor dialog will render without its toolbar icons or editing area');
+}
+
 console.log(failed ? `\n${failed} failure(s)` : '\nALL CHECKS PASSED');
 process.exit(failed ? 1 : 0);

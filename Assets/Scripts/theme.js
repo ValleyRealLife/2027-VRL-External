@@ -62,6 +62,9 @@
     if (state !== 'open' && header.getAttribute('data-menu') === 'open') closedAt = Date.now();
     header.setAttribute('data-menu', state);
     document.body.setAttribute('data-menu', state);
+    if (state !== 'open') {
+      header.querySelectorAll('.is-hot').forEach(function (el) { el.classList.remove('is-hot'); });
+    }
   };
 
   if (header) {
@@ -104,21 +107,44 @@
       if (!header.contains(e.relatedTarget) && !zoneHovered()) setMenu('idle');
     });
 
-    /* Column highlight: hovering or focusing a top-level link lifts its column
-       of children. Link and column share a page id (data-page / data-col). */
-    var setHotColumn = function (id) {
-      header.querySelectorAll('.mega__col[data-col]').forEach(function (col) {
-        col.classList.toggle('is-hot', id !== null && col.getAttribute('data-col') === id);
+    /* Link ↔ column pairing. Hovering or focusing a top-level link lifts its
+       column of children; hovering or focusing inside a column keeps its parent
+       link underlined. Link and column share a page id (data-page / data-col),
+       and both get .is-hot. The pairing holds until another link or column is
+       hovered, or the menu closes (setMenu clears it). */
+    var setHot = function (id) {
+      header.querySelectorAll('.nav__link[data-page], .mega__col[data-col]').forEach(function (el) {
+        var elId = el.getAttribute('data-page') || el.getAttribute('data-col');
+        el.classList.toggle('is-hot', id !== null && elId === id);
       });
     };
     var hotFrom = function (e) {
-      var link = e.target.closest('.nav__link[data-page]');
-      if (link) setHotColumn(link.getAttribute('data-page'));
+      var el = e.target.closest('.nav__link[data-page], .mega__col[data-col]');
+      if (el) setHot(el.getAttribute('data-page') || el.getAttribute('data-col'));
     };
     header.addEventListener('mouseover', hotFrom);
     header.addEventListener('focusin', hotFrom);
-    var navList = header.querySelector('.nav__list');
-    if (navList) navList.addEventListener('mouseleave', function () { setHotColumn(null); });
+
+    /* Exits that don't need a mouse or a keyboard. On a touch screen (e.g. a
+       landscape iPad, which gets the desktop menu) a tap fires the hover that
+       opens the menu, but nothing ever fires the matching mouseleave, and
+       there's no Esc key — the menu stayed open until a refresh. So:
+         • a tap or click anywhere outside the bars closes it;
+         • the panel has a "Close menu" button, shown on devices without
+           hover (CSS: @media (hover: none)). */
+    var closeMenu = function () {
+      clearTimeout(menuTimer);
+      if (document.activeElement && header.contains(document.activeElement)) document.activeElement.blur();
+      setMenu('idle');
+    };
+    document.addEventListener('pointerdown', function (e) {
+      if (header.getAttribute('data-menu') !== 'open') return;
+      if (inZone(e.target)) return;
+      closeMenu();
+    }, true);
+    header.addEventListener('click', function (e) {
+      if (e.target.closest('[data-mega-close]')) closeMenu();
+    });
   }
 
   // --- 3. Mobile drawer --------------------------------------------------------

@@ -83,7 +83,7 @@
    size to the viewport so it fills the width without overflowing. */
 @media (max-width: 599px) { .hero h1 { font-size: 11.2vw; } }
 .hero__times {
-  margin-top: var(--space-lg);
+  margin-top: var(--space-xl);
   font-size: clamp(0.75rem, 1.5vw, 0.9375rem);
   font-weight: 500;
   letter-spacing: var(--tracking-snug);
@@ -133,13 +133,20 @@
      the cards take the pointer — otherwise it swallows the hero CTA. */
   pointer-events: none;
 }
-.js .deck .step-card { pointer-events: auto; }
+.js .deck .nextstep-card { pointer-events: auto; }
 @media (prefers-reduced-motion: reduce) {
   .js .deck { position: static; display: grid; height: auto; margin-top: var(--space-2xl); padding-inline: 0; }
 }
 
+/* Until the choreography has placed them (html.stage-ready, set by home.js
+   once GSAP is set up), the animated-layout cards and heading would sit
+   stacked mid-hero — hide them for that moment. The static layout
+   (stage-static: reduced motion, or the Homepage.aspx safety net when GSAP
+   fails) never waits. */
+html.js:not(.stage-ready):not(.stage-static) :is(.deck, .steps-head) { visibility: hidden; }
+
 /* ===== COMPONENT: step card ===== */
-.step-card {
+.nextstep-card {
   position: relative;
   display: block;
   aspect-ratio: 3 / 4;
@@ -150,38 +157,38 @@
   box-shadow: var(--shadow-card);
   will-change: transform;
 }
-.js .deck .step-card {
+.js .deck .nextstep-card {
   position: absolute;
   width: min(17%, 250px);   /* five across with gaps, inside the gutters */
   left: 50%; top: 50%;
   transform-origin: 50% 120%;
 }
 @media (prefers-reduced-motion: reduce) {
-  .js .deck .step-card { position: relative; width: auto; left: auto; top: auto; }
+  .js .deck .nextstep-card { position: relative; width: auto; left: auto; top: auto; }
 }
-.step-card img {
+.nextstep-card img {
   position: absolute; inset: 0;
   width: 100%; height: 100%; object-fit: cover;
   transition: transform var(--duration-slow) var(--ease-out);
 }
-.step-card__scrim {
+.nextstep-card__scrim {
   position: absolute; inset: 0;
   background: linear-gradient(to top, oklch(0.16 0.01 135 / 0.92) 0%, oklch(0.16 0.01 135 / 0.35) 45%, transparent 75%);
 }
-.step-card__body {
+.nextstep-card__body {
   position: absolute; inset: auto 0 0 0;
   padding: var(--space-lg) var(--space-md);
   display: grid; justify-items: center; gap: var(--space-sm);
   text-align: center;
 }
-.step-card__body h3 {
+.nextstep-card__body h3 {
   font-size: clamp(0.9375rem, 1.35vw, 1.25rem);
   text-transform: uppercase;
   text-shadow: 0 2px 12px oklch(0 0 0 / 0.5);
 }
-.step-card .btn { border-color: #fff; color: #fff; }
-.step-card:hover img { transform: scale(1.06); }
-.step-card:hover .btn { background: #fff; color: var(--text); }
+.nextstep-card .btn { border-color: #fff; color: #fff; }
+.nextstep-card:hover img { transform: scale(1.06); }
+.nextstep-card:hover .btn { background: #fff; color: var(--text); }
 /* ROCK: swap the <img> for a <video muted loop playsinline> to get
    the bumper clip on hover; poster stays as the still. */
 
@@ -541,9 +548,11 @@
   text-align: center; padding: var(--space-sm);
 }
 /* ============================================================
-   SECTION: MESSAGES  (Netflix-inspired)
-   Moving background behind the whole band. "Watch now" fades
-   the UI out and hands the frame to the player.
+   SECTION: MESSAGES  (markup: Assets/Lava/HomeMessages.lava)
+   Two states (data-state): "live" (Resi player inline) and "latest"
+   (current message). Behind both, a static blurred copy of the current
+   series graphic. Playing the latest message fades the UI out and the
+   Rock media player takes over the band (data-playing, home.js).
    ============================================================ */
 .messages {
   position: relative; z-index: 5;
@@ -558,146 +567,255 @@
   position: absolute; inset: -6%;
   pointer-events: none;
 }
-.messages__bg img { width: 100%; height: 100%; object-fit: cover; }
+/* Static, slightly blurred series graphic. scale() pushes the blur's soft
+   edges outside the band; the source is small (w=960) since it's blurred. */
+.messages__bg img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: blur(14px) saturate(1.1);
+  transform: scale(1.08);
+}
 .messages__bg::after {
   content: ""; position: absolute; inset: 0;
   background:
-    linear-gradient(to right, var(--ink-deep) 8%, oklch(from var(--ink-deep) l c h / 0.55) 48%, oklch(from var(--ink-deep) l c h / 0.2) 75%),
+    linear-gradient(to right, var(--ink-deep) 8%, oklch(from var(--ink-deep) l c h / 0.6) 48%, oklch(from var(--ink-deep) l c h / 0.3) 75%),
     linear-gradient(to top, var(--ink-deep) 2%, transparent 45%);
-}
-/* Slow drift — the only always-on motion on the page, and it's
-   a background, which is why it earns its keep. */
-@media (prefers-reduced-motion: no-preference) {
-  .messages__bg img { animation: drift 38s var(--ease-in-out) infinite alternate; }
-}
-@keyframes drift {
-  from { transform: scale(1.06) translate3d(0, 0, 0); }
-  to   { transform: scale(1.14) translate3d(-3%, -2%, 0); }
 }
 
 .messages__inner { position: relative; }
 .messages__label {
+  display: inline-flex; align-items: center; gap: 0.55rem;
   font-size: 0.8125rem; font-weight: 800;
   letter-spacing: var(--tracking-wider); text-transform: uppercase;
 }
+.messages__live-dot {
+  width: 0.6rem; height: 0.6rem; border-radius: var(--radius-circle);
+  background: #e5484d;
+  box-shadow: 0 0 0 4px oklch(0.63 0.2 25 / 0.28);
+}
+
 .messages__feature {
   margin-top: var(--space-lg);
   max-width: 520px;
   transition: opacity var(--duration-slow) var(--ease-out),
               transform var(--duration-slow) var(--ease-out);
 }
+
+/* Thumbnail: a play button in the latest state */
 .messages__art {
-  width: min(320px, 70%);
-  aspect-ratio: 16 / 10;
+  position: relative;
+  display: block;
+  width: min(360px, 80%);
+  aspect-ratio: 16 / 9;
+  padding: 0; border: 0;
   border-radius: var(--radius-md);
+  background: var(--ink);
   box-shadow: var(--shadow-card);
   overflow: hidden;
 }
-.messages__art .ph-green { height: 100%; font-size: 1.25rem; letter-spacing: var(--tracking-wide); }
+.messages__art img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--duration-slow) var(--ease-out); }
+.messages__art-play {
+  position: absolute; left: 50%; top: 50%;
+  width: 56px; height: 56px; margin: -28px 0 0 -28px;
+  display: grid; place-items: center;
+  border-radius: var(--radius-circle);
+  background: oklch(1 0 0 / 0.9); color: var(--ink);   /* neutral: green is everywhere else */
+  box-shadow: var(--shadow-lg);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transition: transform var(--duration) var(--ease-out), background var(--duration) var(--ease-out);
+}
+.messages__art-play svg { margin-left: 3px; }   /* optical centre of the triangle */
+button.messages__art:hover img { transform: scale(1.04); }
+button.messages__art:hover .messages__art-play { transform: scale(1.08); background: #fff; }
+
+/* Latest state layout (mobile first, one column):
+     label · thumbnail (plays) · title · date/speaker · description · series.
+   Desktop: thumbnail left, the body right. */
+.messages__body { margin-top: var(--space-lg); }
+.messages__body .messages__series-link { margin-top: var(--space-lg); }
+.messages__title {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  text-transform: uppercase;
+}
+.messages__meta {
+  margin-top: var(--space-xs);
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand);
+}
 .messages__desc {
-  margin-top: var(--space-lg);
-  font-size: 0.9375rem; color: var(--on-ink-muted);
+  margin-top: var(--space-md);
+  font-size: 0.9375rem; font-weight: 500; color: var(--on-ink-muted);
   max-width: 46ch;
 }
-.messages__feature .btn { margin-top: var(--space-lg); }
+.messages__actions {
+  margin-top: var(--space-lg);
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-md);
+}
 
-/* Player takes over the band when "Watch now" is pressed */
-.messages__player {
-  position: absolute; inset: 0;
-  display: grid; place-items: center;
-  opacity: 0; visibility: hidden;
-  transition: opacity var(--duration-slow) var(--ease-out), visibility 0s linear var(--duration-slow);
+/* Current series: a tinted tag beside the main button */
+.messages__series-link {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: oklch(from var(--brand) l c h / 0.14);
+  border: 1px solid oklch(from var(--brand) l c h / 0.35);
+  color: var(--brand);
+  font-size: 0.8125rem; font-weight: 700;
+  text-decoration: none;
+  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
 }
-.messages[data-playing="true"] .messages__player { opacity: 1; visibility: visible; transition: opacity var(--duration-slow) var(--ease-out), visibility 0s; }
-.messages[data-playing="true"] .messages__feature,
-.messages[data-playing="true"] .messages__label,
-.messages[data-playing="true"] .series { opacity: 0; transform: translateY(12px); pointer-events: none; }
-.messages[data-playing="true"] .messages__bg { opacity: 0.25; }
-.messages__bg, .messages__label, .series {
-  transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+.messages__series-link span {
+  color: var(--on-ink-muted);
+  font-size: 0.625rem; letter-spacing: var(--tracking-wider); text-transform: uppercase;
 }
-.player {
-  width: min(960px, 100%);
-  aspect-ratio: 16 / 9;
+.messages__series-link:is(:hover, :focus) {
+  background: oklch(from var(--brand) l c h / 0.24);
+  border-color: oklch(from var(--brand) l c h / 0.6);
+  color: var(--brand-bright);
+}
+
+/* Live: the Resi player sits where the thumbnail would */
+.messages__feature--live { max-width: 760px; }
+.messages__live {
   position: relative;
+  aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: #000;
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--shadow-xl), 0 0 0 1px oklch(1 0 0 / 0.06);
 }
-/* ROCK: replace .player__stage with the Rock media element / embed. */
-.player__stage { position: absolute; inset: 0; }
-.player__stage .ph-green { height: 100%; font-size: 1rem; }
-.player__bar {
-  position: absolute; inset: auto 0 0 0;
-  display: flex; align-items: center; gap: var(--space-md);
-  padding: var(--space-md);
-  background: linear-gradient(to top, oklch(0 0 0 / 0.85), transparent);
-  color: #fff;
+.messages__live iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+/* Playing (latest state): the player takes over the band.
+   The band is a size container, so the frame can be as large as fits
+   (contain, never cropped, so the controls always show). */
+.messages__player {
+  position: absolute; inset: 0; z-index: 2;
+  container-type: size;
+  display: grid; place-items: center;
+  background: #000;
+  opacity: 0; visibility: hidden;
+  transition: opacity var(--duration-slow) var(--ease-out), visibility 0s linear var(--duration-slow);
 }
-.player__progress { flex: 1; height: 4px; border-radius: var(--radius-pill); background: oklch(1 0 0 / 0.3); overflow: hidden; }
-.player__progress span { display: block; height: 100%; width: 12%; background: var(--brand); }
-.player__close {
-  position: absolute; top: var(--space-md); right: var(--space-md);
+.messages__player-frame {
+  width: 100%;
+  width: min(100cqw, 100cqh * 16 / 9);
+  aspect-ratio: 16 / 9;
+}
+.messages__player-frame > * { width: 100%; height: 100%; }
+.messages__player-close {
+  position: absolute; top: var(--space-md); right: var(--space-md); z-index: 3;
   width: 42px; height: 42px; border-radius: var(--radius-circle);
   display: grid; place-items: center;
   background: oklch(0 0 0 / 0.55); color: #fff; border: 1px solid oklch(1 0 0 / 0.4);
 }
-.player__close:hover { background: var(--brand); color: var(--text-on-brand); border-color: var(--brand); }
+.messages__player-close:hover { background: var(--brand); color: var(--text-on-brand); border-color: var(--brand); }
+
+.messages[data-playing="true"] .messages__player { opacity: 1; visibility: visible; transition: opacity var(--duration-slow) var(--ease-out), visibility 0s; }
+.messages[data-playing="true"] .messages__feature,
+.messages[data-playing="true"] .messages__label,
+.messages[data-playing="true"] .series { opacity: 0; transform: translateY(12px); pointer-events: none; }
+.messages[data-playing="true"] .messages__bg { opacity: 0; }
+.messages__bg, .messages__label, .series {
+  transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+}
 
 /* ---------- Recent series strip ---------- */
 .series { position: relative; margin-top: clamp(2.5rem, 6vw, 4.5rem); }
-.series__head { display: flex; align-items: baseline; gap: var(--space-md); }
-.series__head h3 {
+.series__title {
   font-size: 0.8125rem; font-weight: 800;
   letter-spacing: var(--tracking-wider); text-transform: uppercase;
 }
-.series__head a {
+/* "View all messages": below the rail on phones; on desktop it moves up to
+   the right end of the title row (grid areas in the desktop query). */
+.series__all {
+  display: inline-block;
+  margin-top: var(--space-md);
   font-size: 0.6875rem; font-weight: 700;
   letter-spacing: var(--tracking-wide); text-transform: uppercase;
-  color: var(--on-ink-muted); text-decoration: none;
+  color: var(--on-ink-muted); text-decoration: none; white-space: nowrap;
+  transition: color var(--duration) var(--ease-out);
 }
-.series__head a:hover { color: var(--brand); }
+.series__all:is(:hover, :focus) { color: var(--brand); }
 .series__rail {
   display: flex; gap: var(--space-md);
   margin-top: var(--space-md);
   overflow-x: auto;
   scroll-snap-type: x proximity;
-  padding-bottom: var(--space-sm);
+  padding: var(--space-2xs) 0 var(--space-sm);   /* room for the hover lift */
   scrollbar-width: thin;
 }
 .series__rail::-webkit-scrollbar { height: 6px; }
 .series__rail::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 0.25); border-radius: var(--radius-pill); }
 .series__item {
-  flex: 0 0 clamp(150px, 22vw, 210px);
+  flex: 0 0 clamp(170px, 22vw, 230px);
   scroll-snap-align: start;
+  aspect-ratio: 16 / 9;
   border-radius: var(--radius-sm);
   overflow: hidden;
+  background: var(--ink);
   text-decoration: none;
   transition: transform var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
 }
-.series__item .ph-green { aspect-ratio: 16 / 10; }
+.series__item img { width: 100%; height: 100%; object-fit: cover; }
 .series__item:hover { transform: translateY(-4px) scale(1.02); box-shadow: var(--shadow-lg); }
 
-.messages__more { display: none; }
-.messages__more a {
-  display: inline-flex; align-items: center; gap: 0.4rem;
-  font-size: 0.8125rem; font-weight: 700;
-  letter-spacing: var(--tracking-wide); text-transform: uppercase;
-  color: var(--on-ink); text-decoration: none;
+@media (min-width: 900px) {
+  .messages__feature:not(.messages__feature--live) {
+    max-width: 980px;
+    display: grid;
+    grid-template-columns: minmax(0, 400px) minmax(0, 1fr);
+    column-gap: var(--space-xl);
+    align-items: start;
+  }
+  .messages__feature:not(.messages__feature--live) .messages__art { width: 100%; }
+  .messages__feature:not(.messages__feature--live) .messages__body { margin-top: 0; }
+
+  .series {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "title all" "rail rail";
+    align-items: baseline;
+  }
+  .series__title { grid-area: title; }
+  .series__all   { grid-area: all; margin-top: 0; }
+  .series__rail  { grid-area: rail; }
 }
-.messages__more a:hover { color: var(--brand); }
-.messages__more svg { transition: transform var(--duration) var(--ease-out); }
-.messages__more a:hover svg { transform: translateX(3px); }
 
 @media (max-width: 899px) {
-  .messages { text-align: center; }
+  .messages { text-align: center; padding-block: var(--space-xl) var(--space-2xl); }
+  /* Pinned layout: start at the top instead of centring in the screen-tall
+     band, which left a lot of headroom above the label. */
+  .js .messages { align-content: start; }
+  .messages .series { margin-top: var(--space-3xl); }   /* breathing room under the message */
+  /* Legibility: the band is centred on phones, so text runs over the whole
+     image, including its lightest parts. A stronger, even veil replaces the
+     desktop's left-to-right fade, and the description gets the brighter ink. */
+  .messages__bg::after {
+    background: linear-gradient(to bottom,
+      oklch(from var(--ink-deep) l c h / 0.62) 0%,
+      oklch(from var(--ink-deep) l c h / 0.82) 45%,
+      var(--ink-deep) 100%);
+  }
+  .messages__desc { color: var(--on-ink); }
   .messages__label { font-size: clamp(2.25rem, 10vw, 3rem); line-height: 0.95; letter-spacing: var(--tracking-tight); }
+  .messages__live-dot { width: 0.5em; height: 0.5em; }
   .messages__feature { margin-inline: auto; }
-  .messages__art { margin-inline: auto; width: min(340px, 86%); }
+  .messages__art { margin-inline: auto; width: min(360px, 90%); }
   .messages__desc { margin-inline: auto; }
-  .messages .series { display: none; }
-  .messages__more { display: block; margin-top: var(--space-lg); }
+  .messages__actions { justify-content: center; }
+  /* Phones: a swipe rail, edge to edge, one tile plus a fifth of the next in
+     view so it reads as scrollable. */
+  .series__rail {
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  .series__rail::-webkit-scrollbar { display: none; }
+  .series__item { flex-basis: calc((100% - var(--space-md)) / 1.2); }
 }
 
 /* ============================================================
@@ -824,6 +942,44 @@
 
 .events__all { display: flex; justify-content: center; margin-top: var(--space-md); }
 
+/* Homepage card (markup: Assets/Lava/HomeEvents.lava): thumbnail, date tag,
+   affinity tag, title, description, "View details". The title link is
+   stretched over the whole card (::after), so the card is one link; the
+   button is a visual cue inside it (aria-hidden, not a second link). The full
+   events page can keep the detail card above (meta rows, share). */
+.event-card { position: relative; }
+.event-card__link { color: inherit; text-decoration: none; }
+.event-card__link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.event-card:hover .event-card__link { color: var(--brand-text); }
+.event-card:focus-within { outline: 3px solid var(--brand-dim); outline-offset: 3px; }
+.event-card__link:focus-visible { outline: none; }
+.event-card__tag {
+  justify-self: start;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand-wash);
+  color: var(--brand-text);
+  font-size: 0.625rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+}
+.event-card:hover .event-card__actions .btn--primary { background: var(--brand-bright); box-shadow: var(--shadow-glow); }
+.events__empty { margin-top: var(--space-xl); text-align: center; color: var(--text-secondary); }
+
+/* ============================================================
+   MAIN ZONE: one parent for every block's sections
+   The homepage sections come from more than one block (Home.lava, then
+   HomeEvents.lava). Sticky cover sections pin only within their parent, and
+   each Rock block wraps its output in its own divs (zone, block, update
+   panel). Outside edit mode those wrappers are flattened with
+   display: contents, so every section — and the footer runway at the end —
+   shares <main>. In edit mode (Rock adds zone-/block-highlight to <body>)
+   the wrappers keep their boxes for Rock's config controls, and the covers
+   are switched off anyway (_page.scss).
+   ============================================================ */
+body:not(.zone-highlight):not(.block-highlight) .home div:not([data-cover]):has([data-cover], .stage, .footer-runway) {
+  display: contents;
+}
+
 /* Stage falls back to a static hero + grid below 900px and for
    reduced-motion. Mirrors the reduced-motion overrides above. */
 html.stage-static .stage { height: auto; }
@@ -835,14 +991,14 @@ html.stage-static .deck {
   margin-top: var(--space-2xl); padding-inline: 0;
   grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
 }
-html.stage-static .deck .step-card { position: relative; width: auto; left: auto; top: auto; }
+html.stage-static .deck .nextstep-card { position: relative; width: auto; left: auto; top: auto; }
 /* (Kids/Students stay sticky in every mode — the cover motif is layout, not motion.) */
 
 /* Phones with motion allowed: same pinned hand-off as desktop, but the
    deck is a horizontal rail placed under the heading (JS sets its top)
    and it rises in from below the viewport instead of fanning. */
 @media (max-width: 899px) {
-  html.js:not(.stage-static) .stage { height: 250vh; }
+  html.js:not(.stage-static) .stage { height: 170vh; }   /* was 250vh: hand-off now spans 70vh of scroll, not 150vh */
   html.js:not(.stage-static) .stage__vp { align-content: center; }
   html.js:not(.stage-static) .hero { padding-top: var(--header-h); }
   html.js:not(.stage-static) .deck {
@@ -856,7 +1012,7 @@ html.stage-static .deck .step-card { position: relative; width: auto; left: auto
     overscroll-behavior-x: contain;
     touch-action: pan-x pan-y;
   }
-  html.js:not(.stage-static) .deck .step-card {
+  html.js:not(.stage-static) .deck .nextstep-card {
     position: relative; left: auto; top: auto; width: auto;
   }
 }
@@ -877,12 +1033,12 @@ html.stage-static .deck .step-card { position: relative; width: auto; left: auto
     scrollbar-width: none;
   }
   .deck::-webkit-scrollbar { display: none; }
-  .deck .step-card,
-  html.stage-static .deck .step-card {
+  .deck .nextstep-card,
+  html.stage-static .deck .nextstep-card {
     flex: 0 0 clamp(210px, 68vw, 280px);
     scroll-snap-align: center;
     box-shadow: var(--shadow-lg);   /* the rail clips overflow; a tighter shadow fits inside it */
   }
-  .deck .step-card__body h3 { font-size: 1.125rem; }   /* rail cards are wide; no need to shrink */
+  .deck .nextstep-card__body h3 { font-size: 1.125rem; }   /* rail cards are wide; no need to shrink */
   .deck, html.stage-static .deck { padding-block: var(--space-sm) var(--space-2xl); }
 }
