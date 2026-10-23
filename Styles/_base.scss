@@ -80,7 +80,7 @@ body.is-locked { overflow: hidden; }
   font-weight: 700; text-decoration: none;
   transition: top var(--duration) var(--ease-out);
 }
-.skip-link:focus { top: calc(var(--util-h) + var(--space-xs)); }
+.skip-link:focus { top: calc(var(--alert-h) + var(--util-h) + var(--space-xs)); }
 
 // The inline SVG icon sprite (Assets/Lava/Partials/IconSprite.lava) must take
 // no space. Icons are referenced as <svg><use href="#i-name"/></svg>.
@@ -91,15 +91,19 @@ body.is-locked { overflow: hidden; }
 // core.css ships Bootstrap's .container (fixed widths per breakpoint, 15px
 // padding, and a ::before/::after clearfix). The clearfix pseudo-elements would
 // become grid items wherever .container is also a grid, so they are removed.
+//
+// :not(.modal): Rock's modals are `<div class="modal container …">`; the theme's
+// page container (full width, gutters, 1240px) gave them a ghost frame. Held
+// at (0,1,0) with :where() so component rules on the same element still win.
 // ===========================================================================
-.container {
+:where(.container):not(.modal) {
   width: 100%;
   max-width: var(--container);
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
-.container::before,
-.container::after { content: none; display: none; }
+:where(.container):not(.modal)::before,
+:where(.container):not(.modal)::after { content: none; display: none; }
 
 // ===========================================================================
 // COMPONENT: section heading (shared)

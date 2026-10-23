@@ -85,7 +85,7 @@
 body:is(.zone-highlight, .block-highlight) {
   --footer-h: 0px;   // cancels the runway pull-up (theme.js sets it on <html>)
 }
-body:is(.zone-highlight, .block-highlight) :is(.utilbar, .site-header) {
+body:is(.zone-highlight, .block-highlight) :is(.site-alert, .utilbar, .site-header) {
   position: relative;
   inset: auto;
 }
@@ -96,6 +96,24 @@ body:is(.zone-highlight, .block-highlight) [data-cover] {
   margin-top: 0;
 }
 body:is(.zone-highlight, .block-highlight) .footer-runway { display: none; }
+
+// ===========================================================================
+// ROCK MODALS (block editor, block properties, …)
+// Rock's modal script (Scripts/Rock/Controls/modal.js) adds .modal-open to
+// <body> AND to the modal's "manager" — usually the block's update panel —
+// while it's open; the backdrop goes on <body> at z-index 1040.
+//
+// A block's edit dialog renders inside that block. For blocks in the fixed
+// bars (alert, utility, navigation), the footer, or a pinned homepage section,
+// that's inside a stacking context, so the dialog's own z-index 1060 can't
+// rise above anything outside it. So while a modal is open:
+//   • the one region that CONTAINS the open dialog's manager is lifted above
+//     the backdrop (1050), taking its dialog with it;
+//   • every other bar drops to the bottom (0), under the backdrop.
+// Both revert when Rock removes .modal-open.
+// ===========================================================================
+body.modal-open :is(.site-alert, .utilbar, .site-header) { z-index: 0; }
+body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cover]):has(.modal-open) { z-index: 1050; }
 
 // ===========================================================================
 // ROCK CHROME

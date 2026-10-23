@@ -25,7 +25,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | Path | What lives there |
 | --- | --- |
 | `theme.json` | Tells Rock this is a NextGen theme; the fields shown in the admin theme editor |
-| `Layouts/Site.Master` | The site shell: utility bar, header and footer zones, fonts, scripts, icon sprite |
+| `Layouts/Site.Master` | The site shell: global alert, utility bar, header and footer zones, fonts, scripts, icon sprite |
 | `Layouts/Homepage.aspx` | Homepage: the Main zone plus the homepage-only scripts (GSAP, `home.js`) |
 | `Layouts/FullWidth.aspx` | Interior pages: page title band + Feature, Main, Section A–D zones in the 1240px container |
 | `Layouts/Landing.aspx` | Section landing pages: title band with the page description, Feature / Main / Section A zones |
@@ -43,6 +43,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Styles/theme.scss` | Entry point: Rock's marker comments, partial order, `core.css` import |
 | `Styles/_tokens.scss` | Rock base tokens (must match `theme.json`) + the VRL tiers + light-mode lock |
 | `Styles/_base.scss` … `_page.scss` | One partial per region: base, utility bar, header, care modal, footer, interior page |
+| `Styles/_site-alert.scss` | The global alert banner, including how to add seasonal looks (e.g. `alert-christmas`) |
 | `Styles/_home.scss` | Homepage section styles |
 | `tools/` | `build.mjs` (the theme build), `check-theme.mjs` and `check-master-bindings.mjs` (gates) |
 | `Resources/RockNextgenThemeTemplate/` | The boilerplate NextGen starter theme, kept as reference only |
@@ -53,12 +54,15 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 
 | Zone | Block | Settings |
 | --- | --- | --- |
+| Alert | HTML Content | content: just the message, written in the editor (no HTML needed) · schedule with the block's Display from / to dates · optional CSS Class (Advanced) for a seasonal look |
 | Utility | HTML Content | content: `{% include '~~/Assets/Lava/UtilityBar.lava' %}` |
 | Navigation | Page Menu | Root Page: 41952 · Number of Levels: 2 · Template: `{% include '~~/Assets/Lava/PageNav.lava' %}` |
 | Footer | HTML Content | content: `{% include '~~/Assets/Lava/Footer.lava' %}` · Enabled Lava Commands: **RockEntity** |
 | Main (homepage only, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/Home.lava' %}` · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Home block) | HTML Content | content: `{% include '~~/Assets/Lava/HomeMessages.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Messages block, last in the zone) | HTML Content | content: `{% include '~~/Assets/Lava/HomeEvents.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration: 0 while iterating |
+
+**Excluding the alert from a page:** create a Page attribute `ExcludeGlobalAlert` (Boolean, shown as a checkbox, default unchecked) under Admin Tools → Entity Attributes (entity type: Page). Check it on pages that shouldn't show the alert, such as the login page; `Site.Master` then doesn't render the banner there. Visitors who dismiss the alert won't see it again for the rest of their browser session, but a different message shows again.
 
 Give the app pool write access to the theme folder (Rock saves theme-editor choices into `theme.css`), then restart Rock so it registers the theme. Non-page details in the nav and footer (address, service times, office and playground hours, social links, the Discover and Privacy links) are hardcoded in `PageNav.lava` and `Footer.lava` for now, duplicated between the two, until they are pulled from schedules, campus and global attributes.
 

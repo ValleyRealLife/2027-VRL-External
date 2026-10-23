@@ -192,9 +192,10 @@
   --container:   1240px;
   --container-narrow: 900px;
   --gutter:      clamp(1rem, 4vw, 2.5rem);
+  --alert-h:     0px;    // global alert height; theme.js sets it while the banner shows
   --util-h:      40px;
   --nav-h:       76px;
-  --header-h:    calc(var(--util-h) + var(--nav-h));
+  --header-h:    calc(var(--alert-h) + var(--util-h) + var(--nav-h));
 
   // Menu grid: `--menu-cols` is the number of top-level pages; the nav and
   // footer Lava set it inline from the page tree, and 4 is the fallback (the

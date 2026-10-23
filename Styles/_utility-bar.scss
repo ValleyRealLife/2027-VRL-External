@@ -15,7 +15,7 @@
 @use "config" as *;
 
 .utilbar {
-  position: fixed; inset: 0 0 auto 0; z-index: 70;
+  position: fixed; inset: var(--alert-h) 0 auto 0; z-index: 70;   // under the global alert when it shows
   height: var(--util-h);
   background: var(--ink-deep);
   color: var(--on-ink);

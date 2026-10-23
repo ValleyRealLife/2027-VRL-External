@@ -20,7 +20,7 @@
 @use "config" as *;
 
 .site-header {
-  position: fixed; inset: var(--util-h) 0 auto 0; z-index: 80;
+  position: fixed; inset: calc(var(--alert-h) + var(--util-h)) 0 auto 0; z-index: 80;
   background: transparent;
   transition: box-shadow var(--duration) var(--ease-out);
   // One timing for every part of the light ⇄ dark swap, so the bar, links and

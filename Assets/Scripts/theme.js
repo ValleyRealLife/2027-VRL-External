@@ -13,6 +13,7 @@
  * block's markup is replaced by a partial postback.
  *
  * Sections:
+ *   0. Global alert (show / dismiss for the session, --alert-h)
  *   1. Header: stuck / solid state
  *   2. Mega menu: hover intent (utility bar + header are one hover zone),
  *      keyboard focus, column highlight, Esc
@@ -32,6 +33,57 @@
   var header = document.querySelector('.site-header');
   var utilbar = document.querySelector('.utilbar');
   var stage = document.getElementById('stage');   // homepage hero stage; absent elsewhere
+
+  // --- 0. Global alert ----------------------------------------------------------
+  // The banner (Site.Master) starts hidden. Show it when the Alert zone holds
+  // text (an inactive / expired HTML block renders nothing) and this message
+  // hasn't been dismissed in this browser session. A different message shows
+  // again even after a dismissal, because the session remembers the message
+  // text, not just "dismissed". Its height feeds --alert-h → --header-h, so
+  // every offset makes room for it. Runs first: the header and cover-section
+  // code below measure the header's position.
+  var siteAlert = document.getElementById('siteAlert');
+  var setAlertHeight = function () {
+    var h = siteAlert && !siteAlert.hidden ? siteAlert.offsetHeight : 0;
+    root.style.setProperty('--alert-h', h + 'px');
+  };
+  if (siteAlert) {
+    var alertMsg = siteAlert.querySelector('.site-alert__msg');
+    /* The message's own text only. For signed-in editors Rock puts its zone /
+       block config bars (with labels like "Alert Message") inside the zone too,
+       so measure a copy with those removed — otherwise an expired block still
+       "has text" and the banner shows empty. */
+    var alertText = '';
+    if (alertMsg) {
+      var msgCopy = alertMsg.cloneNode(true);
+      msgCopy.querySelectorAll('.config-bar, .zone-configuration, .block-configuration').forEach(function (bar) { bar.remove(); });
+      alertText = msgCopy.textContent.replace(/\s+/g, ' ').trim();
+    }
+    var alertKey = 'vrl-alert-dismissed';
+    var alertHash = (function (str) {   /* small stable hash of the message */
+      var h = 5381;
+      for (var i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) | 0;
+      return String(h);
+    })(alertText);
+    var dismissed = false;
+    try { dismissed = sessionStorage.getItem(alertKey) === alertHash; } catch (e) {}
+
+    if (alertText && !dismissed) {
+      siteAlert.hidden = false;
+      setAlertHeight();
+      if ('ResizeObserver' in window) new ResizeObserver(setAlertHeight).observe(siteAlert);
+      else window.addEventListener('resize', setAlertHeight);
+
+      var alertClose = siteAlert.querySelector('[data-site-alert-close]');
+      if (alertClose) alertClose.addEventListener('click', function () {
+        siteAlert.hidden = true;
+        try { sessionStorage.setItem(alertKey, alertHash); } catch (e) {}
+        setAlertHeight();
+        /* Everything measured from the header (pinned sections, ScrollTrigger) re-measures on resize */
+        window.dispatchEvent(new Event('resize'));
+      });
+    }
+  }
 
   // --- 1. Header: stuck state + solid flag ------------------------------------
 

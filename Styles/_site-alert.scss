@@ -1,0 +1,103 @@
+// GLOBAL ALERT  (shell: Layouts/Site.Master · message: an HTML block in the Alert zone)
+//
+// A fixed banner above the utility bar for announcements and closures. The
+// HTML block holds only the message; this file styles the banner around it.
+//
+//   Visibility   starts [hidden]; theme.js shows it when the zone has text and
+//                it hasn't been dismissed this session. The block's Display
+//                from / to dates do the scheduling: an inactive block renders
+//                nothing, so the banner never shows.
+//   Layout       theme.js writes the banner's height to --alert-h, which feeds
+//                --header-h, so every offset (content, hero, pinned sections,
+//                menu overlay) makes room for it. 0 when hidden.
+//   Exclusions   pages with the ExcludeGlobalAlert page attribute (Boolean)
+//                checked don't render it at all (Site.Master, server-side).
+//   Edit mode    always shown (and in flow, _page.scss) so the zone is reachable.
+//
+// SEASONAL / THEMED LOOKS
+// Set the HTML block's CSS Class (Block Properties → Advanced), e.g.
+// `alert-christmas`; Rock puts it on the block's wrapper inside the banner.
+// Add a rule below that sets the banner's colours for that class:
+//
+//   .site-alert:has(.alert-christmas) {
+//     --alert-bg: #8b1e2d;     // designer's colours
+//     --alert-fg: #fff;
+//     --alert-link: #f4d27a;
+//   }
+
+@use "config" as *;
+
+.site-alert {
+  --alert-bg: var(--brand);
+  --alert-fg: var(--text-on-brand);
+  --alert-link: var(--text-on-brand);
+
+  position: fixed; inset: 0 0 auto 0; z-index: 72;   // above the utility bar (70), under the header (80) so the mobile drawer covers it
+  background: var(--alert-bg);
+  color: var(--alert-fg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.site-alert[hidden] { display: none; }
+
+.site-alert__inner {
+  display: flex; align-items: center; gap: var(--space-sm);
+  padding-block: var(--space-xs);
+}
+.site-alert__msg { flex: 1; min-width: 0; text-align: left; }
+
+// The message is free rich text from Rock's editor, in interior-page style
+// territory (core.css typography), so its elements are tamed explicitly.
+.site-alert__msg :is(p, h1, h2, h3, h4, h5, h6, ul, ol) {
+  margin: 0;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.site-alert__msg :is(p, ul, ol) + :is(p, ul, ol) { margin-top: 0.25rem; }
+.site-alert__msg strong, .site-alert__msg b { font-weight: 800; }
+.site-alert__msg a,
+.site-alert__msg a:is(:hover, :focus, :visited) {
+  color: var(--alert-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.site-alert__msg a:hover { text-decoration-thickness: 2px; }
+
+.site-alert__close {
+  flex: none;
+  display: grid; place-items: center;
+  order: -1;   // shown at the left; stays after the message in the markup, so it's read after it
+  width: 32px; height: 32px; margin-left: -6px;
+  padding: 0; border: 0; border-radius: var(--radius-circle);
+  background: transparent; color: inherit;
+  cursor: pointer;
+  transition: background var(--duration) var(--ease-out);
+}
+.site-alert__close:hover { background: oklch(0 0 0 / 0.12); }
+.site-alert__close:focus-visible { outline: 3px solid currentColor; outline-offset: 1px; }
+
+// Edit mode: show the zone even without an active message
+body:is(.zone-highlight, .block-highlight) .site-alert[hidden] { display: block; min-height: 40px; }
+
+// Editing an inactive (expired / scheduled) message: the block's edit dialog
+// renders INSIDE this banner, and clicking Edit toggles block editing off, so
+// the [hidden] banner would take its own dialog with it. While the banner
+// holds an open dialog (Rock marks its panel .modal-open) it stays in the page
+// as a zero-height, clipped strip: no empty bar shows, and the fixed-position
+// dialog isn't clipped (overflow doesn't clip fixed descendants).
+.site-alert[hidden]:has(.modal-open) {
+  display: block;
+  height: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+// ---------------------------------------------------------------------------
+// Themed looks (see the header comment). Add one rule per CSS class.
+// ---------------------------------------------------------------------------
+// .site-alert:has(.alert-christmas) { --alert-bg: …; --alert-fg: …; --alert-link: …; }

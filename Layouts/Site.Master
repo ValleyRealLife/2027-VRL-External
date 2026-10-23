@@ -1,5 +1,6 @@
 <%@ Master Language="C#" AutoEventWireup="true" Inherits="Rock.Web.UI.RockMasterPage" %>
 <%@ Import Namespace="System.Web.Optimization" %>
+<%@ Import Namespace="Rock" %>
 <!DOCTYPE html>
 
 <script runat="server">
@@ -13,6 +14,21 @@
     protected override void OnInit( EventArgs e )
     {
         base.OnInit( e );
+
+        // Global alert: pages with the ExcludeGlobalAlert page attribute (Boolean,
+        // a checkbox in Page Properties) checked — e.g. the login page — don't
+        // render the banner at all. Hidden server-side, so the alert's blocks
+        // never reach the page. AsBoolean() reads every stored form (True / Yes /
+        // 1 …) and treats an empty value as false.
+        var rockPage = Page as Rock.Web.UI.RockPage;
+        if ( rockPage != null )
+        {
+            var pageCache = Rock.Web.Cache.PageCache.Get( rockPage.PageId );
+            if ( pageCache != null && pageCache.GetAttributeValue( "ExcludeGlobalAlert" ).AsBoolean() )
+            {
+                siteAlert.Visible = false;
+            }
+        }
     }
 
 </script> 
@@ -27,6 +43,8 @@
     from a block whose Lava is in Assets/Lava:
 
         Zone          Block        Lava
+        Alert         HTML         the message itself (no HTML needed); scheduled by
+                                   the block's Display from / to dates
         Utility       HTML         {% include '~~/Assets/Lava/UtilityBar.lava' %}
         Navigation    Page Menu    {% include '~~/Assets/Lava/PageNav.lava' %}   (Root Page 41952, 2 levels)
         Footer        HTML         {% include '~~/Assets/Lava/Footer.lava' %}    (needs the RockEntity Lava command)
@@ -92,6 +110,26 @@
         <Rock:Lava ID="lavaIconSprite" runat="server">
             {% include '~~/Assets/Lava/Partials/IconSprite.lava' %}
         </Rock:Lava>
+
+        <%-- ===== GLOBAL ALERT (fixed, above the utility bar) =====
+             The HTML block in the Alert zone holds ONLY the message; this shell
+             is the banner (background, layout, dismiss button). Starts hidden;
+             theme.js shows it when the zone has content and it hasn't been
+             dismissed this session, and adds its height to --header-h.
+             Seasonal looks: set the block's CSS Class (Advanced settings), e.g.
+             alert-christmas — see Styles/_site-alert.scss.
+             Hidden server-side on pages with ExcludeGlobalAlert checked (OnInit). --%>
+        <div class="site-alert" id="siteAlert" runat="server" ClientIDMode="Static" role="region" aria-label="Announcement" hidden>
+            <div class="container site-alert__inner">
+                <div class="site-alert__msg">
+                    <Rock:Zone Name="Alert" runat="server" />
+                </div>
+                <button type="button" class="site-alert__close" data-site-alert-close>
+                    <span class="u-visually-hidden">Dismiss announcement</span>
+                    <svg width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg>
+                </button>
+            </div>
+        </div>
 
         <%-- ===== UTILITY BAR (fixed, 40px) ===== --%>
         <div class="utilbar" id="utilbar">

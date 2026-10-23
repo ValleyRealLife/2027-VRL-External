@@ -34,6 +34,7 @@
 // PARTIALS, in cascade order:
 //   tokens        Rock base tokens (theme.json sync) + VRL three-tier tokens
 //   base          reset, type, focus, .container, buttons, small shared parts
+//   site-alert    global alert banner      (Layouts/Site.Master, Alert zone)
 //   utility-bar   fixed top bar            (Assets/Lava/UtilityBar.lava)
 //   header        nav row, mega menu, mobile drawer (Assets/Lava/PageNav.lava)
 //   care-modal    the care <dialog>        (Assets/Lava/UtilityBar.lava)
@@ -47,6 +48,7 @@
 
 @use "tokens";
 @use "base";
+@use "site-alert";
 @use "utility-bar";
 @use "header";
 @use "care-modal";
