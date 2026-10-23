@@ -36,8 +36,6 @@
   --site-footer-background: #030402;
   --page-title-background: #f0f2ef;
   --page-title-foreground: #0b0e0a;
-  --logo-height: clamp(28px, 1.2vw + 22px, 34px);
-  --logo-aspect: 694 / 168;
   color-scheme: light;
   --v-green-50: oklch(0.980 0.025 124);
   --v-green-100: oklch(0.950 0.060 124);
@@ -598,7 +596,7 @@ body.is-locked {
 
 .nav__logo img {
   grid-area: 1/1;
-  width: calc(var(--logo-height, 34px) * (var(--logo-aspect, 694 / 168)));
+  width: calc(clamp(28px, 1.2vw + 22px, 34px) * (694 / 168));
   height: auto;
   transition: opacity var(--bar-swap);
   will-change: opacity;
@@ -1021,7 +1019,7 @@ body.is-locked {
 }
 
 .mobilenav__top .logo {
-  width: calc(var(--logo-height, 34px) * (var(--logo-aspect, 694 / 168)));
+  width: calc(clamp(28px, 1.2vw + 22px, 34px) * (694 / 168));
   height: auto;
 }
 
@@ -1337,7 +1335,7 @@ body.is-locked {
 }
 
 .site-footer__logo img {
-  width: calc(calc(var(--logo-height, 34px) * (var(--logo-aspect, 694 / 168))) * 1.18);
+  width: calc(calc(clamp(28px, 1.2vw + 22px, 34px) * (694 / 168)) * 1.18);
   height: auto;
   margin-inline: auto;
 }

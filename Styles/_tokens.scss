@@ -2,7 +2,7 @@
 //
 // Two token systems meet in this file and are deliberately kept in two blocks:
 //
-//   1. ROCK BASE TOKENS (`--base-*`, `--font-*`, `--site-*`, `--logo-*`)
+//   1. ROCK BASE TOKENS (`--base-*`, `--font-*`, `--site-*`, `--logo-image`)
 //      Rock v18's styles-v2/core.css declares every `--base-*` token on :root
 //      itself and derives its `--color-*` layer from them, so a var() fallback
 //      aimed at a core token is dead code. The theme must declare its own value
@@ -80,16 +80,9 @@
   // --- Logo ------------------------------------------------------------------
   // The header Lava (Assets/Lava/PageNav.lava) renders the logo as an <img> so
   // the ink filter can be applied to it; `--logo-image` from theme.json is
-  // therefore reserved for now.
-  //
-  // Thought of in HEIGHT (the design is "34px on desktop"), applied as WIDTH:
-  // the rules compute width = height × aspect and leave `height: auto`, so the
-  // image keeps its own proportions. If a grid column or `max-width: 100%`
-  // ever narrows it, it scales down instead of stretching (sizing by a fixed
-  // height is what stretched it). The footer logo is derived from it (×1.18,
-  // the concept's 34px → 40px).
-  --logo-height: clamp(28px, 1.2vw + 22px, 34px);
-  --logo-aspect: 694 / 168;
+  // therefore reserved for now. The logo's SIZE is not a token: it's
+  // $logo-height / $logo-width in _config.scss, so Rock's saved theme
+  // settings can't override it.
 
   // ===========================================================================
   // 2. VRL TOKENS

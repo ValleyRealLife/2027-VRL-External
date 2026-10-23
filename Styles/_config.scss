@@ -18,11 +18,19 @@ $bp-xl:  1400px;  // events rail arrows clear the cards entirely
 // var(--menu-cols) resolves on the element that carries the inline count.
 $menu-grid: minmax(190px, 1.1fr) repeat(var(--menu-cols, 4), minmax(0, 1fr)) minmax(180px, 0.95fr);
 
-// Logo width, computed from the target height × aspect ratio (tokens in
-// _tokens.scss / theme.json) so the image is sized by width with
-// `height: auto` and can never stretch. The fallback ratio is interpolated so
-// Sass emits `694 / 168` literally instead of dividing it.
-$logo-width: calc(var(--logo-height, 34px) * (var(--logo-aspect, #{"694 / 168"})));
+// Logo size. Theme code, compiled straight into the rules — deliberately NOT
+// a CSS custom property or theme.json field: Rock writes theme-editor values
+// into theme.css's Bottom region on every theme save, after the theme's own
+// rules, so a saved value (a stale 60px, twice) silently overrode the design.
+//
+// Thought of in HEIGHT (the design is "34px on desktop"), applied as WIDTH:
+// width = height × aspect with `height: auto`, so the image keeps its own
+// proportions and, if a grid column or `max-width: 100%` ever narrows it,
+// scales down instead of stretching. Fluid: 28px tall on phones up to 34px
+// from 1000px wide. The footer logo is ×1.18 (the concept's 34px → 40px).
+$logo-height: clamp(28px, 1.2vw + 22px, 34px);
+$logo-aspect: #{"694 / 168"};   // vrl_logo.png is 694 × 168; interpolated so Sass emits it literally
+$logo-width: calc(#{$logo-height} * (#{$logo-aspect}));
 
 // Where the theme's element reset (_base.scss) applies: the theme's own
 // regions only. Interior-page content (.page) deliberately keeps core.css's
