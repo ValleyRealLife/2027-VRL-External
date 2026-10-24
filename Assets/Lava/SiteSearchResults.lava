@@ -1,0 +1,204 @@
+{% comment %}
+    SITE SEARCH RESULTS — the result groups for one search, as an HTML
+    fragment. Shared by:
+
+      the Lava Application endpoint (live results as the visitor types):
+          {% assign searchQuery = QueryString.q %}
+          {% include '~/Themes/2027 VRL External/Assets/Lava/SiteSearchResults.lava' %}
+          Enabled Lava Commands: RockEntity, Sql
+          (an endpoint has no page, so the theme shortcut ~~ doesn't resolve:
+          use the full path)
+
+      Assets/Lava/SiteSearch.lava, when the page URL has ?q= (a shared link,
+      a reload, or no JavaScript)
+
+    Set `searchQuery` before including this file.
+
+    Scope, queried directly (not Rock's Universal Search index, whose scoping
+    can't be relied on), so results are current the moment content is saved:
+
+      Pages      this site's page tree below rootPageId, skipping pages set to
+                 never show in navigation (and everything under them).
+                 Matches the title, the Description and the text of the
+                 page's HTML blocks. Page security is applied for the current
+                 visitor (page entity command).
+      Messages   channel 5, published (started, not expired, approved).
+                 Matches the title, the content, or the series title.
+      Series     channel 4, published. Matches the title or the content.
+
+    Ranked title match → description/series match → body match. The search
+    text reaches SQL only as a parameter (@term), never pasted into the query.
+
+    Events and life groups are deliberately out of scope for now.
+{% endcomment %}
+{%- assign rootPageId = 41952 -%}
+{%- assign messagesChannelId = 5 -%}
+{%- assign seriesChannelId = 4 -%}
+{%- assign perGroup = 8 -%}
+
+{%- comment -%}
+    The search text, made safe to sit inside a Lava parameter ('…'). It still
+    goes to SQL as a parameter; this only keeps the tag itself parseable.
+{%- endcomment -%}
+{%- assign term = searchQuery | Default:'' | Replace:"'",'' | Replace:'{','' | Replace:'}','' | Trim | Truncate:80,'' -%}
+{%- assign termLength = term | Size -%}
+{%- assign now = 'Now' | Date:'yyyy-MM-dd HH:mm:ss' -%}
+
+{%- if termLength >= 2 -%}
+{%- assign total = 0 -%}
+
+{%- comment -%} ---------- Pages ---------- {%- endcomment -%}
+{% sql term:'{{ term }}' root:'{{ rootPageId }}' %}
+    DECLARE @Like nvarchar(200) = '%' + REPLACE( REPLACE( REPLACE( @term, '[', '[[]' ), '%', '[%]' ), '_', '[_]' ) + '%';
+
+    WITH [Tree] AS (
+        SELECT p.[Id], p.[PageTitle], p.[Description]
+        FROM [Page] p
+        WHERE p.[ParentPageId] = @root AND p.[DisplayInNavWhen] <> 2
+        UNION ALL
+        SELECT c.[Id], c.[PageTitle], c.[Description]
+        FROM [Page] c
+        INNER JOIN [Tree] t ON c.[ParentPageId] = t.[Id]
+        WHERE c.[DisplayInNavWhen] <> 2
+    ),
+    -- The current approved version of each HTML block on those pages
+    [Body] AS (
+        SELECT b.[PageId], hc.[Content]
+        FROM [Block] b
+        INNER JOIN [HtmlContent] hc ON hc.[BlockId] = b.[Id]
+        WHERE b.[PageId] IN ( SELECT [Id] FROM [Tree] )
+          AND hc.[IsApproved] = 1
+          AND hc.[Version] = (
+              SELECT MAX( h2.[Version] ) FROM [HtmlContent] h2
+              WHERE h2.[BlockId] = hc.[BlockId] AND h2.[IsApproved] = 1
+                AND ISNULL( h2.[EntityValue], '' ) = ISNULL( hc.[EntityValue], '' )
+          )
+    )
+    SELECT TOP 20 t.[Id],
+        CASE WHEN t.[PageTitle] LIKE @Like THEN 3
+             WHEN t.[Description] LIKE @Like THEN 2
+             ELSE 1 END AS [Score]
+    FROM [Tree] t
+    WHERE t.[PageTitle] LIKE @Like
+       OR t.[Description] LIKE @Like
+       OR EXISTS ( SELECT 1 FROM [Body] WHERE [Body].[PageId] = t.[Id] AND [Body].[Content] LIKE @Like )
+    ORDER BY [Score] DESC, t.[PageTitle]
+{% endsql %}
+{%- assign pageRows = results -%}
+{%- assign pageFilter = '' -%}
+{%- for row in pageRows -%}
+    {%- if pageFilter != '' %}{% assign pageFilter = pageFilter | Append:' || ' %}{% endif -%}
+    {%- assign pageFilter = pageFilter | Append:'Id == ' | Append:row.Id -%}
+{%- endfor -%}
+
+{%- assign pageCount = 0 -%}
+{%- capture pagesHtml -%}
+{%- if pageFilter != '' -%}
+{% page where:'{{ pageFilter }}' %}
+    {%- comment -%} The entity command drops pages this visitor can't view; keep the SQL ranking {%- endcomment -%}
+    {%- for row in pageRows -%}
+        {%- if pageCount >= perGroup %}{% break %}{% endif -%}
+        {%- assign resultPage = pageItems | Where:'Id', row.Id | First -%}
+        {%- if resultPage == null or resultPage == empty %}{% continue %}{% endif -%}
+        {%- assign pageCount = pageCount | Plus:1 -%}
+        {%- assign pageUrl = resultPage.Id | PageRoute %}
+      <li class="search-result">
+        <a class="search-result__title" href="{{ pageUrl }}">{{ resultPage.PageTitle }}</a>
+        <span class="search-result__path">{{ pageUrl }}</span>
+        {%- if resultPage.Description != empty %}<p class="search-result__summary">{{ resultPage.Description | Truncate:180 }}</p>{% endif %}
+      </li>
+    {%- endfor -%}
+{% endpage %}
+{%- endif -%}
+{%- endcapture -%}
+
+{%- comment -%} ---------- Messages ---------- {%- endcomment -%}
+{% sql term:'{{ term }}' now:'{{ now }}' messages:'{{ messagesChannelId }}' series:'{{ seriesChannelId }}' take:'{{ perGroup }}' %}
+    DECLARE @Like nvarchar(200) = '%' + REPLACE( REPLACE( REPLACE( @term, '[', '[[]' ), '%', '[%]' ), '_', '[_]' ) + '%';
+
+    SELECT TOP ( CAST( @take AS int ) ) i.[Id], i.[Title], i.[StartDateTime], s.[Title] AS [SeriesTitle],
+        CASE WHEN i.[Title] LIKE @Like THEN 3
+             WHEN s.[Title] LIKE @Like THEN 2
+             ELSE 1 END AS [Score]
+    FROM [ContentChannelItem] i
+    INNER JOIN [ContentChannel] cc ON cc.[Id] = i.[ContentChannelId]
+    -- The message's series: its parent item in the series channel
+    OUTER APPLY (
+        SELECT TOP 1 p.[Title]
+        FROM [ContentChannelItemAssociation] a
+        INNER JOIN [ContentChannelItem] p ON p.[Id] = a.[ContentChannelItemId]
+        WHERE a.[ChildContentChannelItemId] = i.[Id] AND p.[ContentChannelId] = @series
+    ) s
+    WHERE i.[ContentChannelId] = @messages
+      AND i.[StartDateTime] <= @now
+      AND ( i.[ExpireDateTime] IS NULL OR i.[ExpireDateTime] > @now )
+      AND ( i.[Status] = 2 OR cc.[RequiresApproval] = 0 )        -- 2 = Approved
+      AND ( i.[Title] LIKE @Like OR i.[Content] LIKE @Like OR s.[Title] LIKE @Like )
+    ORDER BY [Score] DESC, i.[StartDateTime] DESC
+{% endsql %}
+{%- assign messageRows = results -%}
+
+{%- comment -%} ---------- Series ---------- {%- endcomment -%}
+{% sql term:'{{ term }}' now:'{{ now }}' series:'{{ seriesChannelId }}' take:'{{ perGroup }}' %}
+    DECLARE @Like nvarchar(200) = '%' + REPLACE( REPLACE( REPLACE( @term, '[', '[[]' ), '%', '[%]' ), '_', '[_]' ) + '%';
+
+    SELECT TOP ( CAST( @take AS int ) ) i.[Id], i.[Title], i.[StartDateTime],
+        CASE WHEN i.[Title] LIKE @Like THEN 2 ELSE 1 END AS [Score]
+    FROM [ContentChannelItem] i
+    INNER JOIN [ContentChannel] cc ON cc.[Id] = i.[ContentChannelId]
+    WHERE i.[ContentChannelId] = @series
+      AND i.[StartDateTime] <= @now
+      AND ( i.[ExpireDateTime] IS NULL OR i.[ExpireDateTime] > @now )
+      AND ( i.[Status] = 2 OR cc.[RequiresApproval] = 0 )
+      AND ( i.[Title] LIKE @Like OR i.[Content] LIKE @Like )
+    ORDER BY [Score] DESC, i.[StartDateTime] DESC
+{% endsql %}
+{%- assign seriesRows = results -%}
+
+{%- assign messageCount = messageRows | Size -%}
+{%- assign seriesCount = seriesRows | Size -%}
+{%- assign total = pageCount | Plus:messageCount | Plus:seriesCount -%}
+
+{%- if total == 0 %}
+<p class="site-search__empty">Nothing matched “{{ searchQuery | Escape }}”. Try fewer or different words.</p>
+{%- else %}
+<p class="site-search__count">{{ total }} result{% if total != 1 %}s{% endif %} for “{{ searchQuery | Escape }}”</p>
+
+{%- if pageCount > 0 %}
+<section class="site-search__group">
+  <h2 class="site-search__group-title">Pages</h2>
+  <ul class="site-search__list">{{ pagesHtml }}</ul>
+</section>
+{%- endif -%}
+
+{%- if messageCount > 0 %}
+<section class="site-search__group">
+  <h2 class="site-search__group-title">Messages</h2>
+  <ul class="site-search__list">
+    {%- for row in messageRows %}
+    <li class="search-result">
+      {%- comment -%} TODO: the message detail page (placeholder link until it exists) {%- endcomment %}
+      <a class="search-result__title" href="#">{{ row.Title }}</a>
+      <span class="search-result__path">{% if row.SeriesTitle != empty and row.SeriesTitle != null %}{{ row.SeriesTitle }} · {% endif %}{{ row.StartDateTime | Date:'MMMM d, yyyy' }}</span>
+    </li>
+    {%- endfor %}
+  </ul>
+</section>
+{%- endif -%}
+
+{%- if seriesCount > 0 %}
+<section class="site-search__group">
+  <h2 class="site-search__group-title">Series</h2>
+  <ul class="site-search__list">
+    {%- for row in seriesRows %}
+    <li class="search-result">
+      {%- comment -%} TODO: the series detail page (placeholder link until it exists) {%- endcomment %}
+      <a class="search-result__title" href="#">{{ row.Title }}</a>
+      <span class="search-result__path">Started {{ row.StartDateTime | Date:'MMMM yyyy' }}</span>
+    </li>
+    {%- endfor %}
+  </ul>
+</section>
+{%- endif -%}
+{%- endif %}
+{%- endif -%}

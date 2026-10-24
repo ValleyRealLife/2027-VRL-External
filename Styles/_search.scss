@@ -1,47 +1,26 @@
-// UNIVERSAL SEARCH  (Rock's stock Universal Search block, restyled; first used
-// on the 404 page)
+// SITE SEARCH  (Assets/Lava/SiteSearch.lava; behaviour in theme.js)
 //
-// The block is vanilla: no settings or templates from the theme. Everything
-// here hangs off the classes Rock renders (Blocks/Cms/UniversalSearch.ascx):
+// The design system's search pill (Resources/vrl-design-system-v4.html →
+// Forms), and the live results under it (Assets/Lava/SiteSearchResults.lava):
+// one group per kind of result (Pages, Messages, Series), each a real link.
 //
-//   .universal-search                 the block wrapper (Rock adds the block type)
-//     .panel.panel-block              the view panel; its heading is hidden
-//       .input-group.searchbox        → the design system's search pill
-//         .input-group-addon          (the leading icon; hidden: the button carries it)
-//         .form-control               the text input
-//         .input-group-btn .btn       the "Go" link → the round brand button
-//       ul.list-unstyled > .model-cannavigate   one result (a row Rock makes
-//                                              clickable with its own script)
-//       .pagination
-//
-// Scoped to .panel-block so the block's settings dialog (a sibling Rock modal)
-// is never touched.
+// Interior-page content keeps core.css's typography (no theme reset there;
+// see $theme-scope), so every rule below sets its own margins, colours and
+// link states.
 
 @use "config" as *;
 
-$search: ".universal-search .panel-block";
-
-// ---------------------------------------------------------------------------
-// Panel chrome: none. The page header already says what this is, and the
-// panel's own <h1> "Universal Search" would be a second h1 on the page.
-// ---------------------------------------------------------------------------
-#{$search} {
-  margin: 0;
-  background: none;
-  border: 0;
-  box-shadow: none;
-}
-#{$search} > .panel-heading { display: none; }
-#{$search} > .panel-body { padding: 0; }
+.site-search { margin-block: var(--space-md) var(--space-xl); }
 
 // ---------------------------------------------------------------------------
 // The search pill
 // ---------------------------------------------------------------------------
-#{$search} .searchbox {
+.site-search__pill {
   display: flex;
   align-items: center;
   width: 100%;
   max-width: 640px;
+  margin-inline: auto;
   padding: 4px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
@@ -49,20 +28,18 @@ $search: ".universal-search .panel-block";
   transition: border-color var(--duration) var(--ease-out),
               box-shadow var(--duration) var(--ease-out);
 }
-#{$search} .searchbox:hover { border-color: var(--border-strong); }
+.site-search__pill:hover { border-color: var(--border-strong); }
 // The design system's 4px brand ring, with the border in the darker brand
 // green so the focused state still clears 3:1 against white
-#{$search} .searchbox:focus-within {
+.site-search__pill:focus-within {
   border-color: var(--brand-text);
   box-shadow: 0 0 0 4px var(--brand-glow-soft);
 }
 
-#{$search} .searchbox > .input-group-addon { display: none; }
-
-#{$search} .searchbox > .form-control {
+.site-search__pill input {
   flex: 1;
   min-width: 0;
-  height: auto;
+  margin: 0;
   padding: 0.625rem 1.125rem;
   background: transparent;
   border: 0;
@@ -71,19 +48,14 @@ $search: ".universal-search .panel-block";
   color: var(--text);
   font: inherit;
   font-size: 1rem;       // 16px: iOS won't zoom the page on focus
+  appearance: none;
 }
-#{$search} .searchbox > .form-control:focus { outline: 0; box-shadow: none; }
-#{$search} .searchbox > .form-control::placeholder { color: var(--text-muted); }
+.site-search__pill input:focus { outline: 0; }   // the pill shows focus
+.site-search__pill input::placeholder { color: var(--text-muted); }
+.site-search__pill input::-webkit-search-cancel-button { cursor: pointer; }
 
-// "Go" becomes the round icon button. The word stays in the markup (font-size
-// 0 hides it visually), so screen readers still announce the link as "Go".
-#{$search} .searchbox > .input-group-btn {
-  display: block;
-  width: auto;
+.site-search__go {
   flex: 0 0 auto;
-}
-#{$search} .searchbox .btn {
-  position: relative;
   display: grid;
   place-items: center;
   width: 44px;
@@ -93,101 +65,74 @@ $search: ".universal-search .panel-block";
   border-radius: var(--radius-circle);
   background: var(--brand);
   color: var(--text-on-brand);
-  font-size: 0;
-  box-shadow: none;
+  cursor: pointer;
   transition: background var(--duration) var(--ease-out);
 }
-#{$search} .searchbox .btn::before {
-  content: "";
-  width: 18px;
-  height: 18px;
-  background: currentColor;
-  // Tabler "search" (the design system's search-pill icon)
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E") center / contain no-repeat;
-}
-#{$search} .searchbox .btn:is(:hover, :focus) { background: var(--brand-bright); color: var(--text-on-brand); }
-#{$search} .searchbox .btn:focus-visible { outline: 3px solid var(--brand-text); outline-offset: 2px; }
+.site-search__go:hover { background: var(--brand-bright); }
+.site-search__go:focus-visible { outline: 3px solid var(--brand-text); outline-offset: 2px; }
 
-// "Refine Search" (only when the block setting is on): a quiet text link
-#{$search} .panel-body > .clearfix { max-width: 640px; }
-#{$search} .panel-body > .clearfix a {
-  font-size: 0.8125rem;
+// ---------------------------------------------------------------------------
+// Results
+// ---------------------------------------------------------------------------
+// Centred under the pill; the text inside stays left-aligned
+.site-search__results { max-width: 820px; margin: var(--space-xl) auto 0; }
+.site-search__results:empty { display: none; }
+// While a newer search loads, the current results dim instead of vanishing
+.site-search__results { transition: opacity var(--duration) var(--ease-out); }
+.site-search__results[aria-busy="true"] { opacity: 0.5; }
+
+.site-search__count,
+.site-search__empty {
+  margin: 0 0 var(--space-lg);
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--brand-text);
-  text-decoration: none;
-}
-#{$search} .panel-body > .clearfix a:hover { text-decoration: underline; }
-
-// ---------------------------------------------------------------------------
-// Results: Rock renders each one as a Bootstrap row (icon column, text
-// column) followed by an <hr>. Here they become a list of hoverable rows.
-// ---------------------------------------------------------------------------
-#{$search} .list-unstyled { margin: 0; padding: 0; }
-#{$search} .list-unstyled > hr { margin: 0; border: 0; border-top: 1px solid var(--border-subtle); }
-
-#{$search} .model-cannavigate {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-md);
-  margin: 0;
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
   color: var(--text-secondary);
-  font-size: 0.875rem;
-  line-height: 1.55;
-  transition: background var(--duration) var(--ease-out);
 }
-#{$search} .model-cannavigate:hover { background: var(--brand-wash); }
-#{$search} .model-cannavigate::before,
-#{$search} .model-cannavigate::after { content: none; }   // Bootstrap's row clearfix
-#{$search} .model-cannavigate > [class*="col-"] {
-  float: none;
-  width: auto;
-  padding: 0;
-}
-#{$search} .model-cannavigate > [class*="col-"]:first-child {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  color: var(--brand-dim);
-}
-#{$search} .model-cannavigate > [class*="col-"]:first-child i { font-size: 1.125rem; }
-#{$search} .model-cannavigate > [class*="col-"]:last-child { flex: 1; min-width: 0; }
-#{$search} .model-cannavigate strong {
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--text);
-}
-#{$search} .model-cannavigate small { color: var(--text-muted); font-size: 0.75rem; }
 
-// ---------------------------------------------------------------------------
-// Pagination: round buttons
-// ---------------------------------------------------------------------------
-#{$search} .pagination {
-  display: inline-flex;
-  gap: var(--space-2xs);
-  margin: var(--space-lg) 0 0;
+.site-search__group + .site-search__group { margin-top: var(--space-2xl); }
+
+.site-search__group-title {
+  margin: 0 0 var(--space-xs);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--brand-text);
 }
-#{$search} .pagination > li > :is(a, span) {
+
+.site-search__list { margin: 0; padding: 0; list-style: none; }
+
+.search-result {
   display: grid;
-  place-items: center;
-  min-width: 40px;
-  height: 40px;
-  padding: 0 var(--space-xs);
-  float: none;
-  margin: 0;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-pill);
-  background: var(--bg-elevated);
+  gap: var(--space-2xs);
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.search-result:last-child { border-bottom: 1px solid var(--border-subtle); }
+
+.search-result__title {
+  justify-self: start;
+  font-size: 1.125rem;
+  font-weight: 800;
+  line-height: 1.25;
   color: var(--text);
-  font-size: 0.875rem;
-  font-weight: 700;
   text-decoration: none;
 }
-#{$search} .pagination > li > a:hover { border-color: var(--border); background: var(--brand-wash); }
-#{$search} .pagination > .active > span { background: var(--brand); border-color: var(--brand); color: var(--text-on-brand); }
-#{$search} .pagination > .disabled > span { color: var(--text-disabled); }
+// core.css's a / a:hover colours would win here
+.search-result__title:is(:visited, :focus) { color: var(--text); }
+.search-result__title:hover { color: var(--brand-text); text-decoration: underline; text-underline-offset: 3px; }
+
+.search-result__path {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.search-result__summary {
+  margin: 0;
+  max-width: 68ch;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}

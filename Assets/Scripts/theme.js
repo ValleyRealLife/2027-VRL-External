@@ -383,6 +383,68 @@
     link.click();
   });
 
+  // --- Site search: live results (Assets/Lava/SiteSearch.lava) ----------------------
+  // [data-site-search] holds the input; data-endpoint is the Lava Application
+  // endpoint that returns the results fragment (SiteSearchResults.lava), and
+  // data-results the id of the area it fills. Typing searches after a short
+  // pause (2+ characters); Enter or the button searches at once. A newer
+  // search cancels the one in flight. The address bar gets ?q=… so a reload
+  // or a shared link shows the same results (the page renders them itself).
+  // Rock wraps every page in one ASP.NET <form>, so Enter must not reach it:
+  // it would post the page back.
+  var searchTimer = null;
+  var searchRequest = null;
+  function runSiteSearch(box, immediate) {
+    var input = box.querySelector('input[name="q"]');
+    var out = document.getElementById(box.getAttribute('data-results'));
+    if (!input || !out) return;
+    var q = input.value.trim();
+    clearTimeout(searchTimer);
+    if (q.length < 2) {
+      if (searchRequest) searchRequest.abort();
+      out.innerHTML = '';
+      history.replaceState(null, '', location.pathname);
+      return;
+    }
+    searchTimer = setTimeout(function () {
+      if (searchRequest) searchRequest.abort();
+      searchRequest = new AbortController();
+      out.setAttribute('aria-busy', 'true');
+      fetch(box.getAttribute('data-endpoint') + '?q=' + encodeURIComponent(q), {
+        credentials: 'same-origin',
+        signal: searchRequest.signal
+      })
+        .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+        .then(function (html) {
+          out.innerHTML = html;
+          out.removeAttribute('aria-busy');
+          history.replaceState(null, '', location.pathname + '?q=' + encodeURIComponent(q));
+        })
+        .catch(function (err) {
+          if (err.name === 'AbortError') return;
+          out.removeAttribute('aria-busy');
+          out.innerHTML = '<p class="site-search__empty">Search isn’t available right now. Please try again.</p>';
+        });
+    }, immediate ? 0 : 300);
+  }
+  document.addEventListener('input', function (e) {
+    var box = e.target.closest && e.target.closest('[data-site-search]');
+    if (box && e.target.name === 'q') runSiteSearch(box, false);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' || !e.target.closest) return;
+    var box = e.target.closest('[data-site-search]');
+    if (!box || e.target.name !== 'q') return;
+    e.preventDefault();
+    runSiteSearch(box, true);
+  });
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-site-search-go]');
+    if (!btn) return;
+    e.preventDefault();
+    runSiteSearch(btn.closest('[data-site-search]'), true);
+  });
+
   // --- Esc closes whatever is open ------------------------------------------------
 
   document.addEventListener('keydown', function (e) {

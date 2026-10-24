@@ -1,0 +1,38 @@
+{% comment %}
+    SITE SEARCH — the search pill with live results under it. For an HTML
+    block on any page that should offer search (the 404 page; a search page).
+
+    Block content:            {% include '~~/Assets/Lava/SiteSearch.lava' %}
+    Enabled Lava Commands:    RockEntity, Sql
+
+    As the visitor types, theme.js ([data-site-search]) fetches the results
+    from a Rock Lava Application endpoint (searchEndpoint, below) and swaps
+    them into the results area, then puts ?q=… in the address bar so a reload
+    or a shared link shows the same search. With ?q= in the URL, this file
+    renders those results itself (Assets/Lava/SiteSearchResults.lava), so the
+    page also works without JavaScript for shared links.
+
+    The pill is a div, not a <form>: Rock wraps every page in one ASP.NET form
+    and forms can't nest. theme.js keeps Enter from posting Rock's form back.
+
+    Styled by Styles/_search.scss.
+{% endcomment %}
+{%- assign searchEndpoint = '/api/v2/lava-app/1/site/search' -%}
+
+{%- assign searchQuery = 'Global' | PageParameter:'q' | Default:'' | Trim -%}
+
+<div class="site-search">
+  <div class="site-search__pill" data-site-search data-endpoint="{{ searchEndpoint }}" data-results="site-search-results" role="search">
+    <label class="u-visually-hidden" for="site-search-q">Search the site</label>
+    <input type="search" name="q" id="site-search-q" value="{{ searchQuery | Escape }}" placeholder="Search vrl.church…" autocomplete="off" enterkeyhint="search" />
+    <button type="button" class="site-search__go" data-site-search-go aria-label="Search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    </button>
+  </div>
+
+  <div class="site-search__results" id="site-search-results" aria-live="polite">
+    {%- if searchQuery != '' %}
+    {% include '~~/Assets/Lava/SiteSearchResults.lava' %}
+    {%- endif %}
+  </div>
+</div>
