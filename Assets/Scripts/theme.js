@@ -325,10 +325,31 @@
     });
   }
 
-  // --- Delegated clicks (drawer, care dialog, share) ---------------------------------
+  // --- Account menu (UtilityBar.lava, signed in) -------------------------------------
+  // [data-account] holds the toggle and the menu. Closes on a click outside,
+  // Esc, or focus leaving it (so Tab moves on cleanly).
+
+  function setAccount(open) {
+    var box = document.querySelector('[data-account]');
+    if (!box) return;
+    var btn = box.querySelector('[data-account-toggle]');
+    var menu = document.getElementById(btn.getAttribute('aria-controls'));
+    btn.setAttribute('aria-expanded', String(open));
+    if (menu) menu.setAttribute('data-open', String(open));
+  }
+  document.addEventListener('focusout', function (e) {
+    var box = e.target.closest && e.target.closest('[data-account]');
+    if (box && !box.contains(e.relatedTarget)) setAccount(false);
+  });
+
+  // --- Delegated clicks (drawer, care dialog, share, account) ----------------------
 
   document.addEventListener('click', function (e) {
     var t = e.target;
+
+    var accountBtn = t.closest('[data-account-toggle]');
+    if (accountBtn) { setAccount(accountBtn.getAttribute('aria-expanded') !== 'true'); return; }
+    if (!t.closest('[data-account]')) setAccount(false);
 
     if (t.closest('[data-mobilenav-open]')) { openMobile(); return; }
     if (t.closest('[data-mobilenav-close]')) { closeMobile(); return; }
@@ -451,6 +472,12 @@
     if (e.key !== 'Escape') return;
     var drawer = document.getElementById('mobilenav');
     if (drawer && drawer.getAttribute('data-open') === 'true') { closeMobile(); return; }
+    var accountOpen = document.querySelector('[data-account-toggle][aria-expanded="true"]');
+    if (accountOpen) {
+      setAccount(false);
+      if (accountOpen.parentNode.contains(document.activeElement)) accountOpen.focus();
+      return;
+    }
     closeAllShares();
     if (!header) return;
     /* Blur first: focusout fires synchronously and would otherwise overwrite

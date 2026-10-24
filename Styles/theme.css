@@ -647,6 +647,96 @@ body:is(.zone-highlight, .block-highlight) .site-alert[hidden] {
     letter-spacing: var(--tracking-wider);
   }
 }
+.utilbar:has(.account__menu[data-open=true]) {
+  z-index: 90;
+}
+
+.account {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.account__btn {
+  cursor: pointer;
+}
+
+.account__avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-circle);
+  object-fit: cover;
+  background: oklch(100% 0 0deg / 0.15);
+}
+
+.account__name {
+  max-width: 12ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account__caret {
+  transition: transform var(--duration) var(--ease-out);
+}
+
+.account__btn[aria-expanded=true] {
+  color: var(--brand);
+}
+
+.account__btn[aria-expanded=true] .account__caret {
+  transform: rotate(180deg);
+}
+
+.account__menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 208px;
+  padding: var(--space-2xs);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: none;
+}
+
+.account__menu[data-open=true] {
+  display: block;
+}
+
+.account__item {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.account__item:visited {
+  color: var(--text);
+}
+
+.account__item:is(:hover, :focus-visible) {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.account__divider {
+  height: 1px;
+  margin: var(--space-2xs) 0;
+  background: var(--border-subtle);
+}
+
+@media (max-width: 559px) {
+  .account__menu {
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
 .site-header {
   position: fixed;
   inset: calc(var(--alert-h) + var(--util-h)) 0 auto 0;

@@ -1,9 +1,11 @@
 {% comment %}
     UTILITY BAR — for an HTML block in the Site.Master "Utility" zone.
 
-    Block content:   {% include '~~/Assets/Lava/UtilityBar.lava' %}
+    Block content:            {% include '~~/Assets/Lava/UtilityBar.lava' %}
+    Enabled Lava Commands:    RockEntity  (the account menu's pages)
 
-    Renders the links row (Request care · Give · Login/My account) and the
+    Renders the links row (Request care · Give · Login, or the signed-in
+    person's account menu) and the
     care <dialog>. Styled by Styles/_utility-bar.scss and _care-modal.scss;
     driven by Assets/Scripts/theme.js.
 
@@ -13,7 +15,7 @@
     prayer forms are plain Rock pages that also work on their own.
 
     ROCK: point the hrefs / data-care-frame values at the real routes once the
-    pages exist. The login/account routes follow Rock's defaults.
+    pages exist. The Login link uses Rock's default /login route.
 {% endcomment %}
 <div class="container utilbar__inner">
     <div class="utilbar__links">
@@ -28,10 +30,36 @@
         </a>
         <span class="utilbar__sep" aria-hidden="true"></span>
         {% if CurrentPerson %}
-        <a class="utilbar__link" href="/my-account">
-            <svg width="15" height="15" aria-hidden="true"><use href="#i-user-circle"/></svg>
-            <span>My account</span>
-        </a>
+        {%- comment -%}
+            Account menu: My Account (page accountPageId), then its child pages
+            in menu order (pages set to never show in navigation are skipped;
+            the entity command applies page security), then Log out. Log out
+            reloads the current page with ?logout=true, which Rock handles on
+            every page. theme.js opens and closes the menu ([data-account]).
+        {%- endcomment -%}
+        {%- assign accountPageId = 42015 -%}
+        {%- assign currentUrl = 'Global' | Page:'Url' -%}
+        {%- if currentUrl contains '?' %}{% assign logoutUrl = currentUrl | Append:'&logout=true' %}{% else %}{% assign logoutUrl = currentUrl | Append:'?logout=true' %}{% endif %}
+        <div class="account" data-account>
+            <button class="utilbar__link account__btn" type="button" aria-expanded="false" aria-controls="account-menu" data-account-toggle>
+                <img class="account__avatar" src="{{ CurrentPerson.PhotoUrl }}" alt="" width="20" height="20" />
+                <span class="account__name">{{ CurrentPerson.NickName }}</span><span class="u-visually-hidden">, account menu</span>
+                <svg class="account__caret" width="12" height="12" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </button>
+            <div class="account__menu" id="account-menu" data-open="false">
+                {%- page id:'{{ accountPageId }}' %}
+                <a class="account__item" href="{{ page.Id | PageRoute }}">{{ page.PageTitle }}</a>
+                {%- endpage %}
+                {%- page where:'ParentPageId == {{ accountPageId }}' sort:'Order' %}
+                {%- for accountPage in pageItems %}
+                {%- if accountPage.DisplayInNavWhen == 'Never' %}{% continue %}{% endif %}
+                <a class="account__item" href="{{ accountPage.Id | PageRoute }}">{{ accountPage.PageTitle }}</a>
+                {%- endfor %}
+                {%- endpage %}
+                <div class="account__divider" role="separator"></div>
+                <a class="account__item" href="{{ logoutUrl }}">Log out</a>
+            </div>
+        </div>
         {% else %}
         <a class="utilbar__link" href="/login?returnurl={{ 'Global' | Page:'Url' | EscapeDataString }}">
             <svg width="15" height="15" aria-hidden="true"><use href="#i-user-circle"/></svg>

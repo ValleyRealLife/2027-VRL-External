@@ -10,7 +10,8 @@
 //
 // Stacking: the bar sits BELOW the site header (70 < 80) so the mobile drawer,
 // which lives inside the header's block, can cover it. The mega-menu scrim
-// starts at --header-h so it never overlaps the bar anyway.
+// starts at --header-h so it never overlaps the bar anyway. Exception: the
+// open account menu lifts the bar to 90 (bottom of this file).
 
 @use "config" as *;
 
@@ -46,4 +47,57 @@
   .utilbar__inner { justify-content: flex-end; }
   .utilbar__links { gap: var(--space-lg); }
   .utilbar__link { font-size: 0.6875rem; letter-spacing: var(--tracking-wider); }
+}
+
+// ---------------------------------------------------------------------------
+// Account menu (signed in): avatar + nickname toggle, dropdown below the bar.
+// The menu is the design system's dropdown (same surface as the share menus).
+// The bar normally sits under the header (70 < 80); while the menu is open it
+// rises above it so the menu isn't covered.
+// ---------------------------------------------------------------------------
+.utilbar:has(.account__menu[data-open="true"]) { z-index: 90; }
+
+.account { position: relative; display: flex; align-items: center; }
+.account__btn { cursor: pointer; }
+.account__avatar {
+  width: 20px; height: 20px;
+  border-radius: var(--radius-circle);
+  object-fit: cover;
+  background: oklch(1 0 0 / 0.15);
+}
+.account__name {
+  max-width: 12ch;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.account__caret { transition: transform var(--duration) var(--ease-out); }
+.account__btn[aria-expanded="true"] { color: var(--brand); }
+.account__btn[aria-expanded="true"] .account__caret { transform: rotate(180deg); }
+
+.account__menu {
+  position: absolute; top: calc(100% + 10px); right: 0;
+  min-width: 208px;
+  padding: var(--space-2xs);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: none;
+}
+.account__menu[data-open="true"] { display: block; }
+.account__item {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem; font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.account__item:visited { color: var(--text); }
+.account__item:is(:hover, :focus-visible) { background: var(--surface); color: var(--text); }
+.account__divider { height: 1px; margin: var(--space-2xs) 0; background: var(--border-subtle); }
+
+// Phones: the bar is centred, so the menu opens centred under the button
+@media (max-width: #{$bp-sm - 1px}) {
+  .account__menu { right: auto; left: 50%; transform: translateX(-50%); }
 }

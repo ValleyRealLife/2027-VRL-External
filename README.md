@@ -31,7 +31,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Layouts/FullWidth.aspx` | Deprecated copy of InnerDefault, kept until its pages are reassigned in Rock; then delete it |
 | `Layouts/Landing.aspx` | Section landing pages: title band with the page description, Feature / Main / Section A zones |
 | `Layouts/Blank.aspx`, `Dialog.aspx`, `Error.aspx` | Rock's required utility layouts (from the reference template) |
-| `Assets/Lava/UtilityBar.lava` | HTML block include: Request care · Give · Login, plus the care dialog |
+| `Assets/Lava/UtilityBar.lava` | HTML block include: Request care · Give · Login (or the account menu when signed in), plus the care dialog |
 | `Assets/Lava/PageNav.lava` | Page Menu template: nav row, mega menu and mobile drawer from one block |
 | `Assets/Lava/Home.lava` | HTML block include: the hero / Next Steps and Kids + Students sections, hardcoded from the concept for now |
 | `Assets/Lava/HomeMessages.lava` | HTML block include: Messages (live Resi player or the latest message + play in place, the 7 previous series, blurred series background), via entity commands |
@@ -61,7 +61,7 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 | Zone | Block | Settings |
 | --- | --- | --- |
 | Alert | HTML Content | content: just the message, written in the editor (no HTML needed) · schedule with the block's Display from / to dates · optional CSS Class (Advanced) for a seasonal look |
-| Utility | HTML Content | content: `{% include '~~/Assets/Lava/UtilityBar.lava' %}` |
+| Utility | HTML Content | content: `{% include '~~/Assets/Lava/UtilityBar.lava' %}` · Enabled Lava Commands: **RockEntity** (the account menu lists My Account, page 42015, and its child pages) |
 | Navigation | Page Menu | Root Page: 41952 · Number of Levels: 2 · Template: `{% include '~~/Assets/Lava/PageNav.lava' %}` |
 | Footer | HTML Content | content: `{% include '~~/Assets/Lava/Footer.lava' %}` · Enabled Lava Commands: **RockEntity** |
 | Main (homepage only, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/Home.lava' %}` · Cache Duration: 0 while iterating |
