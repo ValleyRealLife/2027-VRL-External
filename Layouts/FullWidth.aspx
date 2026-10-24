@@ -5,7 +5,11 @@
 <%@ Import Namespace="Rock.Web.Cache" %>
 
 <%--
-    INTERIOR LAYOUT
+    DEPRECATED — replaced by InnerDefault.aspx (identical markup).
+    Kept only until every page using it is reassigned in Rock; then delete this
+    file and its Layout record.
+
+INTERIOR LAYOUT
 
     "FullWidth" is Rock's conventional default layout name, but the design has
     no unrestricted full-width page: content sits in the same 1240px container
@@ -15,7 +19,8 @@
     Page header: the PageHeaderStyle page attribute picks SideImage (the
     default: a card with the title, description and PageImage overlapping a
     gray stripe, styled like the landing cards) or SimpleStripe (the plain gray
-    band). Both show the page Description as a lead line when it's set.
+    band). Both show the page Description as a lead line when it's set and
+    the page's Show Description property is on.
 
     Mobile first: one column everywhere; Section B/C/D become thirds at 900px.
     `.page` carries the offset for the fixed header (the homepage hero does
@@ -36,7 +41,8 @@
                 // PageTitle control can only appear once); the modifier class does the rest.
                 var headerStyleValue = page.GetAttributeValue( "PageHeaderStyle" );
                 var headerStyle = string.Equals( ( headerStyleValue ?? "" ).Trim(), "SimpleStripe", StringComparison.OrdinalIgnoreCase ) ? "simple-stripe" : "side-image";
-                var pageDescription = ( page.Description ?? "" ).Trim();
+                // Page Properties → Show Description (PageDisplayDescription) gates the lead
+                var pageDescription = page.PageDisplayDescription ? ( page.Description ?? "" ).Trim() : "";
                 var pageImageGuid = ( page.GetAttributeValue( "PageImage" ) ?? "" ).Trim();
             %>
             <% if(showPageTitle) { %>

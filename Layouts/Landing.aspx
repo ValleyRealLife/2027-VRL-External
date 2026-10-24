@@ -13,7 +13,7 @@
 
         {% include '~~/Assets/Lava/SubpageList.lava' %}     (Enabled Lava Commands: RockEntity)
 
-    Same container and mobile-first rules as FullWidth.aspx; only the Feature
+    Same container and mobile-first rules as InnerDefault.aspx; only the Feature
     zone is full-bleed.
 
     Rule for this file: a Rock zone may never sit inside a control that contains
@@ -32,7 +32,7 @@
                 <header class="page-title-band landing-band">
                     <div class="container">
                         <h1 class="page-title-heading"><Rock:PageTitle ID="PageTitle" runat="server" /></h1>
-                        <% if ( !string.IsNullOrWhiteSpace( page.Description ) ) { %>
+                        <% if ( page.PageDisplayDescription && !string.IsNullOrWhiteSpace( page.Description ) ) { %>
                             <p class="landing-band__lead"><%= System.Web.HttpUtility.HtmlEncode( page.Description ) %></p>
                         <% } %>
                     </div>

@@ -1,4 +1,4 @@
-// INTERIOR PAGES  (markup: Layouts/FullWidth.aspx)
+// INTERIOR PAGES  (markup: Layouts/InnerDefault.aspx)
 //
 // The homepage hero clears the fixed header itself; every other layout wraps
 // its content in `.page`, which carries the offset. Content sits in the same
@@ -48,7 +48,7 @@
 .page-title-heading i { font-size: 0.6em; margin-right: 0.35em; vertical-align: 0.1em; }
 
 // ---------------------------------------------------------------------------
-// PAGE HEADER STYLES  (Layouts/FullWidth.aspx; PageHeaderStyle page attribute)
+// PAGE HEADER STYLES  (Layouts/InnerDefault.aspx; PageHeaderStyle page attribute)
 // One markup, two looks:
 //   .page-head--simple-stripe  the plain gray band: title + description lead
 //   .page-head--side-image     (default) a white card overlapping the bottom of
