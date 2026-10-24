@@ -38,6 +38,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Assets/Lava/HomeEvents.lava` | HTML block include: the homepage's What's Happening cards (live events via a `{% sql %}` query adapted from the Connect theme) + the footer runway |
 | `Assets/Lava/Footer.lava` | HTML block include: the menu reflected (reads the page tree), visit info, bar |
 | `Assets/Lava/SubpageList.lava` | HTML block include for Landing pages: the current page's children as alternating image cards (`PageImage`, optional `CallToAction` page attributes) |
+| `Assets/Lava/PopularPages.lava` | HTML block include (first used on the 404 page): the most-viewed pages one level below the nav sections, ranked from the Interaction table over 90 days |
 | `Assets/Lava/Partials/IconSprite.lava` | The inline SVG icon sprite + logo ink filter, included once by `Site.Master` |
 | `Assets/Scripts/theme.js` | Site-wide behaviour: header, mega menu, drawer, care dialog, cover sections, footer reveal |
 | `Assets/Scripts/home.js` | Homepage only: events rail, Messages player, GSAP choreography |
@@ -46,6 +47,8 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Styles/_base.scss` … `_page.scss` | One partial per region: base, utility bar, header, care modal, footer, interior page |
 | `Styles/_site-alert.scss` | The global alert banner, including how to add seasonal looks (e.g. `alert-christmas`) |
 | `Styles/_home.scss` | Homepage section styles |
+| `Styles/_popular-pages.scss` | Popular pages cards (horizontal event-card style) |
+| `Styles/_search.scss` | Rock's stock Universal Search block restyled as the design system's search pill, results and pagination (CSS only; the block stays vanilla) |
 | `tools/` | `build.mjs` (the theme build), `check-theme.mjs` and `check-master-bindings.mjs` (gates) |
 | `Resources/RockNextgenThemeTemplate/` | The boilerplate NextGen starter theme, kept as reference only |
 
@@ -62,6 +65,8 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 | Main (homepage only, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/Home.lava' %}` · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Home block) | HTML Content | content: `{% include '~~/Assets/Lava/HomeMessages.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Messages block, last in the zone) | HTML Content | content: `{% include '~~/Assets/Lava/HomeEvents.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration: 0 while iterating |
+| Main (404 page, InnerDefault, Page level) | Universal Search | Rock's block, no theme changes |
+| Section A (404 page, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/PopularPages.lava' %}` · Enabled Lava Commands: **Cache, RockEntity, Sql** |
 
 **Page header style:** create a Page attribute `PageHeaderStyle` (Single-Select, values `SideImage^Side image,SimpleStripe^Simple stripe`, default `SideImage`) under Admin Tools → Entity Attributes (entity type: Page). InnerDefault pages use SideImage when it's empty: a card with the title, the page Description and the `PageImage` overlapping a gray stripe. SimpleStripe is the plain gray band.
 

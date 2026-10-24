@@ -41,6 +41,8 @@
 //   footer        footer + runway          (Assets/Lava/Footer.lava)
 //   page          interior page layout     (Layouts/InnerDefault.aspx)
 //   landing       landing page + subpage cards (Layouts/Landing.aspx, Assets/Lava/SubpageList.lava)
+//   popular-pages most-viewed section pages (Assets/Lava/PopularPages.lava; the 404 page)
+//   search        Rock's Universal Search block as the design system's search pill
 //   home          homepage sections        (Assets/Lava/Home.lava)
 
 /* CSS Overrides Top Start */
@@ -55,6 +57,8 @@
 @use "footer";
 @use "page";
 @use "landing";
+@use "popular-pages";
+@use "search";
 @use "home";
 
 // Rock's HTML editor (Summernote): its toolbar icon font and the rules that

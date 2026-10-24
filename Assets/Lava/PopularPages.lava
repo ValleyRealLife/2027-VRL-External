@@ -1,0 +1,148 @@
+{% comment %}
+    POPULAR PAGES — for an HTML block on any interior page (first used on the
+    404 page, below the Universal Search block).
+
+    Block content:            {% include '~~/Assets/Lava/PopularPages.lava' %}
+    Enabled Lava Commands:    Cache, RockEntity, Sql
+
+    Lists this site's most-viewed section pages: the pages one level below the
+    top nav sections (the mega-menu pages: About → Our story, Ministries →
+    Kids, …), ranked by page views in Rock's Interaction table over the last
+    90 days (`days`, below). Pages set to never show in navigation are skipped, the
+    same rule as the nav and footer. Pages nobody has viewed yet still qualify,
+    in nav order, so the list is full on a new site.
+
+    Settings (below):
+      rootPageId   the site's root page (the nav Root Page)
+      depth        levels below the root: 1 = the nav sections themselves,
+                   2 = their child pages (the default)
+      days         how far back to count views
+      limit        how many cards to show
+
+    The SQL only ranks page ids, and its result is cached for an hour (the
+    404 page takes a lot of bot traffic; the Interaction table is large). The
+    pages themselves are loaded with the page entity command, which applies
+    page security for the current visitor, so a page that needs a login never
+    shows to someone who can't open it.
+
+    Card: PageImage thumbnail (brand gradient without one), the section name,
+    the page title as the card's one real link, the Description. theme.js
+    makes a click anywhere on the card follow the link (data-card).
+
+    Styled by Styles/_popular-pages.scss.
+{% endcomment %}
+{%- assign rootPageId = 41952 -%}
+{%- assign depth = 2 -%}
+{%- assign days = 90 -%}
+{%- assign limit = 6 -%}
+{%- assign debug = false -%}    {%- comment -%} true: print the query result and the page filter above the list {%- endcomment -%}
+
+{%- assign currentPageId = 'Global' | Page:'Id' | AsInteger -%}
+
+{%- comment -%}
+    Ranked "pageId^sectionTitle" pairs, separated by |. Twice the limit, so
+    pages hidden by security still leave enough to fill the list.
+{%- endcomment -%}
+{%- capture rankedPages -%}
+{% cache key:'popular-pages-{{ rootPageId }}-{{ depth }}-{{ days }}' duration:'3600' %}
+{% sql %}
+    DECLARE @RootPageId int = {{ rootPageId }};
+    -- The site is the root page's (via its layout)
+    DECLARE @SiteId int = ( SELECT l.[SiteId] FROM [Page] p INNER JOIN [Layout] l ON l.[Id] = p.[LayoutId] WHERE p.[Id] = @RootPageId );
+    DECLARE @Depth int = {{ depth }};
+    DECLARE @Since datetime = DATEADD( day, -{{ days }}, GETDATE() );
+    DECLARE @PageEntityTypeId int = ( SELECT [Id] FROM [EntityType] WHERE [Name] = 'Rock.Model.Page' );
+
+    -- The page tree below the root; DisplayInNavWhen 2 = Never
+    WITH [Tree] AS (
+        SELECT p.[Id], p.[Order], 1 AS [Depth], p.[Order] AS [SectionOrder], p.[PageTitle] AS [SectionTitle]
+        FROM [Page] p
+        WHERE p.[ParentPageId] = @RootPageId AND p.[DisplayInNavWhen] <> 2
+        UNION ALL
+        SELECT c.[Id], c.[Order], t.[Depth] + 1, t.[SectionOrder], t.[SectionTitle]
+        FROM [Page] c
+        INNER JOIN [Tree] t ON c.[ParentPageId] = t.[Id]
+        WHERE t.[Depth] < @Depth AND c.[DisplayInNavWhen] <> 2
+    ),
+    -- Page views on this site: one interaction channel per site, one component per page
+    [Views] AS (
+        SELECT icmp.[EntityId] AS [PageId], COUNT(*) AS [Views]
+        FROM [Interaction] i
+        INNER JOIN [InteractionComponent] icmp ON icmp.[Id] = i.[InteractionComponentId]
+        INNER JOIN [InteractionChannel] ich ON ich.[Id] = icmp.[InteractionChannelId]
+        WHERE ich.[ChannelEntityId] = @SiteId
+          AND ich.[ComponentEntityTypeId] = @PageEntityTypeId
+          AND i.[InteractionDateTime] >= @Since
+          AND icmp.[EntityId] IN ( SELECT [Id] FROM [Tree] WHERE [Depth] = @Depth )
+        GROUP BY icmp.[EntityId]
+    )
+    SELECT TOP {{ limit | Times:2 }} t.[Id], t.[SectionTitle]
+    FROM [Tree] t
+    LEFT JOIN [Views] v ON v.[PageId] = t.[Id]
+    WHERE t.[Depth] = @Depth
+    ORDER BY ISNULL( v.[Views], 0 ) DESC, t.[SectionOrder], t.[Order]
+{% endsql %}
+{%- for row in results %}{{ row.Id }}^{{ row.SectionTitle | Replace:'|','' }}|{% endfor -%}
+{% endcache %}
+{%- endcapture -%}
+
+{%- assign rankedRows = rankedPages | Trim | Split:'|' -%}
+{%- comment -%}
+    The entity command's filter: "Id == 1 || Id == 2 …". Each id goes through
+    AsInteger, so stray whitespace or an empty row can't reach the command.
+{%- endcomment -%}
+{%- assign pageFilter = '' -%}
+{%- for rankedRow in rankedRows -%}
+    {%- assign rowParts = rankedRow | Split:'^' -%}
+    {%- assign rowId = rowParts[0] | Trim | AsInteger -%}
+    {%- if rowId == null or rowId == 0 %}{% continue %}{% endif -%}
+    {%- if pageFilter != '' %}{% assign pageFilter = pageFilter | Append:' || ' %}{% endif -%}
+    {%- assign pageFilter = pageFilter | Append:'Id == ' | Append:rowId -%}
+{%- endfor -%}
+
+{%- if debug %}
+<pre class="popular-pages__debug">rankedPages: {{ rankedPages | Escape }}
+pageFilter:  {{ pageFilter | Escape }}</pre>
+{%- endif -%}
+
+{%- assign cardCount = 0 -%}
+{%- capture cardsHtml -%}
+{%- if pageFilter != '' -%}
+{% page where:'{{ pageFilter }}' %}
+    {%- comment -%} The entity command returns its own order; walk the ranked list instead {%- endcomment -%}
+    {%- for rankedRow in rankedRows -%}
+        {%- if cardCount >= limit %}{% break %}{% endif -%}
+        {%- assign rowParts = rankedRow | Split:'^' -%}
+        {%- assign rankedId = rowParts[0] | Trim | AsInteger -%}
+        {%- if rankedId == currentPageId %}{% continue %}{% endif -%}
+        {%- assign rankedPage = pageItems | Where:'Id', rankedId | First -%}
+        {%- if rankedPage == null or rankedPage == empty %}{% continue %}{% endif -%}
+        {%- assign cardCount = cardCount | Plus:1 -%}
+        {%- assign imageGuid = rankedPage | Attribute:'PageImage','RawValue' | Trim %}
+    <article class="popular-card" data-card>
+      <div class="popular-card__media{% if imageGuid == '' %} popular-card__media--empty{% endif %}">
+        {%- if imageGuid != '' %}
+        <img src="/GetImage.ashx?guid={{ imageGuid }}&w=400&h=400&mode=crop" alt="" />
+        {%- endif %}
+      </div>
+      <div class="popular-card__body">
+        <span class="popular-card__section">{{ rowParts[1] }}</span>
+        <h3 class="popular-card__title"><a class="popular-card__link" href="{{ rankedPage.Id | PageRoute }}" data-card-link>{{ rankedPage.PageTitle }}</a></h3>
+        {%- if rankedPage.Description != empty %}
+        <p class="popular-card__desc">{{ rankedPage.Description }}</p>
+        {%- endif %}
+      </div>
+    </article>
+    {%- endfor -%}
+{% endpage %}
+{%- endif -%}
+{%- endcapture -%}
+
+{%- if cardCount > 0 %}
+<section class="popular-pages" aria-labelledby="popular-pages-heading">
+  <h2 class="popular-pages__heading" id="popular-pages-heading">Popular pages</h2>
+  <div class="popular-pages__grid">
+    {{ cardsHtml }}
+  </div>
+</section>
+{%- endif %}
