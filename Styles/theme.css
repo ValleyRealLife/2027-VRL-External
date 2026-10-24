@@ -2010,7 +2010,7 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   }
 }
 .popular-pages {
-  margin-block: var(--space-xl) var(--space-2xl);
+  margin-block: var(--space-3xl) var(--space-2xl);
 }
 
 .popular-pages__heading {
