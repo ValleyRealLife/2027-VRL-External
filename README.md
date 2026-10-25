@@ -51,6 +51,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Styles/_home.scss` | Homepage section styles |
 | `Styles/_popular-pages.scss` | Popular pages cards (horizontal event-card style) |
 | `Styles/_search.scss` | Site search: the design system's search pill and the grouped live results |
+| `Styles/_login.scss` | Rock's stock Login block (unchanged in Rock) restyled as a centred card; `theme.js` adds the Phone or email / Username & password tabs |
 | `tools/` | `build.mjs` (the theme build), `check-theme.mjs` and `check-master-bindings.mjs` (gates) |
 | `Resources/RockNextgenThemeTemplate/` | The boilerplate NextGen starter theme, kept as reference only |
 

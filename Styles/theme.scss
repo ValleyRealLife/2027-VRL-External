@@ -43,6 +43,7 @@
 //   landing       landing page + subpage cards (Layouts/Landing.aspx, Assets/Lava/SubpageList.lava)
 //   popular-pages most-viewed section pages (Assets/Lava/PopularPages.lava; the 404 page)
 //   search        site search pill + results (Assets/Lava/SiteSearch.lava)
+//   login         Rock's Login block as a card, with method tabs (theme.js)
 //   home          homepage sections        (Assets/Lava/Home.lava)
 
 /* CSS Overrides Top Start */
@@ -59,6 +60,7 @@
 @use "landing";
 @use "popular-pages";
 @use "search";
+@use "login";
 @use "home";
 
 // Rock's HTML editor (Summernote): its toolbar icon font and the rules that

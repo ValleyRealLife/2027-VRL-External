@@ -466,6 +466,86 @@
     runSiteSearch(btn.closest('[data-site-search]'), true);
   });
 
+  // --- Login block: method tabs (Rock's Obsidian Login block; Styles/_login.scss) ---
+  // Rock offers the other sign-in method as ONE button ("Sign in with
+  // Account" / "Sign in with Email or Phone"). When both methods are on, this
+  // adds a two-tab switch above the form; picking the other tab clicks Rock's
+  // button, so Rock still does all the work.
+  // Vue owns everything inside the block's root element ([id^="obsidian-"])
+  // and breaks if other code changes it, so nothing here touches it: the tabs
+  // go BEFORE the root element and the state class goes on the block
+  // instance. Rock renders the block in the browser and re-renders between
+  // steps, so a MutationObserver keeps the tabs in sync. If the picker can't
+  // be found (one method only, or a Rock update renamed it), the tabs hide
+  // and Rock's own UI shows.
+  var loginHost = document.querySelector('.block-instance.login');
+  var loginRoot = loginHost && loginHost.querySelector('.block-content > [id^="obsidian-"]');
+  if (loginRoot) {
+    var LOGIN_TABS = [
+      { key: 'passwordless', label: 'Phone or email' },
+      { key: 'credential', label: 'Username & password' }
+    ];
+    var loginTabs = document.createElement('div');
+    loginTabs.className = 'login-tabs';
+    loginTabs.setAttribute('role', 'tablist');
+    loginTabs.setAttribute('aria-label', 'Sign-in method');
+    loginTabs.hidden = true;
+    LOGIN_TABS.forEach(function (def) {
+      var tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'login-tabs__tab';
+      tab.setAttribute('role', 'tab');
+      tab.setAttribute('aria-controls', loginRoot.id);
+      tab.setAttribute('data-login-method', def.key);
+      tab.textContent = def.label;
+      loginTabs.appendChild(tab);
+    });
+    loginRoot.parentNode.insertBefore(loginTabs, loginRoot);
+
+    var findLoginPicker = function () {
+      var btn = loginRoot.querySelector('.login-methods button');
+      return btn && /sign in with/i.test(btn.textContent) ? btn : null;
+    };
+    var syncLoginTabs = function () {
+      var picker = findLoginPicker();
+      loginTabs.hidden = !picker;
+      loginHost.classList.toggle('login--tabs', !!picker);
+      if (!picker) return;
+      /* The picker offers the method that is NOT showing */
+      var active = /account/i.test(picker.textContent) ? 'passwordless' : 'credential';
+      loginTabs.setAttribute('data-active', active);
+      loginTabs.querySelectorAll('[role="tab"]').forEach(function (tab) {
+        var on = tab.getAttribute('data-login-method') === active;
+        tab.setAttribute('aria-selected', String(on));
+        tab.tabIndex = on ? 0 : -1;
+      });
+    };
+    var switchLoginMethod = function (tab) {
+      if (tab.getAttribute('aria-selected') === 'true') return;
+      var picker = findLoginPicker();
+      if (!picker || picker.disabled) return;
+      /* Slide the pill now; the observer confirms once Rock has swapped the form */
+      loginTabs.setAttribute('data-active', tab.getAttribute('data-login-method'));
+      picker.click();
+    };
+    loginTabs.addEventListener('click', function (e) {
+      var tab = e.target.closest('.login-tabs__tab');
+      if (tab) switchLoginMethod(tab);
+    });
+    /* Arrow keys move between the two tabs (and switch), per the tabs pattern */
+    loginTabs.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      var tab = e.target.closest('.login-tabs__tab');
+      if (!tab) return;
+      e.preventDefault();
+      var other = tab.nextElementSibling || tab.previousElementSibling;
+      other.focus();
+      switchLoginMethod(other);
+    });
+    syncLoginTabs();
+    new MutationObserver(syncLoginTabs).observe(loginRoot, { childList: true, subtree: true, characterData: true });
+  }
+
   // --- Esc closes whatever is open ------------------------------------------------
 
   document.addEventListener('keydown', function (e) {

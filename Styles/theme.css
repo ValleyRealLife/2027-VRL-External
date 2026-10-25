@@ -2389,6 +2389,241 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   color: var(--text-secondary);
 }
 
+.block-instance.login > .block-content {
+  max-width: 440px;
+  margin: var(--space-lg) auto var(--space-2xl);
+  padding: clamp(1.25rem, 5vw, 2rem);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+}
+
+.login-block fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.login-block legend {
+  display: none;
+}
+
+.login-block .login-container {
+  display: block !important;
+  margin: 0;
+}
+
+.login-block .login-container > * {
+  float: none;
+  width: auto;
+  max-width: none;
+  padding: 0;
+}
+
+.login--tabs .login-block :is(.login-methods, .rock-divider) {
+  display: none;
+}
+
+.login-tabs {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: var(--space-lg);
+  padding: 4px;
+  background: var(--surface);
+  border-radius: var(--radius-pill);
+}
+
+.login-tabs[hidden] {
+  display: none;
+}
+
+.login-tabs::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 6px);
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.login-tabs[data-active=credential]::before {
+  transform: translateX(calc(100% + 4px));
+}
+
+.login-tabs:not([data-active])::before {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-tabs::before {
+    transition: none;
+  }
+}
+.login-tabs__tab {
+  padding: 0.6rem 0.75rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: color var(--duration) var(--ease-out);
+}
+
+.login-tabs__tab:hover {
+  color: var(--text);
+}
+
+.login-tabs__tab[aria-selected=true] {
+  color: var(--text);
+  cursor: default;
+}
+
+.login-tabs__tab:focus-visible {
+  outline: 3px solid var(--brand-text);
+  outline-offset: 2px;
+}
+
+.login-block .form-group {
+  margin-bottom: var(--space-md);
+}
+
+.login-block .control-label {
+  margin-bottom: var(--space-xs);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.login-block .form-control {
+  height: 48px;
+  padding: 0 var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  transition: border-color var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
+}
+
+.login-block .form-control::placeholder {
+  color: var(--text-muted);
+}
+
+.login-block .form-control:hover {
+  border-color: var(--border-strong);
+}
+
+.login-block .form-control:focus {
+  outline: 0;
+  border-color: var(--brand-text);
+  box-shadow: 0 0 0 4px var(--brand-glow-soft);
+}
+
+.login-block .rock-code-box input {
+  height: 52px;
+  padding: 0;
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.login-block .checkbox label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.login-block .btn.d-sm-none {
+  display: block !important;
+  width: 100%;
+}
+
+.login-block .btn.d-none.d-sm-inline-block {
+  display: none !important;
+}
+
+.login-block .btn {
+  min-height: 48px;
+  margin-top: var(--space-xs);
+  border-radius: var(--radius-pill);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  box-shadow: none;
+  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
+}
+
+.login-block .btn-primary,
+.login-block .btn-primary:focus {
+  background: var(--brand);
+  border: 0;
+  color: var(--text-on-brand);
+}
+
+.login-block .btn-primary:hover {
+  background: var(--brand-bright);
+  color: var(--text-on-brand);
+}
+
+.login-block :is(.btn-action, .btn-default),
+.login-block :is(.btn-action, .btn-default):focus {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.login-block :is(.btn-action, .btn-default):hover {
+  border-color: var(--text);
+  background: transparent;
+  color: var(--text);
+}
+
+.login-block .btn-link,
+.login-block .btn-link:focus {
+  min-height: 0;
+  color: var(--brand-text);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.login-block .btn-link:hover {
+  color: var(--brand-text);
+  text-decoration: underline;
+}
+
+.login-block .btn:focus-visible {
+  outline: 3px solid var(--brand-text);
+  outline-offset: 2px;
+}
+
+.login-block > .mt-3 {
+  margin: var(--space-lg) 0 0 !important;
+  padding: var(--space-md) 0 0;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.login-block > .mt-3 a {
+  color: var(--brand-text);
+}
+
 /* ============================================================
    SECTION: HERO + NEXT STEPS  (one continuous scroll handoff)
    The four cards start fanned at the bottom of the hero, then
