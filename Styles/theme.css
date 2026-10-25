@@ -605,7 +605,7 @@ body:is(.zone-highlight, .block-highlight) .site-alert[hidden] {
 .utilbar__links {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-lg);
 }
 
 .utilbar__link {
