@@ -27,9 +27,9 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `theme.json` | Tells Rock this is a NextGen theme; the fields shown in the admin theme editor |
 | `Layouts/Site.Master` | The site shell: global alert, utility bar, header and footer zones, fonts, scripts, icon sprite |
 | `Layouts/Homepage.aspx` | Homepage: the Main zone plus the homepage-only scripts (GSAP, `home.js`) |
-| `Layouts/InnerDefault.aspx` | Interior pages (the default): page header (SideImage by default, or SimpleStripe, per the `PageHeaderStyle` page attribute) + Feature, Main, Section A–D zones in the 1240px container |
+| `Layouts/InnerDefault.aspx` | Interior pages (the default): page header (SideImage by default; the `PageHeaderStyle` page attribute picks another style or none) + Feature, Main, Section A–D zones in the 1240px container |
 | `Layouts/FullWidth.aspx` | Deprecated copy of InnerDefault, kept until its pages are reassigned in Rock; then delete it |
-| `Layouts/Landing.aspx` | Section landing pages: title band with the page description, Feature / Main / Section A zones |
+| `Layouts/Landing.aspx` | Section landing pages: the same page header (SimpleGradStripe by default, per the `PageHeaderStyle` page attribute) + Feature / Main / Section A zones |
 | `Layouts/Blank.aspx`, `Dialog.aspx`, `Error.aspx` | Rock's required utility layouts (from the reference template) |
 | `Assets/Lava/UtilityBar.lava` | HTML block include: Request care · Give · Login (or the account menu when signed in), plus the care dialog |
 | `Assets/Lava/PageNav.lava` | Page Menu template: nav row, mega menu and mobile drawer from one block |
@@ -78,7 +78,7 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 {% include '~/Themes/2027 VRL External/Assets/Lava/SiteSearchResults.lava' %}
 ```
 
-**Page header style:** create a Page attribute `PageHeaderStyle` (Single-Select, values `SideImage^Side image,SimpleStripe^Simple stripe`, default `SideImage`) under Admin Tools → Entity Attributes (entity type: Page). InnerDefault pages use SideImage when it's empty: a card with the title, the page Description and the `PageImage` overlapping a gray stripe. SimpleStripe is the plain gray band.
+**Page header style:** create a Page attribute `PageHeaderStyle` (Single-Select, values `SideImage`, `SimpleGrayStripe`, `SimpleGreenStripe`, `SimpleGradStripe`, `None`; **no default value**) under Admin Tools → Entity Attributes (entity type: Page). SideImage is a card with the title, the page Description and the `PageImage` overlapping a gray stripe; the three Simple stripes are a full-width band (plain gray, solid brand green, or gray with a soft slanted green wash at the right); None hides the page header (the page's content then needs its own heading). Left empty, each layout uses its own default: InnerDefault → SideImage, Landing → SimpleGradStripe. A default on the attribute would override both. The old value `SimpleStripe` still works and shows as SimpleGradStripe.
 
 **Excluding the alert from a page:** create a Page attribute `ExcludeGlobalAlert` (Boolean, shown as a checkbox, default unchecked) under Admin Tools → Entity Attributes (entity type: Page). Check it on pages that shouldn't show the alert, such as the login page; `Site.Master` then doesn't render the banner there. Visitors who dismiss the alert won't see it again for the rest of their browser session, but a different message shows again.
 

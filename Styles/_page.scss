@@ -30,13 +30,6 @@
 
 .page { padding-top: var(--header-h); }
 
-// Page title band, driven by the theme.json "Header & Footer" fields.
-.page-title-band {
-  margin: 0;
-  background-color: var(--page-title-background);
-  color: var(--page-title-foreground);
-  padding-block: clamp(2rem, 6vw, 4rem);
-}
 .page-title-heading {
   margin: 0;
   color: var(--page-title-foreground);
@@ -48,9 +41,10 @@
 .page-title-heading i { font-size: 0.6em; margin-right: 0.35em; vertical-align: 0.1em; }
 
 // ---------------------------------------------------------------------------
-// PAGE HEADER STYLES  (Layouts/InnerDefault.aspx; PageHeaderStyle page attribute)
-// One markup, two looks:
-//   .page-head--simple-stripe  the plain gray band: title + description lead
+// PAGE HEADER STYLES  (Layouts/InnerDefault.aspx and Landing.aspx; PageHeaderStyle page attribute)
+// One markup, several looks (PageHeaderStyle None renders no header at all):
+//   .page-head--simple         a full-width band, title + description lead, in
+//                              three colourways (-gray, -green, -grad)
 //   .page-head--side-image     (default) a white card overlapping the bottom of
 //                              a full-width gray stripe: title + description on
 //                              the left, PageImage on the right with the landing
@@ -68,12 +62,47 @@
   color: var(--text-secondary);
 }
 
-// SimpleStripe: the gray band, text only
-.page-head--simple-stripe {
+// Simple stripes: a full-width band, text only. Three colourways:
+//   .page-head--simple-gray    the plain gray band
+//   .page-head--simple-green   a solid brand-green band (dark text: ink on
+//                              v-green-500 passes AA)
+//   .page-head--simple-grad    the gray band with a green wash at the far right.
+//     The wash is a panel pinned to the viewport's right edge whose gradient
+//     runs toward the top-right corner at an angle, so the green fades out
+//     along lines that follow the site's slant (wider at the top) and the
+//     slant has no hard edge. It sits behind the text; the title and lead stop
+//     at 60ch, so on wide screens they don't reach the green, and on phones
+//     the panel narrows and pales.
+.page-head--simple {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background-color: var(--page-title-background);
   padding-block: clamp(2rem, 6vw, 4rem);
 }
-.page-head--simple-stripe .page-title-heading { color: var(--page-title-foreground); }
+.page-head--simple .page-title-heading { color: var(--page-title-foreground); }
+
+.page-head--simple-green { background-color: var(--brand); }
+.page-head--simple-green .page-title-heading { color: var(--text-on-brand); }
+.page-head--simple-green .page-head__lead { color: var(--v-neutral-800); }
+
+.page-head--simple-grad::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0; right: 0; bottom: 0;
+  width: clamp(160px, 46vw, 960px);
+  // 50deg: the fade lines run down and to the right, the slant's direction
+  background: linear-gradient(50deg,
+    oklch(from var(--v-green-300) l c h / 0) 30%,
+    oklch(from var(--v-green-300) l c h / 0.4) 62%,
+    var(--v-green-300) 100%);
+  pointer-events: none;
+}
+
+@media (max-width: #{$bp-md - 1px}) {
+  .page-head--simple-grad::after { width: 50vw; opacity: 0.7; }
+}
 
 // SideImage
 .page-head--side-image {

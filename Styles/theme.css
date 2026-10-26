@@ -1731,13 +1731,6 @@ body:is(.zone-highlight, .block-highlight) .site-alert[hidden] {
   padding-top: var(--header-h);
 }
 
-.page-title-band {
-  margin: 0;
-  background-color: var(--page-title-background);
-  color: var(--page-title-foreground);
-  padding-block: clamp(2rem, 6vw, 4rem);
-}
-
 .page-title-heading {
   margin: 0;
   color: var(--page-title-foreground);
@@ -1767,15 +1760,48 @@ body:is(.zone-highlight, .block-highlight) .site-alert[hidden] {
   color: var(--text-secondary);
 }
 
-.page-head--simple-stripe {
+.page-head--simple {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background-color: var(--page-title-background);
   padding-block: clamp(2rem, 6vw, 4rem);
 }
 
-.page-head--simple-stripe .page-title-heading {
+.page-head--simple .page-title-heading {
   color: var(--page-title-foreground);
 }
 
+.page-head--simple-green {
+  background-color: var(--brand);
+}
+
+.page-head--simple-green .page-title-heading {
+  color: var(--text-on-brand);
+}
+
+.page-head--simple-green .page-head__lead {
+  color: var(--v-neutral-800);
+}
+
+.page-head--simple-grad::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: clamp(160px, 46vw, 960px);
+  background: linear-gradient(50deg, oklch(from var(--v-green-300) l c h/0) 30%, oklch(from var(--v-green-300) l c h/0.4) 62%, var(--v-green-300) 100%);
+  pointer-events: none;
+}
+
+@media (max-width: 899px) {
+  .page-head--simple-grad::after {
+    width: 50vw;
+    opacity: 0.7;
+  }
+}
 .page-head--side-image {
   --head-overlap: clamp(2rem, 5vw, 3.5rem);
   padding-top: clamp(1.25rem, 4vw, 2.5rem);
@@ -1936,15 +1962,6 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   inset: 0;
   z-index: 1990;
   background: oklch(16% 0.01 135deg / 0.4);
-}
-
-.landing-band__lead {
-  margin: var(--space-md) 0 0;
-  max-width: 60ch;
-  font-size: clamp(1rem, 1.6vw, 1.25rem);
-  font-weight: 500;
-  line-height: 1.55;
-  color: var(--text-secondary);
 }
 
 .subpages {

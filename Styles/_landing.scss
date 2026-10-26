@@ -1,8 +1,7 @@
 // LANDING PAGES  (layout: Layouts/Landing.aspx · cards: Assets/Lava/SubpageList.lava)
 //
-// A section's landing page: the header band gains a lead line (the page
-// description), and the child pages list as alternating image cards with a
-// slanted image edge.
+// A section's landing page: the child pages list as alternating image cards
+// with a slanted image edge. (The page header is the shared one in _page.scss.)
 //
 // Mobile first: a horizontal swipe rail, one card plus a fifth of the next in
 // view; each card has its image on top (slanted along its bottom edge) and
@@ -15,18 +14,6 @@
 // sets its own margins, colours and link states.
 
 @use "config" as *;
-
-// ---------------------------------------------------------------------------
-// Header band lead
-// ---------------------------------------------------------------------------
-.landing-band__lead {
-  margin: var(--space-md) 0 0;
-  max-width: 60ch;
-  font-size: clamp(1rem, 1.6vw, 1.25rem);
-  font-weight: 500;
-  line-height: 1.55;
-  color: var(--text-secondary);
-}
 
 // ---------------------------------------------------------------------------
 // Card list

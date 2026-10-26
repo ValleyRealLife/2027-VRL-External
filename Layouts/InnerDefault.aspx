@@ -15,9 +15,10 @@
 
     Page header: the PageHeaderStyle page attribute picks SideImage (the
     default: a card with the title, description and PageImage overlapping a
-    gray stripe, styled like the landing cards) or SimpleStripe (the plain gray
-    band). Both show the page Description as a lead line when it's set and
-    the page's Show Description property is on.
+    gray stripe, styled like the landing cards), SimpleGrayStripe,
+    SimpleGreenStripe, SimpleGradStripe, or None (no header). Every style
+    shows the page Description as a lead line when it's set and the page's
+    Show Description property is on.
 
     Mobile first: one column everywhere; Section B/C/D become thirds at 900px.
     `.page` carries the offset for the fixed header (the homepage hero does
@@ -33,17 +34,35 @@
             <% var showPageTitle = page.PageDisplayTitle; %>
             <% var showPageBreadcrumbs = page.PageDisplayBreadCrumb; %>
             <%
-                // Page header style: the PageHeaderStyle page attribute (SideImage |
-                // SimpleStripe); SideImage when empty. One markup for both (Rock's
-                // PageTitle control can only appear once); the modifier class does the rest.
-                var headerStyleValue = page.GetAttributeValue( "PageHeaderStyle" );
-                var headerStyle = string.Equals( ( headerStyleValue ?? "" ).Trim(), "SimpleStripe", StringComparison.OrdinalIgnoreCase ) ? "simple-stripe" : "side-image";
+                // Page header style: the PageHeaderStyle page attribute.
+                //   SimpleGrayStripe   the plain gray band
+                //   SimpleGreenStripe  a solid brand-green band
+                //   SimpleGradStripe   the gray band with a soft green wash at the right
+                //   SideImage          a card with the PageImage overlapping a gray stripe
+                //   None               no page header
+                // Empty (or an unknown value): SideImage.
+                // The old value SimpleStripe reads as SimpleGradStripe. One markup for
+                // every style (Rock's PageTitle control can only appear once); the
+                // modifier classes do the rest.
+                var headerStyle = ( page.GetAttributeValue( "PageHeaderStyle" ) ?? "" ).Trim().ToLowerInvariant();
+                if ( headerStyle == "" ) { headerStyle = "sideimage"; }
+                if ( headerStyle == "simplestripe" ) { headerStyle = "simplegradstripe"; }
+                string headerClass;
+                switch ( headerStyle )
+                {
+                    case "simplegraystripe":  headerClass = "page-head--simple page-head--simple-gray"; break;
+                    case "simplegreenstripe": headerClass = "page-head--simple page-head--simple-green"; break;
+                    case "simplegradstripe":  headerClass = "page-head--simple page-head--simple-grad"; break;
+                    case "none":              headerClass = ""; break;
+                    default:                  headerStyle = "sideimage"; headerClass = "page-head--side-image"; break;
+                }
+                var isSideImage = headerStyle == "sideimage";
                 // Page Properties → Show Description (PageDisplayDescription) gates the lead
                 var pageDescription = page.PageDisplayDescription ? ( page.Description ?? "" ).Trim() : "";
                 var pageImageGuid = ( page.GetAttributeValue( "PageImage" ) ?? "" ).Trim();
             %>
-            <% if(showPageTitle) { %>
-                <header class="page-head page-head--<%= headerStyle %>">
+            <% if ( showPageTitle && headerStyle != "none" ) { %>
+                <header class="page-head <%= headerClass %>">
                     <div class="container">
                         <div class="page-head__card">
                             <div class="page-head__body">
@@ -52,7 +71,7 @@
                                     <p class="page-head__lead"><%= System.Web.HttpUtility.HtmlEncode( pageDescription ) %></p>
                                 <% } %>
                             </div>
-                            <% if ( headerStyle == "side-image" ) { %>
+                            <% if ( isSideImage ) { %>
                                 <div class="page-head__media<%= pageImageGuid == "" ? " page-head__media--empty" : "" %>">
                                     <% if ( pageImageGuid != "" ) { %>
                                         <img src="/GetImage.ashx?guid=<%= System.Web.HttpUtility.UrlEncode( pageImageGuid ) %>&amp;w=1400&amp;h=900&amp;mode=crop" alt="" />
