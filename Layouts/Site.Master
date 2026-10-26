@@ -31,7 +31,87 @@
         }
     }
 
-</script> 
+    /// <summary>
+    /// Raises the <see cref="E:System.Web.UI.Control.PreRender" /> event.
+    /// </summary>
+    /// <param name="e">An <see cref="T:System.EventArgs" /> object that contains the event data.</param>
+    protected override void OnPreRender( EventArgs e )
+    {
+        base.OnPreRender( e );
+        AddOpenGraphImage();
+    }
+
+    // Open Graph image (link previews in Facebook, iMessage, Slack …), first match wins:
+    //   1. an og:image already in the <head>: a block or the page's Header
+    //      Content set one. The event and sermon detail pages will set the
+    //      item's thumbnail image here from their Lava.
+    //   2. the page's PageImage attribute, cropped to 1200×630 by GetImage
+    //   3. the theme's default, Assets/Images/OG_Default-NEWVRLCHURCH.jpg
+    //      (1200×630). Fingerprinted (?v=…), so replacing the file busts caches.
+    // Runs at PreRender, after the blocks have loaded. Crawlers need absolute URLs.
+    void AddOpenGraphImage()
+    {
+        if ( Page.Header == null || HeadHasOpenGraphImage( Page.Header ) )
+        {
+            return;
+        }
+
+        var siteRoot = Request.UrlProxySafe().GetLeftPart( UriPartial.Authority );
+        var rockPage = Page as Rock.Web.UI.RockPage;
+        var pageCache = rockPage != null ? Rock.Web.Cache.PageCache.Get( rockPage.PageId ) : null;
+        var imageGuid = pageCache != null ? pageCache.GetAttributeValue( "PageImage" ).AsGuidOrNull() : null;
+
+        var imageUrl = imageGuid.HasValue
+            ? siteRoot + "/GetImage.ashx?guid=" + imageGuid.Value + "&w=1200&h=630&mode=crop"
+            : siteRoot + ResolveRockUrl( "~~/Assets/Images/OG_Default-NEWVRLCHURCH.jpg", true ).Replace( " ", "%20" );
+
+        AddOpenGraphMeta( "og:image", imageUrl );
+        AddOpenGraphMeta( "og:image:width", "1200" );
+        AddOpenGraphMeta( "og:image:height", "630" );
+    }
+
+    // Looks through the head, including content placeholders, for a meta tag or
+    // a raw HTML literal that already sets og:image.
+    bool HeadHasOpenGraphImage( Control parent )
+    {
+        foreach ( Control control in parent.Controls )
+        {
+            var meta = control as System.Web.UI.HtmlControls.HtmlMeta;
+            if ( meta != null && ( string.Equals( meta.Attributes["property"], "og:image", StringComparison.OrdinalIgnoreCase )
+                || string.Equals( meta.Name, "og:image", StringComparison.OrdinalIgnoreCase ) ) )
+            {
+                return true;
+            }
+
+            var literal = control as LiteralControl;
+            if ( literal != null && literal.Text.IndexOf( "og:image", StringComparison.OrdinalIgnoreCase ) >= 0 )
+            {
+                return true;
+            }
+
+            var literalControl = control as Literal;
+            if ( literalControl != null && ( literalControl.Text ?? "" ).IndexOf( "og:image", StringComparison.OrdinalIgnoreCase ) >= 0 )
+            {
+                return true;
+            }
+
+            if ( control.HasControls() && HeadHasOpenGraphImage( control ) )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void AddOpenGraphMeta( string property, string content )
+    {
+        var meta = new System.Web.UI.HtmlControls.HtmlMeta { Content = content };
+        meta.Attributes["property"] = property;
+        Page.Header.Controls.Add( meta );
+    }
+
+</script>
 
 <%--
     SITE SHELL — Valley Real Life 2027
