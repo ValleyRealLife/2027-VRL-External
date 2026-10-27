@@ -44,6 +44,69 @@
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-sm);
 }
+
+// ---------------------------------------------------------------------------
+// Photo beside the form (Assets/Lava/LoginMedia.lava: the PageImage of the
+// page the visitor came from), desktop only. When an HTML block in the Login
+// block's zone renders .login-media, the zone becomes the card: two columns,
+// the photo filling the left, the form on the right (whatever the block
+// order). Not in edit mode, where
+// Rock's zone and block chrome needs the normal flow.
+// ---------------------------------------------------------------------------
+$login-pair: "body:not(.zone-highlight, .block-highlight) .zone-content:has(> .block-instance.login):has(.login-media)";
+
+.login-media { display: none; }
+
+@media (min-width: #{$bp-md}) {
+  #{$login-pair} {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+    max-width: 1000px;
+    margin: var(--space-lg) auto var(--space-2xl);
+    overflow: hidden;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+  }
+  // Placement by role, not block order: the photo block on the left, the
+  // Login block on the right, one row. Any other block in the zone (an empty
+  // leftover HTML block, say) would add grid cells, so it's hidden here.
+  #{$login-pair} > .block-instance:not(.login, :has(.login-media)) { display: none; }
+  #{$login-pair} > .block-instance:has(.login-media) { grid-column: 1; grid-row: 1; }
+  // The form side: the card's own frame goes (the zone is the card now)
+  #{$login-pair} > .block-instance.login { grid-column: 2; grid-row: 1; align-self: center; }
+  #{$login-pair} > .block-instance.login > .block-content {
+    max-width: none;
+    margin: 0;
+    padding: 2.5rem;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  // The photo side: the HTML block stretches to the card's height (a grid
+  // item), and the photo is pinned to all four of its edges, so Rock's
+  // wrappers inside the block don't matter. The photo (a 3:2 crop from
+  // GetImage) covers the column.
+  #{$login-pair} > .block-instance:has(.login-media) {
+    position: relative;
+    min-height: 380px;
+    margin: 0;
+    overflow: hidden;
+  }
+  .login-media {
+    display: block;
+    position: absolute; inset: 0;
+    background: var(--surface);
+  }
+  .login-media img {
+    display: block;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+}
+
 .login-block fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 .login-block legend { display: none; }
 

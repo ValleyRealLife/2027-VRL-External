@@ -39,6 +39,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Assets/Lava/Footer.lava` | HTML block include: the menu reflected (reads the page tree), visit info, bar |
 | `Assets/Lava/SubpageList.lava` | HTML block include for Landing pages: the current page's children as alternating image cards (`PageImage`, optional `CallToAction` page attributes) |
 | `Assets/Lava/PopularPages.lava` | HTML block include (first used on the 404 page): the most-viewed pages one level below the nav sections, ranked from the Interaction table over 90 days |
+| `Assets/Lava/LoginMedia.lava` | HTML block include for the login page: the PageImage of the page in `?returnurl=`, shown beside the login form from 900px |
 | `Assets/Lava/SiteSearch.lava` | HTML block include: the search pill with live results (fetched from a Lava Application endpoint as you type; rendered in place when the URL has `?q=`) |
 | `Assets/Lava/SiteSearchResults.lava` | The search results fragment, shared by the endpoint and `SiteSearch.lava`: pages on this site, messages, series, queried directly with SQL |
 | `Assets/Lava/Partials/IconSprite.lava` | The inline SVG icon sprite + logo ink filter, included once by `Site.Master` |
@@ -68,6 +69,7 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 | Main (homepage only, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/Home.lava' %}` · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Home block) | HTML Content | content: `{% include '~~/Assets/Lava/HomeMessages.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Messages block, last in the zone) | HTML Content | content: `{% include '~~/Assets/Lava/HomeEvents.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration: 0 while iterating |
+| Main (login page, Page level, same zone as the Login block; other blocks there hide while the photo shows) | HTML Content | content: `{% include '~~/Assets/Lava/LoginMedia.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 |
 | Main (404 page, or any page that offers search, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/SiteSearch.lava' %}` · Enabled Lava Commands: **RockEntity, Sql** |
 | Section A (404 page, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/PopularPages.lava' %}` · Enabled Lava Commands: **Cache, RockEntity, Sql** |
 

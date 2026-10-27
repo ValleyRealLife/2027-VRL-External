@@ -61,7 +61,7 @@
             </div>
         </div>
         {% else %}
-        <a class="utilbar__link" href="/login?returnurl={{ 'Global' | Page:'Url' | EscapeDataString }}">
+        <a class="utilbar__link" href="/login?returnurl={{ 'Global' | Page:'Path' | EscapeDataString }}">
             <svg width="15" height="15" aria-hidden="true"><use href="#i-user-circle"/></svg>
             <span>Login</span>
         </a>

@@ -1,0 +1,109 @@
+{% comment %}
+    LOGIN MEDIA — the photo beside the login form (desktop only).
+
+    Block:                    an HTML block in the Login block's zone (the
+                              login page's Main zone), before or after it;
+                              other blocks in that zone are hidden while the
+                              photo shows
+    Block content:            {% include '~~/Assets/Lava/LoginMedia.lava' %}
+    Enabled Lava Commands:    RockEntity
+    Cache Duration:           0 (the photo depends on ?returnurl=)
+
+    Shows the PageImage of the page the visitor came from: the login link
+    carries it as ?returnurl=… (/ministries/kids from the utility bar; Rock's
+    own redirects send paths too; a full https://… address also works). The
+    path becomes a page on THIS site (route names repeat across Rock sites):
+    /page/{id} directly, otherwise an exact route match (routes with
+    parameters, {id} or {slug}, don't match). Every lookup is an entity
+    command, so page security applies.
+
+    Nothing renders when there's no return URL, it isn't a known page, or that
+    page has no PageImage. Styles/_login.scss then keeps the single login
+    card; with .login-media present (from 900px) the card becomes two columns,
+    the photo on the left as a 3:2 crop.
+
+    debug = true prints each step above the photo.
+{% endcomment %}
+{%- assign debug = false -%}
+
+{%- assign returnUrl = 'Global' | PageParameter:'returnurl' | Default:'' | Trim -%}
+{%- assign currentPageId = 'Global' | Page:'Id' | AsInteger -%}
+
+{%- comment -%}
+    The path's segments: drop the query and fragment, split on "/" (Split
+    drops the empty pieces, so outer slashes vanish), and for a full address
+    drop the scheme and host.
+{%- endcomment -%}
+{%- assign path = returnUrl | Split:'?' | First | Split:'#' | First -%}
+{%- assign segments = path | Split:'/' -%}
+{%- if path contains '://' -%}
+    {%- assign route = '' -%}
+    {%- for segment in segments offset:2 -%}
+        {%- if route != '' %}{% assign route = route | Append:'/' %}{% endif -%}
+        {%- assign route = route | Append:segment -%}
+    {%- endfor -%}
+    {%- assign segments = route | Split:'/' -%}
+{%- endif -%}
+{%- assign route = segments | Join:'/' | Replace:'"','' | Replace:"'",'' -%}
+
+{%- comment -%}
+    This site's layouts, as ",12,15,": route names aren't unique across Rock
+    sites (another site can have its own /ministries/kids), so a candidate
+    page only counts when its layout belongs to this site. The site is the
+    login page's own (its layout's SiteId).
+{%- endcomment -%}
+{%- assign siteId = 0 -%}
+{% page id:'{{ currentPageId }}' %}
+    {%- assign currentLayoutId = page.LayoutId -%}
+{% endpage %}
+{% layout id:'{{ currentLayoutId }}' %}
+    {%- assign siteId = layout.SiteId -%}
+{% endlayout %}
+{%- assign siteLayoutIds = ',' -%}
+{% layout where:'SiteId == {{ siteId }}' %}
+    {%- for siteLayout in layoutItems %}{% assign siteLayoutIds = siteLayoutIds | Append:siteLayout.Id | Append:',' %}{% endfor -%}
+{% endlayout %}
+
+{%- comment -%} Candidate page ids, as ",1,2,": /page/{id} itself, or every page with this route {%- endcomment -%}
+{%- assign candidateIds = ',' -%}
+{%- assign firstSegment = segments | First | Downcase -%}
+{%- assign segmentCount = segments | Size -%}
+{%- if firstSegment == 'page' and segmentCount == 2 -%}
+    {%- assign candidateIds = candidateIds | Append:segments[1] | Append:',' -%}
+{%- elsif route != '' -%}
+    {% pageroute where:'Route == "{{ route }}"' %}
+        {%- for pageRoute in pagerouteItems %}{% assign candidateIds = candidateIds | Append:pageRoute.PageId | Append:',' %}{% endfor -%}
+    {% endpageroute %}
+{%- endif -%}
+
+{%- comment -%} The first candidate on this site (the page command applies security) {%- endcomment -%}
+{%- assign returnPageId = 0 -%}
+{%- assign imageGuid = '' -%}
+{%- assign candidates = candidateIds | Split:',' -%}
+{%- for candidateId in candidates -%}
+    {%- assign candidateId = candidateId | AsInteger -%}
+    {%- if candidateId == null or candidateId == 0 or candidateId == currentPageId %}{% continue %}{% endif -%}
+    {% page id:'{{ candidateId }}' %}
+        {%- assign layoutKey = ',' | Append:page.LayoutId | Append:',' -%}
+        {%- if page.Id and siteLayoutIds contains layoutKey -%}
+            {%- assign returnPageId = page.Id -%}
+            {%- assign imageGuid = page | Attribute:'PageImage','RawValue' | Trim -%}
+        {%- endif -%}
+    {% endpage %}
+    {%- if returnPageId > 0 %}{% break %}{% endif -%}
+{%- endfor -%}
+
+{%- if debug %}
+<pre style="font-size:12px">returnUrl:  {{ returnUrl | Escape }}
+route:      {{ route | Escape }}
+site:       {{ siteId }} (layouts {{ siteLayoutIds }})
+candidates: {{ candidateIds }}
+pageId:     {{ returnPageId }}
+image:      {{ imageGuid }}</pre>
+{%- endif -%}
+
+{%- if imageGuid != '' %}
+<div class="login-media" aria-hidden="true">
+  <img src="/GetImage.ashx?guid={{ imageGuid }}&w=1200&h=800&mode=crop" alt="" />
+</div>
+{%- endif %}
