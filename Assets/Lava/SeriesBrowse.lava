@@ -22,13 +22,13 @@
                       lazily (loading="lazy"). Without JavaScript every card
                       shows, in the grid view.
 
-    Series links are placeholders (`seriesDetailUrl`) until the series detail
-    page exists.
+    Series links go to /watch/previous-messages/{slug} (the series' primary
+    slug; `seriesUrlBase`). A series without a slug links to the base page.
 {% endcomment %}
 
 {%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
 {%- assign seriesChannelId = 4 -%}
-{%- assign seriesDetailUrl = '#' -%}
+{%- assign seriesUrlBase = '/watch/previous-messages/' -%}
 {%- assign batchSize = 12 -%}
 {%- assign descLength = 220 -%}
 
@@ -40,13 +40,14 @@
         {%- assign imageGuid = series | Attribute:'SeriesImage','RawValue' | Trim -%}
         {%- if imageGuid == '' %}{% continue %}{% endif -%}
         {%- assign seriesCount = seriesCount | Plus:1 -%}
+        {%- assign seriesUrl = seriesUrlBase | Append:series.PrimarySlug -%}
         {%- assign seriesDesc = series.Content | StripHtml | HtmlDecode | Trim | Truncate:descLength %}
       <li class="series-card" data-card>
         <div class="series-card__media">
           <img src="/GetImage.ashx?guid={{ imageGuid }}&w=720&h=405&mode=crop" width="720" height="405" alt="" loading="lazy" decoding="async" />
         </div>
         <div class="series-card__body">
-          <h3 class="series-card__title"><a href="{{ seriesDetailUrl }}" data-card-link>{{ series.Title }}</a></h3>
+          <h3 class="series-card__title"><a href="{{ seriesUrl }}" data-card-link>{{ series.Title }}</a></h3>
           <p class="series-card__date">{{ series.StartDateTime | Date:'MMMM yyyy' }}</p>
           {%- if seriesDesc != '' %}
           <p class="series-card__desc">{{ seriesDesc | Escape }}</p>

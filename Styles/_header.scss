@@ -238,7 +238,7 @@
   text-decoration: none;
   display: inline-flex; align-items: flex-start; gap: 0.35rem;
 }
-.mega__visit .mega__address:hover { text-decoration: underline; }
+.mega__visit .mega__address { @include link-draw(1px); }
 .mega__times {
   margin-top: var(--space-lg); padding-top: var(--space-lg);
   border-top: 1px solid oklch(1 0 0 / 0.2);
@@ -305,7 +305,7 @@
 // Today's row (the card always renders today, server-side): hours larger and bold
 .mega__hours[data-today="true"] dl dd { font-size: 0.875rem; font-weight: 700; color: var(--on-ink); }
 .mega__hours a { display: inline-block; margin-top: var(--space-sm); font-size: 0.6875rem; font-weight: 700; letter-spacing: var(--tracking-wide); text-transform: uppercase; color: var(--brand); text-decoration: none; }
-.mega__hours a:hover { text-decoration: underline; }
+.mega__hours a { @include link-draw(1px); }
 
 // ---------------------------------------------------------------------------
 // Mobile drawer  (collapsible sections; <details> so they work without JS)

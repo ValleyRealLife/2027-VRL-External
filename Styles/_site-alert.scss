@@ -60,12 +60,7 @@
 }
 .site-alert__msg :is(p, ul, ol) + :is(p, ul, ol) { margin-top: 0.25rem; }
 .site-alert__msg strong, .site-alert__msg b { font-weight: 800; }
-.site-alert__msg a,
-.site-alert__msg a:is(:hover, :focus, :visited) {
-  color: var(--alert-link);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
+.site-alert__msg a { @include link-prose(var(--alert-link)); }
 .site-alert__msg a:hover { text-decoration-thickness: 2px; }
 
 .site-alert__close {

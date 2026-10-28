@@ -1,4 +1,4 @@
-// Build-time configuration: SCSS variables only, no CSS output.
+// Build-time configuration: SCSS variables and mixins only, no CSS output.
 //
 // Breakpoints live here because a CSS custom property cannot be used inside
 // an @media condition. Every partial pulls these in with `@use "config" as *;`.
@@ -40,3 +40,42 @@ $theme-scope: ".utilbar, .site-header, .site-footer, .home, .care-modal, .live, 
 // …and never inside Rock's admin UI, even when it renders within those
 // regions (the HTML editor modal, zone/block config bars, edit-mode chrome).
 $not-admin: ':not(.modal, .modal *, .config-bar, .config-bar *, [class*="-configuration"], [class*="-configuration"] *)';
+
+// ---------------------------------------------------------------------------
+// Link underlines: one animation everywhere, an underline that draws in from
+// the left (the nav links' and the live cards' motion). A background
+// gradient, not text-decoration (which can't animate) or ::after (which can't
+// follow a link that wraps onto a second line).
+//
+//   link-draw    standalone text links (a breadcrumb, "View all events", a
+//                card title): no line at rest, drawn in on hover / focus.
+//                $trigger: an ancestor whose hover also draws it (a card).
+//   link-prose   links inside running text: a faint line at rest, so a link
+//                reads as one without relying on colour alone (WCAG 1.4.1),
+//                and the full-strength line draws in over it on hover.
+// Mixins emit nothing until included.
+// ---------------------------------------------------------------------------
+@mixin link-draw($weight: 2px, $trigger: null) {
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0% $weight;
+  transition: background-size var(--duration-slow) var(--ease-out), color var(--duration) var(--ease-out);
+  &:is(:hover, :focus-visible) { background-size: 100% $weight; text-decoration: none; }
+  @if $trigger { #{$trigger}:hover & { background-size: 100% $weight; } }
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}
+
+@mixin link-prose($color: var(--brand-text)) {
+  color: $color;
+  text-decoration: none;
+  background-image:
+    linear-gradient(currentColor, currentColor),
+    linear-gradient(color-mix(in oklch, currentColor 35%, transparent), color-mix(in oklch, currentColor 35%, transparent));
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 0% 2px, 100% 1px;
+  padding-bottom: 1px;
+  transition: background-size var(--duration-slow) var(--ease-out);
+  &:is(:hover, :focus, :visited) { color: $color; text-decoration: none; }
+  &:is(:hover, :focus-visible) { background-size: 100% 2px, 100% 1px; }
+  @media (prefers-reduced-motion: reduce) { transition: none; }
+}

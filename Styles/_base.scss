@@ -224,3 +224,16 @@ body.is-locked { overflow: hidden; }
     scroll-behavior: auto !important;
   }
 }
+
+// ===========================================================================
+// LINKS IN RUNNING TEXT (rich text from HTML blocks and content items)
+// The prose underline (link-prose in _config.scss). Only links without a
+// class, directly in a paragraph, list item, definition or quote (or one
+// strong/em/span in): component links carry classes and keep their own
+// styles, and Rock's menus, tabs and paging (.nav, .pagination, …) are
+// excluded, as is the admin UI.
+// ===========================================================================
+.page :is(p, li, dd, blockquote, figcaption) > a:not([class]):where(#{$not-admin}):not(:is(.nav, .pagination, .dropdown-menu, .breadcrumb) > li > a),
+.page :is(p, li, dd, blockquote, figcaption) > :is(strong, b, em, i, span) > a:not([class]):where(#{$not-admin}) {
+  @include link-prose;
+}

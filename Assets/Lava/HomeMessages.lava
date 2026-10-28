@@ -27,8 +27,8 @@
                 series is the current message's parent; the rail is the 7
                 newest started series, excluding the current one.
 
-    Links to series pages are placeholders (`seriesPlaceholderUrl`) until the
-    series detail pages exist; they'll use the item slug.
+    Series links go to /watch/previous-messages/{slug} (the series' primary
+    slug; `seriesUrlBase`). A series without a slug links to the base page.
 {% endcomment %}
 
 {%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
@@ -36,7 +36,7 @@
 {%- assign seriesChannelId = 4 -%}
 {%- assign railSize = 7 -%}
 {%- assign livePageUrl = 'https://www.vrl.church/watch/live' -%}
-{%- assign seriesPlaceholderUrl = '#' -%}
+{%- assign seriesUrlBase = '/watch/previous-messages/' -%}
 {%- comment -%} ROCK: the message archive page, once it exists {%- endcomment -%}
 {%- assign archivePlaceholderUrl = '#' -%}
 {%- assign resiEmbedId = '692bc6a6-70a1-4fa1-af72-e1a7e7290763' -%}
@@ -142,7 +142,7 @@
         {%- assign railImageGuid = railItem | Attribute:'SeriesImage','RawValue' -%}
         {%- if railImageGuid == '' %}{% continue %}{% endif -%}
         {%- assign railCount = railCount | Plus:1 %}
-        <a class="series__item" href="{{ seriesPlaceholderUrl }}">
+        <a class="series__item" href="{{ seriesUrlBase }}{{ railItem.PrimarySlug }}">
           <img src="/GetImage.ashx?guid={{ railImageGuid }}&w=480&h=270&mode=crop" width="480" height="270" alt="{{ railItem.Title | Escape }}" />
         </a>
     {%- endfor -%}
@@ -177,7 +177,7 @@
       <div class="messages__actions">
         <a class="btn btn--primary" href="{{ livePageUrl }}">Watch on the live page</a>
         {%- if seriesTitle != '' %}
-        <a class="messages__series-link" href="{{ seriesPlaceholderUrl }}"><span>Current series</span> {{ seriesTitle }}</a>
+        <a class="messages__series-link" href="{{ seriesUrlBase }}{{ seriesItem.PrimarySlug }}"><span>Current series</span> {{ seriesTitle }}</a>
         {%- endif %}
       </div>
     </div>
@@ -203,7 +203,7 @@
         <p class="messages__desc">{{ messageDesc }}</p>
         {%- endif %}
         {%- if seriesTitle != '' %}
-        <a class="messages__series-link" href="{{ seriesPlaceholderUrl }}"><span>Series</span> {{ seriesTitle }}</a>
+        <a class="messages__series-link" href="{{ seriesUrlBase }}{{ seriesItem.PrimarySlug }}"><span>Series</span> {{ seriesTitle }}</a>
         {%- endif %}
       </div>
     </div>

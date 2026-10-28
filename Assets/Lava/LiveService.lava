@@ -44,8 +44,8 @@
 {%- assign connectFormUrl = '/watch/live/cta?cta=connect&WorkflowTypeId=391&ConnectionPoint=2279' -%}
 {%- assign prayerFormUrl  = '/watch/live/cta?cta=prayer' -%}
 
-{%- comment -%} TODO: the series detail page (placeholder until it exists, as in HomeMessages.lava) {%- endcomment -%}
-{%- assign seriesDetailUrl = '#' -%}
+{%- comment -%} Series pages: /watch/previous-messages/{slug} (the series' primary slug), as in HomeMessages.lava {%- endcomment -%}
+{%- assign seriesUrlBase = '/watch/previous-messages/' -%}
 
 {%- assign showConnectButton = true -%}   {%- comment -%} "Connect with us" tag above the player (service window only) {%- endcomment -%}
 {%- assign useGiveWidget     = true -%}   {%- comment -%} Give card: the Merlin widget (needs the page on No-Store); false = a link to /give {%- endcomment -%}
@@ -73,7 +73,7 @@
 ══════════════════════════════════════════════════════════════════════════
   STAGE — dark band, green edge glow and a green stripe along the bottom.
   Needs: resiEmbedId, the service window, today's message, connectFormUrl,
-  seriesDetailUrl, showConnectButton.
+  seriesUrlBase, showConnectButton.
 ══════════════════════════════════════════════════════════════════════════
 {%- endcomment %}
 <section class="live live-stage on-ink" aria-labelledby="live-heading">
@@ -132,7 +132,7 @@
       <div class="live-info__body" id="live-info-body">
         {%- if sermonDescription != empty %}<div class="live-info__desc">{{ sermonDescription }}</div>{% endif %}
         {%- if sermonSeriesName != empty %}
-        <a class="live-info__series" href="{{ seriesDetailUrl }}">
+        <a class="live-info__series" href="{{ seriesUrlBase }}{{ sermonSeriesItem.ContentChannelItem.PrimarySlug }}">
           <span class="live-info__series-label">Series</span>
           <span class="live-info__series-name">{{ sermonSeriesName }}</span>
           <svg width="14" height="14" aria-hidden="true"><use href="#i-chevron-right"/></svg>

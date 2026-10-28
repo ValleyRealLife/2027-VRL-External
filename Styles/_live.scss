@@ -353,7 +353,8 @@
   color: var(--brand-text); text-decoration: none;
 }
 .live-events__all svg { transition: transform var(--duration) var(--ease-out); }
-.live-events__all:is(:hover, :focus-visible) { color: var(--brand-text); text-decoration: underline; text-underline-offset: 0.3em; }
+.live-events__all { @include link-draw(2px); padding-bottom: 0.25rem; }
+.live-events__all:is(:hover, :focus-visible) { color: var(--brand-text); }
 .live-events__all:hover svg { transform: translateX(3px); }
 
 // ===========================================================================

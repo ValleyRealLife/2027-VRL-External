@@ -120,7 +120,8 @@
 }
 // core.css's a / a:hover colours would win here
 .search-result__title:is(:visited, :focus) { color: var(--text); }
-.search-result__title:hover { color: var(--brand-text); text-decoration: underline; text-underline-offset: 3px; }
+.search-result__title { @include link-draw(2px); }
+.search-result__title:hover { color: var(--brand-text); }
 
 .search-result__path {
   font-size: 0.75rem;

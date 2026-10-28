@@ -17,15 +17,15 @@
     played), with its title, date · speaker, series and Content (as plain
     text, cut to `contentLength` characters).
 
-    Series links are placeholders (`seriesDetailUrl`) until the series detail
-    page exists.
+    Series links go to /watch/previous-messages/{slug} (the series' primary
+    slug; `seriesUrlBase`). A series without a slug links to the base page.
 {% endcomment %}
 
 {%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
 {%- assign messagesChannelId = 5 -%}
 {%- assign seriesChannelId = 4 -%}
 {%- assign livePageUrl = '/watch/live' -%}
-{%- assign seriesDetailUrl = '#' -%}
+{%- assign seriesUrlBase = '/watch/previous-messages/' -%}
 {%- assign contentLength = 280 -%}
 {%- comment -%} Preview: true shows the live bar whatever the time. Set back to false. {%- endcomment -%}
 {%- assign forceLive = true -%}
@@ -98,7 +98,7 @@
       <h2 class="sermons-latest__title" id="sermons-latest-title">{{ messageItem.Title }}</h2>
       <p class="sermons-latest__meta">{{ messageItem.StartDateTime | Date:'MMMM d, yyyy' }}{% if messageSpeaker != empty %} · {{ messageSpeaker }}{% endif %}</p>
       {%- if seriesItem %}
-      <a class="sermons-latest__series" href="{{ seriesDetailUrl }}"><span>Series</span> {{ seriesItem.Title }}</a>
+      <a class="sermons-latest__series" href="{{ seriesUrlBase }}{{ seriesItem.PrimarySlug }}"><span>Series</span> {{ seriesItem.Title }}</a>
       {%- endif %}
       {%- if messageDesc != '' %}
       <p class="sermons-latest__content">{{ messageDesc | Escape }}</p>

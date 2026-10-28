@@ -262,7 +262,8 @@ $login-pair: "body:not(.zone-highlight, .block-highlight) .zone-content:has(> .b
   font-size: 0.875rem;
   text-decoration: none;
 }
-.login-block .btn-link:hover { color: var(--brand-text); text-decoration: underline; }
+.login-block .btn-link { @include link-draw(1px); }
+.login-block .btn-link:hover { color: var(--brand-text); }
 
 .login-block .btn:focus-visible { outline: 3px solid var(--brand-text); outline-offset: 2px; }
 
