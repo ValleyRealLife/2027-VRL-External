@@ -15,11 +15,15 @@
     {
         base.OnInit( e );
 
-        // Global alert: pages with the ExcludeGlobalAlert page attribute (Boolean,
-        // a checkbox in Page Properties) checked — e.g. the login page — don't
-        // render the banner at all. Hidden server-side, so the alert's blocks
-        // never reach the page. AsBoolean() reads every stored form (True / Yes /
-        // 1 …) and treats an empty value as false.
+        // Page attributes (Boolean, checkboxes in Page Properties). AsBoolean()
+        // reads every stored form (True / Yes / 1 …) and treats an empty value
+        // as false.
+        //   ExcludeGlobalAlert  pages such as the login page don't render the
+        //                       banner at all. Hidden server-side, so the
+        //                       alert's blocks never reach the page.
+        //   DarkHeader          the header bar renders dark (data-tone="dark",
+        //                       Styles/_header.scss), for pages that open on a
+        //                       dark band such as the live page.
         var rockPage = Page as Rock.Web.UI.RockPage;
         if ( rockPage != null )
         {
@@ -27,6 +31,10 @@
             if ( pageCache != null && pageCache.GetAttributeValue( "ExcludeGlobalAlert" ).AsBoolean() )
             {
                 siteAlert.Visible = false;
+            }
+            if ( pageCache != null && pageCache.GetAttributeValue( "DarkHeader" ).AsBoolean() )
+            {
+                siteHeader.Attributes["data-tone"] = "dark";
             }
         }
     }
@@ -218,8 +226,9 @@
 
         <%-- ===== SITE HEADER: nav row + mega menu + mobile drawer (fixed, under the utility bar) =====
              data-menu: idle | open | closed (Esc latches "closed" until the pointer leaves)
-             data-solid: "false" while the homepage hero is under the bar (theme.js) --%>
-        <header class="site-header" id="siteHeader" data-menu="idle" data-solid="true" data-stuck="false">
+             data-solid: "false" while the homepage hero is under the bar (theme.js)
+             data-tone:  "dark" on pages with DarkHeader checked (OnInit) --%>
+        <header class="site-header" id="siteHeader" runat="server" ClientIDMode="Static" data-menu="idle" data-solid="true" data-stuck="false">
             <Rock:Zone Name="Navigation" runat="server" />
         </header>
 

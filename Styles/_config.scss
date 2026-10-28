@@ -35,7 +35,7 @@ $logo-width: calc(#{$logo-height} * (#{$logo-aspect}));
 // Where the theme's element reset (_base.scss) applies: the theme's own
 // regions only. Interior-page content (.page) deliberately keeps core.css's
 // typography so rich text from Rock blocks reads normally.
-$theme-scope: ".utilbar, .site-header, .site-footer, .home, .care-modal";
+$theme-scope: ".utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons";
 
 // …and never inside Rock's admin UI, even when it renders within those
 // regions (the HTML editor modal, zone/block config bars, edit-mode chrome).

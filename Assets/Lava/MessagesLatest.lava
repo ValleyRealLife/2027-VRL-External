@@ -1,0 +1,113 @@
+{% comment %}
+    MESSAGES PAGE: LIVE BAR + LATEST MESSAGE — the first of the messages
+    page's two blocks (Assets/Lava/SeriesBrowse.lava is the second).
+
+    Block:                    HTML block in the Main zone, above the series block
+    Block content:            {% include '~~/Assets/Lava/MessagesLatest.lava' %}
+    Enabled Lava Commands:    RockEntity
+    Cache Duration:           0 (the live bar depends on the time of day)
+
+    Live bar: during the live window (Sundays 7:45am–12:15pm, server time),
+    a bar linking to the live page. ROCK: replace with a schedule check later
+    (same window as LiveService.lava and HomeMessages.lava).
+
+    Latest message: the newest message in channel 5 that has started, hasn't
+    expired and has a VimeoMedia value (the same rule as the homepage), in
+    Rock's media player (it shows the media element's thumbnail until
+    played), with its title, date · speaker, series and Content (as plain
+    text, cut to `contentLength` characters).
+
+    Series links are placeholders (`seriesDetailUrl`) until the series detail
+    page exists.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign messagesChannelId = 5 -%}
+{%- assign seriesChannelId = 4 -%}
+{%- assign livePageUrl = '/watch/live' -%}
+{%- assign seriesDetailUrl = '#' -%}
+{%- assign contentLength = 280 -%}
+{%- comment -%} Preview: true shows the live bar whatever the time. Set back to false. {%- endcomment -%}
+{%- assign forceLive = true -%}
+
+{%- comment -%} ===== LIVE WINDOW (24-hour HHmm integers: 745 = 7:45am) ===== {%- endcomment -%}
+{%- assign liveDay = 'Sunday' -%}
+{%- assign liveStartTime = 745 -%}
+{%- assign liveEndTime = 1215 -%}
+{%- assign nowDay = 'Now' | Date:'dddd' -%}
+{%- assign nowTime = 'Now' | Date:'HHmm' | AsInteger -%}
+{%- assign isLive = false -%}
+{%- if nowDay == liveDay and nowTime >= liveStartTime and nowTime <= liveEndTime -%}
+    {%- assign isLive = true -%}
+{%- endif -%}
+{%- if forceLive %}{% assign isLive = true %}{% endif -%}
+
+{%- comment -%} ===== LATEST MESSAGE + ITS SERIES ===== {%- endcomment -%}
+{%- assign messageItem = null -%}
+{%- assign seriesItem = null -%}
+{%- assign now = 'Now' | Date:'yyyy-MM-ddTHH:mm:ss' -%}
+{% contentchannelitem where:'ContentChannelId == {{ messagesChannelId }} && StartDateTime <= "{{ now }}"' sort:'StartDateTime desc' limit:'25' %}
+    {%- for item in contentchannelitemItems -%}
+        {%- if item.ExpireDateTime != null and item.ExpireDateTime != empty -%}
+            {%- assign minutesUntilExpire = 'Now' | DateDiff:item.ExpireDateTime,'m' -%}
+            {%- if minutesUntilExpire < 0 %}{% continue %}{% endif -%}
+        {%- endif -%}
+        {%- assign itemMediaGuid = item | Attribute:'VimeoMedia','RawValue' | Trim -%}
+        {%- if itemMediaGuid == '' %}{% continue %}{% endif -%}
+        {%- assign messageItem = item -%}
+        {%- break -%}
+    {%- endfor -%}
+{% endcontentchannelitem %}
+
+{%- if messageItem -%}
+    {%- for association in messageItem.ParentItems -%}
+        {%- if association.ContentChannelItem.ContentChannelId == seriesChannelId -%}
+            {%- assign seriesItem = association.ContentChannelItem -%}
+            {%- break -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {%- assign messageSpeaker = messageItem | Attribute:'Speaker' -%}
+    {%- assign messageDesc = messageItem.Content | StripHtml | HtmlDecode | Trim | Truncate:contentLength -%}
+    {%- comment -%} The media element, loaded by its GUID (the attribute's raw value) {%- endcomment -%}
+    {%- assign messageMedia = null -%}
+    {%- assign messageMediaGuid = messageItem | Attribute:'VimeoMedia','RawValue' | Trim -%}
+    {% mediaelement where:'Guid == "{{ messageMediaGuid }}"' limit:'1' %}
+        {%- assign messageMedia = mediaelementItems | First -%}
+    {% endmediaelement %}
+{%- endif -%}
+
+<section class="sermons sermons-latest" aria-labelledby="sermons-latest-title">
+
+  {%- if isLive %}
+  <a class="sermons-livebar" href="{{ livePageUrl }}">
+    <span class="sermons-livebar__tag"><span class="sermons-livebar__dot" aria-hidden="true"></span>Live now</span>
+    <span class="sermons-livebar__text">We're streaming the Sunday service</span>
+    <span class="sermons-livebar__cta">Watch live <svg width="16" height="16" aria-hidden="true"><use href="#i-arrow-right"/></svg></span>
+  </a>
+  {%- endif %}
+
+  {%- if messageItem %}
+  <div class="sermons-latest__feature">
+    <div class="sermons-latest__player">
+      {%- if messageMedia %}
+      {[ mediaplayer media:'{{ messageMedia.Id }}' autoresumeindays:'14' combineplaystatisticsindays:'14' ]}{[ endmediaplayer ]}
+      {%- endif %}
+    </div>
+    <div class="sermons-latest__body">
+      <p class="sermons-eyebrow">Latest message</p>
+      <h2 class="sermons-latest__title" id="sermons-latest-title">{{ messageItem.Title }}</h2>
+      <p class="sermons-latest__meta">{{ messageItem.StartDateTime | Date:'MMMM d, yyyy' }}{% if messageSpeaker != empty %} · {{ messageSpeaker }}{% endif %}</p>
+      {%- if seriesItem %}
+      <a class="sermons-latest__series" href="{{ seriesDetailUrl }}"><span>Series</span> {{ seriesItem.Title }}</a>
+      {%- endif %}
+      {%- if messageDesc != '' %}
+      <p class="sermons-latest__content">{{ messageDesc | Escape }}</p>
+      {%- endif %}
+    </div>
+  </div>
+  {%- else %}
+  <h2 class="sermons-latest__title" id="sermons-latest-title">Messages</h2>
+  <p class="sermons-latest__meta">New messages are on their way. Check back soon.</p>
+  {%- endif %}
+
+</section>

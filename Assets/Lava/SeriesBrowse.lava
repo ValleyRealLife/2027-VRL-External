@@ -1,0 +1,86 @@
+{% comment %}
+    MESSAGES PAGE: SERIES BROWSE — the second of the messages page's two
+    blocks (Assets/Lava/MessagesLatest.lava is the first).
+
+    Block:                    HTML block in the Main zone, below the latest message
+    Block content:            {% include '~~/Assets/Lava/SeriesBrowse.lava' %}
+    Enabled Lava Commands:    RockEntity
+    Cache Duration:           600 or so: the list only changes when a series
+                              starts (a new series shows within 10 minutes)
+
+    Every started series in channel 4 that has a SeriesImage, expired or
+    not (the archive keeps past series; expire dates are for promotion),
+    newest first, as cards: the series graphic, title, start month, and a
+    truncated Content (shown in the detail view only).
+
+    Behaviour (theme.js, "Series browse"):
+      Grid / Detail   the view toggle; the choice is remembered per browser
+      Show more       the server renders every series; the browser shows the
+                      first `batchSize` and reveals the next batch as the
+                      "Show more" button scrolls into view (or is pressed).
+                      Hidden cards' images aren't requested; shown ones load
+                      lazily (loading="lazy"). Without JavaScript every card
+                      shows, in the grid view.
+
+    Series links are placeholders (`seriesDetailUrl`) until the series detail
+    page exists.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign seriesChannelId = 4 -%}
+{%- assign seriesDetailUrl = '#' -%}
+{%- assign batchSize = 12 -%}
+{%- assign descLength = 220 -%}
+
+{%- assign now = 'Now' | Date:'yyyy-MM-ddTHH:mm:ss' -%}
+{%- assign seriesCount = 0 -%}
+{%- capture seriesCards -%}
+{% contentchannelitem where:'ContentChannelId == {{ seriesChannelId }} && StartDateTime <= "{{ now }}"' sort:'StartDateTime desc' %}
+    {%- for series in contentchannelitemItems -%}
+        {%- assign imageGuid = series | Attribute:'SeriesImage','RawValue' | Trim -%}
+        {%- if imageGuid == '' %}{% continue %}{% endif -%}
+        {%- assign seriesCount = seriesCount | Plus:1 -%}
+        {%- assign seriesDesc = series.Content | StripHtml | HtmlDecode | Trim | Truncate:descLength %}
+      <li class="series-card" data-card>
+        <div class="series-card__media">
+          <img src="/GetImage.ashx?guid={{ imageGuid }}&w=720&h=405&mode=crop" width="720" height="405" alt="" loading="lazy" decoding="async" />
+        </div>
+        <div class="series-card__body">
+          <h3 class="series-card__title"><a href="{{ seriesDetailUrl }}" data-card-link>{{ series.Title }}</a></h3>
+          <p class="series-card__date">{{ series.StartDateTime | Date:'MMMM yyyy' }}</p>
+          {%- if seriesDesc != '' %}
+          <p class="series-card__desc">{{ seriesDesc | Escape }}</p>
+          {%- endif %}
+        </div>
+      </li>
+    {%- endfor -%}
+{% endcontentchannelitem %}
+{%- endcapture -%}
+
+<section class="sermons sermons-series" aria-labelledby="sermons-series-title" data-series-browse data-batch="{{ batchSize }}">
+
+  <div class="sermons-divider">
+    <h2 id="sermons-series-title">All series</h2>
+  </div>
+
+  {%- if seriesCount > 0 %}
+  <div class="sermons-series__bar">
+    <p class="sermons-series__count">{{ seriesCount }} series</p>
+    <div class="view-toggle" role="group" aria-label="View" data-view-toggle hidden>
+      <button type="button" class="view-toggle__btn" data-view="grid" aria-pressed="true">Grid</button>
+      <button type="button" class="view-toggle__btn" data-view="detail" aria-pressed="false">Detail</button>
+    </div>
+  </div>
+
+  <ul class="sermons-series__list" data-series-list data-view="grid" role="list">
+    {{ seriesCards }}
+  </ul>
+
+  <div class="sermons-series__more">
+    <button type="button" class="btn btn--outline" data-series-more hidden>Show more series</button>
+  </div>
+  {%- else %}
+  <p class="sermons-series__count">Series are on their way. Check back soon.</p>
+  {%- endif %}
+
+</section>

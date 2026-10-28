@@ -39,6 +39,9 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Assets/Lava/Footer.lava` | HTML block include: the menu reflected (reads the page tree), visit info, bar |
 | `Assets/Lava/SubpageList.lava` | HTML block include for Landing pages: the current page's children as alternating image cards (`PageImage`, optional `CallToAction` page attributes) |
 | `Assets/Lava/PopularPages.lava` | HTML block include (first used on the 404 page): the most-viewed pages one level below the nav sections, ranked from the Interaction table over 90 days |
+| `Assets/Lava/LiveService.lava` | HTML block include for the watch-live page: the Resi player (service window) or an off-air message, the message details, What's next cards and featured events. One block for now; each band is a self-contained section ready to become its own block |
+| `Assets/Lava/MessagesLatest.lava` | HTML block include for the messages page: a Live now bar during the live window, then the latest message (Rock media player, title, date · speaker, series, Content) |
+| `Assets/Lava/SeriesBrowse.lava` | HTML block include for the messages page: "All series" divider, every started series as cards with a Grid / Detail toggle, revealed in batches as you scroll |
 | `Assets/Lava/LoginMedia.lava` | HTML block include for the login page: the PageImage of the page in `?returnurl=`, shown beside the login form from 900px |
 | `Assets/Lava/SiteSearch.lava` | HTML block include: the search pill with live results (fetched from a Lava Application endpoint as you type; rendered in place when the URL has `?q=`) |
 | `Assets/Lava/SiteSearchResults.lava` | The search results fragment, shared by the endpoint and `SiteSearch.lava`: pages on this site, messages, series, queried directly with SQL |
@@ -53,6 +56,8 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Styles/_popular-pages.scss` | Popular pages cards (horizontal event-card style) |
 | `Styles/_search.scss` | Site search: the design system's search pill and the grouped live results |
 | `Styles/_login.scss` | Rock's stock Login block (unchanged in Rock) restyled as a centred card; `theme.js` adds the Phone or email / Username & password tabs |
+| `Styles/_live.scss` | The watch-live page's bands (stage, What's next, featured events) |
+| `Styles/_sermons.scss` | The messages page: live bar, latest message, divider, series cards (grid and detail views) |
 | `tools/` | `build.mjs` (the theme build), `check-theme.mjs` and `check-master-bindings.mjs` (gates) |
 | `Resources/RockNextgenThemeTemplate/` | The boilerplate NextGen starter theme, kept as reference only |
 
@@ -69,6 +74,9 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 | Main (homepage only, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/Home.lava' %}` · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Home block) | HTML Content | content: `{% include '~~/Assets/Lava/HomeMessages.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Messages block, last in the zone) | HTML Content | content: `{% include '~~/Assets/Lava/HomeEvents.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration: 0 while iterating |
+| Feature (watch-live page on InnerDefault, PageHeaderStyle Hidden, Page Cacheability No-Store) | HTML Content | content: `{% include '~~/Assets/Lava/LiveService.lava' %}` · Enabled Lava Commands: **RockEntity, Calendar Events** |
+| Main (messages page on InnerDefault), first block | HTML Content | content: `{% include '~~/Assets/Lava/MessagesLatest.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration 0 |
+| Main (messages page), second block | HTML Content | content: `{% include '~~/Assets/Lava/SeriesBrowse.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration 600 |
 | Main (login page, Page level, same zone as the Login block; other blocks there hide while the photo shows) | HTML Content | content: `{% include '~~/Assets/Lava/LoginMedia.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 |
 | Main (404 page, or any page that offers search, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/SiteSearch.lava' %}` · Enabled Lava Commands: **RockEntity, Sql** |
 | Section A (404 page, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/PopularPages.lava' %}` · Enabled Lava Commands: **Cache, RockEntity, Sql** |
@@ -80,9 +88,11 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 {% include '~/Themes/2027 VRL External/Assets/Lava/SiteSearchResults.lava' %}
 ```
 
-**Page header style:** create a Page attribute `PageHeaderStyle` (Single-Select, values `SideImage`, `SimpleGrayStripe`, `SimpleGreenStripe`, `SimpleGradStripe`, `None`; **no default value**) under Admin Tools → Entity Attributes (entity type: Page). SideImage is a card with the title, the page Description and the `PageImage` overlapping a gray stripe; the three Simple stripes are a full-width band (plain gray, solid brand green, or gray with a soft slanted green wash at the right); None hides the page header (the page's content then needs its own heading). Left empty, each layout uses its own default: InnerDefault → SideImage, Landing → SimpleGradStripe. A default on the attribute would override both. The old value `SimpleStripe` still works and shows as SimpleGradStripe.
+**Page header style:** create a Page attribute `PageHeaderStyle` (Single-Select, values `SideImage`, `SimpleGrayStripe`, `SimpleGreenStripe`, `SimpleGradStripe`, `Hidden`; **no default value**) under Admin Tools → Entity Attributes (entity type: Page). SideImage is a card with the title, the page Description and the `PageImage` overlapping a gray stripe; the three Simple stripes are a full-width band (plain gray, solid brand green, or gray with a soft slanted green wash at the right); Hidden hides the page header (Rock's own "None" option on a non-required Single-Select clears the value, which means the layout default, not "no header"; the page's content then needs its own heading). Left empty, each layout uses its own default: InnerDefault → SideImage, Landing → SimpleGradStripe. A default on the attribute would override both. The old value `SimpleStripe` still works and shows as SimpleGradStripe.
 
 **Excluding the alert from a page:** create a Page attribute `ExcludeGlobalAlert` (Boolean, shown as a checkbox, default unchecked) under Admin Tools → Entity Attributes (entity type: Page). Check it on pages that shouldn't show the alert, such as the login page; `Site.Master` then doesn't render the banner there. Visitors who dismiss the alert won't see it again for the rest of their browser session, but a different message shows again.
+
+**Dark header bar:** create a Page attribute `DarkHeader` (Boolean, shown as a checkbox, default unchecked) under Admin Tools → Entity Attributes (entity type: Page). Checked, the header bar renders dark (ink, white links and wordmark) for that page, the look it has with the mega menu open. For pages that open on a dark band, such as the live page. Set server-side in `Layouts/Site.Master` (`data-tone="dark"`), styled in `Styles/_header.scss`.
 
 Give the app pool write access to the theme folder (Rock saves theme-editor choices into `theme.css`), then restart Rock so it registers the theme. Non-page details in the nav and footer (address, service times, office and playground hours, social links, the Discover and Privacy links) are hardcoded in `PageNav.lava` and `Footer.lava` for now, duplicated between the two, until they are pulled from schedules, campus and global attributes.
 

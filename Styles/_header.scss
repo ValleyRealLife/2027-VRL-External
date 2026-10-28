@@ -106,6 +106,17 @@
 }
 .nav__cta { display: none; }
 
+// Dark bar: the DarkHeader page attribute (Layouts/Site.Master sets
+// data-tone="dark"), for pages that open on a dark band, such as the live
+// page. The same look as the bar with the mega menu open, held for the page.
+.site-header[data-tone="dark"]::before {
+  background-color: color-mix(in oklch, var(--ink-deep) 88%, transparent);
+  border-bottom-color: oklch(1 0 0 / 0.08);
+}
+.site-header[data-tone="dark"] :is(.nav__link, .nav__burger) { color: var(--on-ink); }
+.site-header[data-tone="dark"] .nav__logo-ink { opacity: 0; }
+.site-header[data-tone="dark"] .nav__logo-light { opacity: 1; }
+
 @media (min-width: #{$bp-nav}) {
   .nav-row { grid-template-columns: $menu-grid; gap: var(--menu-gap); }
   .nav__list {

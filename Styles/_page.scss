@@ -175,10 +175,13 @@
 @media (min-width: #{$bp-md}) {
   .page-grid--thirds { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
-// Empty zones must not leave a gap: Rock renders an empty zone as nothing in
-// view mode, but the grid wrapper would still take its margin. (:empty won't
-// do — the whitespace between the zone tags counts as content.)
-.page-grid:not(:has(*)) { display: none; }
+// Empty zones must not leave a gap. Rock still renders an empty zone's
+// wrappers (.zone-instance > .zone-content), so "empty" means no block in it.
+// Not in edit mode, where the empty zones are where blocks get added.
+// - the B/C/D grid would still take its margin
+// - a page built only from Feature bands (the live page) would keep the
+//   content area's padding: a white strip between the last band and the footer
+body:not(.zone-highlight, .block-highlight) :is(.page-grid, .page-content):not(:has(.block-instance)) { display: none; }
 
 // ===========================================================================
 // ROCK EDIT MODE

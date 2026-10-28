@@ -81,3 +81,6 @@
 }
 .care-modal[data-view="frame"] .care-modal__inner { display: none; }
 .care-modal[data-view="frame"] .care-modal__frame { display: block; }
+// Opened straight to a form from outside the dialog (theme.js openCareFrame):
+// there are no options to go back to
+.care-modal[data-direct] .care-modal__back { display: none; }

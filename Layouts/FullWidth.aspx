@@ -50,6 +50,7 @@ INTERIOR LAYOUT
                 var headerStyle = ( page.GetAttributeValue( "PageHeaderStyle" ) ?? "" ).Trim().ToLowerInvariant();
                 if ( headerStyle == "" ) { headerStyle = "sideimage"; }
                 if ( headerStyle == "simplestripe" ) { headerStyle = "simplegradstripe"; }
+                if ( headerStyle == "hidden" ) { headerStyle = "none"; }   // Rock's own "None" radio option clears the value (= layout default), so hiding needs a real value
                 string headerClass;
                 switch ( headerStyle )
                 {

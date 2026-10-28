@@ -301,6 +301,20 @@
     var iframe = d.querySelector('[data-care-iframe]');
     if (iframe) iframe.removeAttribute('src');
     d.setAttribute('data-view', 'options');
+    d.removeAttribute('data-direct');
+  }
+  /* Any [data-care-frame] link OUTSIDE the dialog (e.g. the live page's
+     Connect and Prayer links) opens the dialog straight to that form.
+     data-direct hides the back-to-options button, since the visitor never
+     saw the options. */
+  function openCareFrame(link) {
+    var d = careDialog();
+    d.setAttribute('data-direct', '');
+    if (!showCareFrame(link)) { d.removeAttribute('data-direct'); return false; }
+    d.showModal();
+    var close = d.querySelector('[data-care-close]');
+    if (close) close.focus();
+    return true;
   }
   /* Reset to the options view whenever the dialog closes (Esc, backdrop, X),
      so the form doesn't keep loading behind a closed dialog. */
@@ -358,8 +372,8 @@
     if (t.closest('[data-care-close]')) { closeCare(); return; }
     if (t.closest('[data-care-back]')) { showCareOptions(); return; }
     var option = t.closest('[data-care-frame]');
-    if (option && careSupported() && careDialog().contains(option)) {
-      if (showCareFrame(option)) e.preventDefault();
+    if (option && careSupported()) {
+      if (careDialog().contains(option) ? showCareFrame(option) : openCareFrame(option)) e.preventDefault();
       return;
     }
 
@@ -545,6 +559,119 @@
     syncLoginTabs();
     new MutationObserver(syncLoginTabs).observe(loginRoot, { childList: true, subtree: true, characterData: true });
   }
+
+  // --- Live page: message panel collapse (Assets/Lava/LiveService.lava) ------------
+  // The toggle beside the message title folds the panel down to the title.
+  // Phones start folded so the page below is reachable without a long scroll.
+  // The height animates with the Web Animations API (no GSAP on this page);
+  // opacity leads on the way out and trails on the way in, so text never
+  // shows clipped mid-line. The open/closed end states belong to the CSS.
+  var liveInfo = document.querySelector('[data-live-info]');
+  var liveToggle = liveInfo && liveInfo.querySelector('[data-live-info-toggle]');
+  var liveBody = liveInfo && document.getElementById(liveToggle && liveToggle.getAttribute('aria-controls'));
+  if (liveToggle && liveBody) {
+    var setLiveCollapsed = function (on) {
+      var label = on ? 'Show details' : 'Hide details';
+      liveInfo.classList.toggle('is-collapsed', on);
+      liveToggle.setAttribute('aria-expanded', String(!on));
+      liveToggle.setAttribute('aria-label', label);
+      liveToggle.title = label;
+    };
+    var liveBusy = false;
+    liveToggle.hidden = false;
+    if (window.matchMedia('(max-width: 699px)').matches) setLiveCollapsed(true);
+    liveToggle.addEventListener('click', function () {
+      if (liveBusy) return;
+      var on = !liveInfo.classList.contains('is-collapsed');
+      if (reduced.matches || typeof liveBody.animate !== 'function') { setLiveCollapsed(on); return; }
+      liveBusy = true;
+      if (!on) setLiveCollapsed(false);                 // measure the open state
+      else liveToggle.setAttribute('aria-expanded', 'false');   // chevron turns with the motion
+      var openPad = parseFloat(getComputedStyle(liveBody).paddingTop) || 0;
+      var open = { height: liveBody.offsetHeight + 'px', paddingTop: openPad + 'px' };
+      var shut = { height: '0px', paddingTop: '0px' };
+      liveBody.style.overflow = 'hidden';
+      var ease = 'cubic-bezier(.45, 0, .55, 1)';
+      var size = liveBody.animate(on ? [open, shut] : [shut, open], { duration: 600, easing: ease });
+      liveBody.animate(on ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 0 }, { opacity: 1 }],
+        on ? { duration: 250, easing: 'ease-out', fill: 'forwards' }
+           : { duration: 350, delay: 200, easing: 'ease-in', fill: 'backwards' });
+      size.onfinish = function () {
+        if (on) setLiveCollapsed(true);
+        liveBody.getAnimations().forEach(function (a) { a.cancel(); });
+        liveBody.style.overflow = '';
+        liveBusy = false;
+      };
+    });
+  }
+
+  // --- Series browse: Grid/Detail + reveal in batches (Assets/Lava/SeriesBrowse.lava) ---
+  // The server renders every series. Cards past the first batch get
+  // .is-pending (display: none, so their images aren't fetched); the next
+  // batch is revealed when the Show more button nears the viewport, or when
+  // it's pressed. The view choice is remembered in localStorage.
+  document.querySelectorAll('[data-series-browse]').forEach(function (browse) {
+    var list = browse.querySelector('[data-series-list]');
+    if (!list) return;
+    var cards = Array.prototype.slice.call(list.children);
+    var batch = parseInt(browse.getAttribute('data-batch'), 10) || 12;
+    var more = browse.querySelector('[data-series-more]');
+    var toggle = browse.querySelector('[data-view-toggle]');
+    var shown = Math.min(batch, cards.length);
+
+    cards.forEach(function (card, i) { if (i >= shown) card.classList.add('is-pending'); });
+
+    function reveal() {
+      var next = Math.min(shown + batch, cards.length);
+      for (var i = shown; i < next; i++) {
+        cards[i].classList.remove('is-pending');
+        cards[i].classList.add('is-revealed');
+      }
+      shown = next;
+      if (shown >= cards.length && more) {
+        more.hidden = true;
+        if (observer) observer.disconnect();
+      }
+    }
+
+    var observer = null;
+    if (more && shown < cards.length) {
+      more.hidden = false;
+      more.addEventListener('click', function () {
+        var first = cards[shown];
+        reveal();
+        /* Keyboard and screen reader users land on the first new card */
+        var link = first && first.querySelector('[data-card-link]');
+        if (link) link.focus({ preventScroll: true });
+      });
+      if ('IntersectionObserver' in window) {
+        observer = new IntersectionObserver(function (entries) {
+          if (!entries[0].isIntersecting) return;
+          reveal();
+          /* Still in range after the reveal (a tall screen): observing again
+             reports it afresh, so the next batch follows */
+          if (shown < cards.length) { observer.unobserve(more); observer.observe(more); }
+        }, { rootMargin: '0px 0px 400px 0px' });
+        observer.observe(more);
+      }
+    }
+
+    if (!toggle) return;
+    var buttons = toggle.querySelectorAll('[data-view]');
+    function setView(view) {
+      list.setAttribute('data-view', view);
+      toggle.setAttribute('data-active', view);
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-view') === view ? 'true' : 'false'); });
+      try { localStorage.setItem('vrl-series-view', view); } catch (e) {}
+    }
+    var saved = null;
+    try { saved = localStorage.getItem('vrl-series-view'); } catch (e) {}
+    setView(saved === 'detail' ? 'detail' : 'grid');
+    toggle.hidden = false;
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () { setView(b.getAttribute('data-view')); });
+    });
+  });
 
   // --- Esc closes whatever is open ------------------------------------------------
 

@@ -44,6 +44,7 @@
 //   popular-pages most-viewed section pages (Assets/Lava/PopularPages.lava; the 404 page)
 //   search        site search pill + results (Assets/Lava/SiteSearch.lava)
 //   login         Rock's Login block as a card, with method tabs (theme.js)
+//   live          the watch-live page (Assets/Lava/LiveService.lava)
 //   home          homepage sections        (Assets/Lava/Home.lava)
 
 /* CSS Overrides Top Start */
@@ -61,6 +62,8 @@
 @use "popular-pages";
 @use "search";
 @use "login";
+@use "live";
+@use "sermons";
 @use "home";
 
 // Rock's HTML editor (Summernote): its toolbar icon font and the rules that
