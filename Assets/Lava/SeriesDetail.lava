@@ -27,7 +27,8 @@
     Sections:
       WATCH       YouTube's watch layout: the message title and week across
                   the top, the player, the control strip under it (Share,
-                  Theater, the description box), and the series' messages
+                  Sermon notes, Group questions, Theater; the description
+                  box), and the series' messages
                   as a playlist beside it (compact rows, each one link)
       POPULAR     the most-viewed messages from other series (page views of
                   this page's message URLs, last `popularDays` days).
@@ -202,7 +203,7 @@
       {%- capture shareUrl %}{{ siteRoot }}{{ currentUrl }}{% endcapture -%}
       {%- assign shareText = current.Title | Append:' | ' | Append:series.Title %}
       <div class="share">
-        <button class="watch__btn" type="button" aria-expanded="false" aria-controls="watch-share" data-share-toggle>
+        <button class="pill-btn" type="button" aria-expanded="false" aria-controls="watch-share" data-share-toggle>
           <svg width="16" height="16" aria-hidden="true"><use href="#i-share"/></svg> Share
         </button>
         <div class="share__menu share__menu--down" id="watch-share" data-open="false">
@@ -213,7 +214,9 @@
           <button class="share__item" type="button" data-copy="{{ shareUrl }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-copy"/></svg> <span>Copy link</span></button>
         </div>
       </div>
-      <button class="watch__btn watch__theater" type="button" aria-pressed="false" data-watch-theater hidden>
+      {%- assign resourceItem = current %}
+      {% include '~~/Assets/Lava/Partials/MessageResources.lava' %}
+      <button class="pill-btn watch__theater" type="button" aria-pressed="false" data-watch-theater hidden>
         {%- comment -%} Tabler "arrows-horizontal" {%- endcomment %}
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8l-4 4l4 4"/><path d="M17 8l4 4l-4 4"/><path d="M3 12l18 0"/></svg>
         <span>Theater</span>

@@ -226,7 +226,9 @@
   border-radius: var(--radius-xl);
   transition: background var(--duration) var(--ease-out);
 }
-.series-card:hover { background: var(--surface); }
+// Halfway between --surface and --surface-hover: --surface alone barely
+// showed on the page background
+.series-card:hover { background: color-mix(in oklch, var(--surface), var(--surface-hover)); }
 .series-card:focus-within { outline: 3px solid var(--brand-text); outline-offset: -3px; }
 .series-card__media {
   overflow: hidden;
@@ -366,7 +368,6 @@
   }
   .watch[data-theater] { grid-template-areas: "head head" "player player" "info list"; }
 }
-@media (max-width: #{$bp-nav - 1px}) { .watch__theater { display: none; } }
 
 .watch__player {
   grid-area: player;
@@ -381,7 +382,8 @@
 // Across the top: the message title, the week under it
 .watch__head { grid-area: head; display: grid; gap: var(--space-xs); }
 .watch__head .sermons-latest__tag { margin: 0; }
-// Under the player: the control strip, then the description box
+// Under the player: the control strip (pill buttons, below), then the
+// description box
 .watch__info { grid-area: info; display: grid; justify-items: start; gap: var(--space-sm); min-width: 0; }
 .watch__title {
   font-size: clamp(1.375rem, 1rem + 1.4vw, 2rem);
@@ -390,20 +392,8 @@
   color: var(--text);
 }
 .watch__actions { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
-.watch__btn {
-  display: inline-flex; align-items: center; gap: 0.45em;
-  padding: 0.45rem 0.9rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
-  color: var(--text);
-  font-size: 0.75rem; font-weight: 800;
-  letter-spacing: var(--tracking-wide); text-transform: uppercase;
-  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
-}
-.watch__btn[hidden] { display: none; }
-.watch__btn:hover,
-.watch__btn[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-wash); }
+// Theater only where the playlist can sit beside the player
+@media (max-width: #{$bp-nav - 1px}) { .pill-btn.watch__theater { display: none; } }
 
 // The description box (YouTube's): date · speaker, then the description,
 // clamped with Show more (.clamp, below)
@@ -486,6 +476,38 @@
 .message-row__title a { text-decoration: none; }
 .message-row__title a:is(:link, :visited, :hover, :focus) { color: var(--text); text-decoration: none; }
 .message-row__title a:focus-visible { outline: none; }   // the row shows focus
+
+// ---------------------------------------------------------------------------
+// Pill buttons: the series page's control strip (Share, Sermon notes, Group
+// questions, Theater) and the message widget's Sermon notes / Group
+// questions (Partials/MessageResources.lava). Outlined, small caps; green on
+// hover or when pressed. On an ink band: glass.
+// ---------------------------------------------------------------------------
+.pill-btn {
+  display: inline-flex; align-items: center; gap: 0.45em;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  text-decoration: none;
+  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
+}
+.pill-btn:is(:link, :visited, :hover, :focus) { color: var(--text); text-decoration: none; }   // over core.css's link colours
+.pill-btn[hidden] { display: none; }
+.pill-btn:hover,
+.pill-btn[aria-pressed="true"],
+.pill-btn[aria-expanded="true"] { border-color: var(--brand); background: var(--brand-wash); }
+.on-ink .pill-btn { border-color: oklch(1 0 0 / 0.2); background: oklch(1 0 0 / 0.06); }
+.on-ink .pill-btn:is(:link, :visited, :hover, :focus) { color: var(--on-ink); }
+.on-ink .pill-btn:hover { border-color: var(--brand); background: oklch(from var(--brand) l c h / 0.16); }
+
+// In the message widget: a row under the series tag. No links = no row
+// (:has, not :empty: the include leaves whitespace behind)
+.sermons-latest__actions { display: flex; flex-wrap: wrap; gap: var(--space-xs); margin-top: var(--space-sm); }
+.sermons-latest__actions:not(:has(a)) { display: none; }
 
 // ---------------------------------------------------------------------------
 // Show more: clamped text that slides open ([data-clamp]; theme.js). Used by

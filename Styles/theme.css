@@ -5,7 +5,6 @@
 @import url('/Styles/styles-v2/icons/fontawesome-solid.css?v=4137481333');
 @import url('/Styles/styles-v2/icons/tabler-icon.css?v=225734114');
 /* CSS Overrides Top End */
-
 @import "../../../Styles/summernote/summernote.min.css";
 @import "../../../Styles/styles-v2/core.css";
 :root {
@@ -3719,7 +3718,7 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
 }
 
 .series-card:hover {
-  background: var(--surface);
+  background: color-mix(in oklch, var(--surface), var(--surface-hover));
 }
 
 .series-card:focus-within {
@@ -3955,11 +3954,6 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
     grid-template-areas: "head head" "player player" "info list";
   }
 }
-@media (max-width: 999px) {
-  .watch__theater {
-    display: none;
-  }
-}
 .watch__player {
   grid-area: player;
   overflow: hidden;
@@ -4004,32 +3998,11 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   gap: var(--space-xs);
 }
 
-.watch__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45em;
-  padding: 0.45rem 0.9rem;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  background: var(--bg-elevated);
-  color: var(--text);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
+@media (max-width: 999px) {
+  .pill-btn.watch__theater {
+    display: none;
+  }
 }
-
-.watch__btn[hidden] {
-  display: none;
-}
-
-.watch__btn:hover,
-.watch__btn[aria-pressed=true] {
-  border-color: var(--brand);
-  background: var(--brand-wash);
-}
-
 .watch__about {
   justify-self: stretch;
   display: grid;
@@ -4179,6 +4152,64 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
 
 .message-row__title a:focus-visible {
   outline: none;
+}
+
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
+}
+
+.pill-btn:is(:link, :visited, :hover, :focus) {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.pill-btn[hidden] {
+  display: none;
+}
+
+.pill-btn:hover,
+.pill-btn[aria-pressed=true],
+.pill-btn[aria-expanded=true] {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+}
+
+.on-ink .pill-btn {
+  border-color: oklch(100% 0 0deg / 0.2);
+  background: oklch(100% 0 0deg / 0.06);
+}
+
+.on-ink .pill-btn:is(:link, :visited, :hover, :focus) {
+  color: var(--on-ink);
+}
+
+.on-ink .pill-btn:hover {
+  border-color: var(--brand);
+  background: oklch(from var(--brand) l c h/0.16);
+}
+
+.sermons-latest__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+.sermons-latest__actions:not(:has(a)) {
+  display: none;
 }
 
 .clamp {
@@ -5911,41 +5942,5 @@ html.stage-static .deck .nextstep-card {
     padding-block: var(--space-sm) var(--space-2xl);
   }
 }
-
 /* CSS Overrides Bottom Start */
-:root {
-    --base-primary: #9bc93c;
-    --base-secondary: #0b0e0a;
-    --base-link: #617e00;
-    --logo-image: url('/Themes/2027 VRL External/Assets/Images/vrl_logo.png');
-    --site-header-background: #ffffff;
-    --page-title-background: #f0f2ef;
-    --page-title-foreground: #0b0e0a;
-    --site-footer-background: #030402;
-    --base-interface-strongest: #030402;
-    --base-interface-stronger: #0b0e0a;
-    --base-interface-strong: #3f443c;
-    --base-interface-medium: #8d918b;
-    --base-interface-soft: #dfe2de;
-    --base-interface-softer: #f0f2ef;
-    --base-interface-softest: #f7f9f6;
-    --base-danger: #d70015;
-    --base-success: #01a11e;
-    --base-warning: #e58600;
-    --base-info: #005dd7;
-    --base-critical: #ee7725;
-    --font-family-title: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-family-body: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-size-regular: 16px;
-    --font-size-h1: 48px;
-    --font-size-h2: 40px;
-    --font-size-h3: 28px;
-    --font-size-h4: 22px;
-    --font-size-h5: 18px;
-    --font-size-h6: 16px;
-}
-
-/* Insert overrides from Rock theme admin */
-
-h1 { font-size: 20rem;}
 /* CSS Overrides Bottom End */

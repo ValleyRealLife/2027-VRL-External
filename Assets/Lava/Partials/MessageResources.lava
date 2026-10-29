@@ -1,0 +1,36 @@
+{% comment %}
+    MESSAGE RESOURCES — Sermon notes and Group questions for one message, as
+    pill links. Shared by the series page's control strip (SeriesDetail.lava)
+    and the message widget (Partials/LatestMessage.lava: Previous Messages
+    and the live page). Renders nothing for a link the message doesn't have.
+
+    Assign before the include:
+      resourceItem   the message (a channel 5 content channel item)
+
+      Sermon notes      the first child item with a YouVersionURL (the
+                        message's notes on YouVersion)
+      Group questions   the message's GroupQuestions URL, else its
+                        GroupQuestionsFile (an uploaded file)
+    Both open in a new tab: they're off the site (or a file), and the video
+    keeps playing.
+{% endcomment %}
+{%- assign notesUrl = '' -%}
+{%- for childAssociation in resourceItem.ChildItems -%}
+    {%- assign childNotesUrl = childAssociation.ChildContentChannelItem | Attribute:'YouVersionURL','RawValue' | Trim -%}
+    {%- if childNotesUrl != '' %}{% assign notesUrl = childNotesUrl %}{% break %}{% endif -%}
+{%- endfor -%}
+{%- assign questionsUrl = resourceItem | Attribute:'GroupQuestions','RawValue' | Trim -%}
+{%- if questionsUrl == '' -%}
+    {%- assign questionsFile = resourceItem | Attribute:'GroupQuestionsFile','RawValue' | Trim -%}
+    {%- if questionsFile != '' %}{% assign questionsUrl = '/GetFile.ashx?guid=' | Append:questionsFile %}{% endif -%}
+{%- endif -%}
+{%- if notesUrl != '' %}
+<a class="pill-btn" href="{{ notesUrl }}" target="_blank" rel="noopener">
+  <svg width="16" height="16" aria-hidden="true"><use href="#i-notebook"/></svg> Sermon notes<span class="u-visually-hidden"> (opens YouVersion in a new tab)</span>
+</a>
+{%- endif %}
+{%- if questionsUrl != '' %}
+<a class="pill-btn" href="{{ questionsUrl }}" target="_blank" rel="noopener">
+  <svg width="16" height="16" aria-hidden="true"><use href="#i-message-question"/></svg> Group questions<span class="u-visually-hidden"> (opens in a new tab)</span>
+</a>
+{%- endif %}

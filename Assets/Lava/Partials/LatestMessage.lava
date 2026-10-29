@@ -1,6 +1,7 @@
 {% comment %}
     LATEST MESSAGE — a player beside the message's title, date · speaker,
-    series tag and the Content (its HTML, clamped, with Show more). Shared by the messages page
+    series tag, Sermon notes / Group questions (Partials/MessageResources.lava)
+    and the Content (its HTML, clamped, with Show more). Shared by the messages page
     (MessagesLatest.lava, light) and the live page in both states
     (LiveService.lava, inside the dark stage, where it's recoloured).
 
@@ -99,6 +100,13 @@
     {%- endif %}
     {%- if latestSeries %}
     <a class="series-tag" href="{{ latestSeriesUrlBase }}{{ latestSeries.PrimarySlug }}"><span>Series</span> {{ latestSeries.Title }}</a>
+    {%- endif %}
+    {%- if latestItem %}
+    {%- comment -%} Sermon notes / Group questions (Partials/MessageResources.lava); the row collapses when there are none {%- endcomment %}
+    {%- assign resourceItem = latestItem %}
+    <div class="sermons-latest__actions">
+      {%- include '~~/Assets/Lava/Partials/MessageResources.lava' %}
+    </div>
     {%- endif %}
     {%- if latestDesc and latestDesc != '' %}
     {%- comment -%} The full description as written (HTML: paragraphs, links), height-clamped with Show more (theme.js "Show more") {%- endcomment %}
