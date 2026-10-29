@@ -1,0 +1,353 @@
+{% comment %}
+    SERIES DETAIL — one series and its messages, played in place.
+
+    Page:                     one page, two routes:
+                                watch/previous-messages/{slug}
+                                watch/previous-messages/{slug}/{message}
+                              InnerDefault, PageHeaderStyle SimpleGrayStripe
+                              (as the Previous Messages page; the header shows
+                              the series title, set below)
+    Block:                    HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/SeriesDetail.lava' %}
+    Enabled Lava Commands:    RockEntity, Sql, Cache
+    Cache Duration:           0 (the page depends on the URL)
+
+    How it works: every message has its own address, /{series}/{message}, and
+    it is this same page with that message in the player. Picking a message
+    is an ordinary link, so
+      - Rock logs a page view for each message (the URL is in the
+        interaction), which is what "Popular messages" counts
+      - a message can be shared or bookmarked, and Back works
+      - the browser animates the change as a cross-document view transition
+        (the <style> below opts these pages in), so it reads as one page;
+        browsers without it simply load the page
+    /{series} alone redirects (302) to its newest message's address
+    (`defaultMessage`), so every view is logged against a message.
+
+    Sections:
+      WATCH       YouTube's watch layout: the player, the message's details
+                  under it (Copy link, Theater, the description box), and
+                  the series' messages as a playlist beside it (compact
+                  rows; Details opens the date, speaker and description)
+      POPULAR     the most-viewed messages from other series (page views of
+                  this page's message URLs, last `popularDays` days).
+                  ROCK: becomes "Related" once the related-content attribute
+                  exists.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign seriesUrlBase = '/watch/previous-messages/' -%}
+{%- assign allSeriesUrl = '/watch/previous-messages' -%}   {%- comment -%} the not-found message's link {%- endcomment -%}
+{%- assign defaultMessage = 'latest' -%}   {%- comment -%} or 'first': /{series} alone plays week 1 {%- endcomment -%}
+{%- assign popularDays = 90 -%}
+{%- assign popularCount = 3 -%}
+
+{%- capture siteRoot %}{{ 'Global' | Page:'Scheme' }}://{{ 'Global' | Page:'Host' }}{% endcapture -%}
+{%- assign seriesSlug = 'Global' | PageParameter:'slug' | Default:'' | Trim | Replace:'"','' | Replace:"'",'' -%}
+{%- assign messageSlug = 'Global' | PageParameter:'message' | Default:'' | Trim | Replace:'"','' | Replace:"'",'' -%}
+
+{%- comment -%} ===== THE SERIES (by slug; channel 4) ===== {%- endcomment -%}
+{%- assign series = null -%}
+{%- if seriesSlug != '' -%}
+    {% contentchannelitemslug where:'Slug == "{{ seriesSlug }}"' limit:'10' %}
+        {%- for slugItem in contentchannelitemslugItems -%}
+            {%- if slugItem.ContentChannelItem.ContentChannelId == 4 -%}
+                {%- assign series = slugItem.ContentChannelItem -%}
+                {%- break -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {% endcontentchannelitemslug %}
+{%- endif -%}
+
+{%- if series == null %}
+<section class="sermons series-missing">
+    <h2 class="sermons-latest__title">Series not found</h2>
+    <p class="sermons-latest__content">We couldn't find that series. It may have moved.</p>
+    <a class="sermons-latest__archive" href="{{ allSeriesUrl }}">Browse all series <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+</section>
+{%- else -%}
+
+{%- comment -%}
+    ===== ITS MESSAGES =====
+    The series' child items, oldest first. A message counts once it has
+    started and has a video (VimeoMedia), the rule used everywhere else.
+{%- endcomment -%}
+{%- assign idFilter = '' -%}
+{% contentchannelitemassociation where:'ContentChannelItemId == {{ series.Id }}' %}
+    {%- for association in contentchannelitemassociationItems -%}
+        {%- if idFilter != '' %}{% assign idFilter = idFilter | Append:' || ' %}{% endif -%}
+        {%- assign idFilter = idFilter | Append:'Id == ' | Append:association.ChildContentChannelItemId -%}
+    {%- endfor -%}
+{% endcontentchannelitemassociation %}
+
+{%- assign messages = '' -%}
+{%- assign messageCount = 0 -%}
+{%- assign mediaFilter = '' -%}
+{%- if idFilter != '' -%}
+    {% contentchannelitem where:'{{ idFilter }}' sort:'StartDateTime' %}
+        {%- assign messages = contentchannelitemItems -%}
+    {% endcontentchannelitem %}
+{%- endif -%}
+{%- for message in messages -%}
+    {%- assign minutesUntilStart = 'Now' | DateDiff:message.StartDateTime,'m' -%}
+    {%- if message.ContentChannelId != 5 or minutesUntilStart > 0 %}{% continue %}{% endif -%}
+    {%- assign mediaGuid = message | Attribute:'VimeoMedia','RawValue' | Trim -%}
+    {%- if mediaGuid == '' %}{% continue %}{% endif -%}
+    {%- assign messageCount = messageCount | Plus:1 -%}
+    {%- if mediaFilter != '' %}{% assign mediaFilter = mediaFilter | Append:' || ' %}{% endif -%}
+    {%- assign mediaFilter = mediaFilter | Append:'Guid == "' | Append:mediaGuid | Append:'"' -%}
+{%- endfor -%}
+
+{%- comment -%} Their media elements, in one query (player ids and thumbnails) {%- endcomment -%}
+{%- assign mediaItems = '' -%}
+{%- if mediaFilter != '' -%}
+    {% mediaelement where:'{{ mediaFilter }}' %}
+        {%- assign mediaItems = mediaelementItems -%}
+    {% endmediaelement %}
+{%- endif -%}
+
+{%- comment -%} The message in the player: the one named in the URL, else the default {%- endcomment -%}
+{%- assign current = null -%}
+{%- assign currentWeek = 0 -%}
+{%- assign week = 0 -%}
+{%- assign firstDate = '' -%}
+{%- assign lastDate = '' -%}
+{%- for message in messages -%}
+    {%- assign minutesUntilStart = 'Now' | DateDiff:message.StartDateTime,'m' -%}
+    {%- if message.ContentChannelId != 5 or minutesUntilStart > 0 %}{% continue %}{% endif -%}
+    {%- assign mediaGuid = message | Attribute:'VimeoMedia','RawValue' | Trim -%}
+    {%- if mediaGuid == '' %}{% continue %}{% endif -%}
+    {%- assign week = week | Plus:1 -%}
+    {%- if firstDate == '' %}{% assign firstDate = message.StartDateTime %}{% endif -%}
+    {%- assign lastDate = message.StartDateTime -%}
+    {%- if messageSlug != '' and message.PrimarySlug == messageSlug -%}
+        {%- assign current = message -%}{%- assign currentWeek = week -%}
+    {%- elsif messageSlug == '' and defaultMessage == 'first' and week == 1 -%}
+        {%- assign current = message -%}{%- assign currentWeek = week -%}
+    {%- elsif messageSlug == '' and defaultMessage != 'first' -%}
+        {%- assign current = message -%}{%- assign currentWeek = week -%}
+    {%- endif -%}
+{%- endfor -%}
+
+{%- assign seriesImageGuid = series | Attribute:'SeriesImage','RawValue' | Trim -%}
+{%- assign seriesUrl = seriesUrlBase | Append:series.PrimarySlug -%}
+{%- assign seriesDesc = series.Content | StripHtml | HtmlDecode | Trim -%}
+
+{%- if current -%}
+    {%- assign currentSpeaker = current | Attribute:'Speaker' -%}
+    {%- assign currentDesc = current.Content | StripHtml | HtmlDecode | Trim -%}
+    {%- assign currentUrl = seriesUrl | Append:'/' | Append:current.PrimarySlug -%}
+    {%- assign currentMediaGuid = current | Attribute:'VimeoMedia','RawValue' | Trim | Downcase -%}
+    {%- assign currentMedia = null -%}
+    {%- for media in mediaItems -%}
+        {%- assign thisGuid = media.Guid | ToString | Downcase -%}
+        {%- if thisGuid == currentMediaGuid %}{% assign currentMedia = media %}{% break %}{% endif -%}
+    {%- endfor -%}
+    {%- comment -%}
+        /{series} alone: send the visitor to the message's own address, so
+        the page view (Rock logs one per address) belongs to that message.
+        302, not 301: "the newest message" changes every week.
+    {%- endcomment -%}
+    {%- if messageSlug == '' %}{{ currentUrl | PageRedirect:'302' }}{% endif -%}
+    {%- comment -%} Browser tab: message and series {%- endcomment -%}
+    {%- capture browserTitle %}{{ current.Title }} | {{ series.Title }}{% endcapture -%}
+    {{ browserTitle | SetPageTitle:'BrowserTitle' }}
+{%- else -%}
+    {{ series.Title | SetPageTitle:'BrowserTitle' }}
+{%- endif -%}
+{%- comment -%} The page header's title: the series {%- endcomment -%}
+{{ series.Title | SetPageTitle:'PageTitle' }}
+{%- if seriesImageGuid != '' -%}
+    {%- capture ogImage %}{{ siteRoot }}/GetImage.ashx?guid={{ seriesImageGuid }}&w=1200&h=630&mode=crop{% endcapture -%}
+    {{ ogImage | AddMetaTagToHead:'property','og:image' }}
+{%- endif -%}
+
+{%- comment -%}
+    Cross-document view transitions between these pages (moving between
+    messages or series). Only pages that carry this rule take part, so
+    leaving for any other page navigates as usual. Reduced motion: off.
+    The named parts (player, message text) are in Styles/_sermons.scss.
+{%- endcomment %}
+<style>
+  @view-transition { navigation: auto; }
+  @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+</style>
+
+{%- comment -%}
+    ===== WATCH =====  (YouTube's watch page)
+    Desktop: the player large on the left, the series' messages (the
+    playlist) on the right, the message's details under the player. Theater
+    (the button under the player; theme.js "Series watch", remembered per
+    browser): the player spans the full width and the playlist drops below
+    it, beside the details. Phones: player, details, playlist.
+{%- endcomment %}
+{%- if current %}
+<section class="sermons watch" aria-label="Now playing" data-watch>
+
+  <div class="watch__player series-now__player">
+    {%- if currentMedia %}
+    {[ mediaplayer media:'{{ currentMedia.Id }}' autoresumeindays:'14' combineplaystatisticsindays:'14' ]}{[ endmediaplayer ]}
+    {%- endif %}
+  </div>
+
+  <div class="watch__info series-now__body">
+    <p class="sermons-latest__tag">Week {{ currentWeek }} of {{ messageCount }}</p>
+    <h2 class="watch__title">{{ current.Title }}</h2>
+    <div class="watch__actions">
+      <button class="watch__btn" type="button" data-copy="{{ siteRoot }}{{ currentUrl }}">
+        <svg width="16" height="16" aria-hidden="true"><use href="#i-copy"/></svg> <span>Copy link</span>
+      </button>
+      <button class="watch__btn watch__theater" type="button" aria-pressed="false" data-watch-theater hidden>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/></svg>
+        <span>Theater</span>
+      </button>
+    </div>
+    {%- comment -%} The description box: date · speaker, then the description, clamped with "Show more" (theme.js) {%- endcomment %}
+    <div class="watch__about" data-watch-about>
+      <p class="watch__meta">{{ current.StartDateTime | Date:'MMMM d, yyyy' }}{% if currentSpeaker != empty %} · {{ currentSpeaker }}{% endif %}</p>
+      {%- if currentDesc != '' %}
+      <p class="watch__desc" id="watch-desc">{{ currentDesc | Escape }}</p>
+      <button class="watch__more" type="button" aria-expanded="false" aria-controls="watch-desc" data-watch-more hidden>Show more</button>
+      {%- endif %}
+    </div>
+  </div>
+
+  <aside class="watch__list" aria-labelledby="watch-list-title">
+    <header class="watch__list-head">
+      <h2 class="watch__list-title" id="watch-list-title">Messages in this series</h2>
+      <p class="watch__list-meta">
+        {{ messageCount }} message{% if messageCount != 1 %}s{% endif %} ·
+        {% assign firstMonth = firstDate | Date:'MMM yyyy' %}{% assign lastMonth = lastDate | Date:'MMM yyyy' -%}
+        {{ firstMonth }}{% if lastMonth != firstMonth %} – {{ lastMonth }}{% endif %}
+      </p>
+    </header>
+    <ol class="message-list" role="list">
+      {%- assign week = 0 -%}
+      {%- for message in messages -%}
+          {%- assign minutesUntilStart = 'Now' | DateDiff:message.StartDateTime,'m' -%}
+    {%- if message.ContentChannelId != 5 or minutesUntilStart > 0 %}{% continue %}{% endif -%}
+          {%- assign mediaGuid = message | Attribute:'VimeoMedia','RawValue' | Trim | Downcase -%}
+          {%- if mediaGuid == '' %}{% continue %}{% endif -%}
+          {%- assign week = week | Plus:1 -%}
+          {%- assign isCurrent = false -%}
+          {%- if current and message.Id == current.Id %}{% assign isCurrent = true %}{% endif -%}
+          {%- assign messageUrl = seriesUrl | Append:'/' | Append:message.PrimarySlug -%}
+          {%- assign rowSpeaker = message | Attribute:'Speaker' -%}
+          {%- assign rowDesc = message.Content | StripHtml | HtmlDecode | Trim -%}
+          {%- comment -%} Thumbnail: the media element's 4th size (as on the homepage), else its last {%- endcomment -%}
+          {%- assign rowThumb = '' -%}
+          {%- for media in mediaItems -%}
+              {%- assign thisGuid = media.Guid | ToString | Downcase -%}
+              {%- if thisGuid == mediaGuid -%}
+                  {%- assign thumbData = media.ThumbnailDataJson | FromJSON -%}
+                  {%- assign thumbCount = thumbData | Size -%}
+                  {%- if thumbCount > 3 %}{% assign rowThumb = thumbData[3].Link %}{% elsif thumbCount > 0 %}{% assign lastThumb = thumbData | Last %}{% assign rowThumb = lastThumb.Link %}{% endif -%}
+                  {%- break -%}
+              {%- endif -%}
+          {%- endfor -%}
+          {%- if rowThumb == '' and seriesImageGuid != '' %}{% capture rowThumb %}/GetImage.ashx?guid={{ seriesImageGuid }}&w=480&h=270&mode=crop{% endcapture %}{% endif %}
+      <li class="message-row{% if isCurrent %} is-current{% endif %}">
+        <a class="message-row__thumb" href="{{ messageUrl }}" tabindex="-1" aria-hidden="true">
+          {%- if rowThumb != '' %}<img src="{{ rowThumb }}" alt="" width="480" height="270" loading="lazy" decoding="async" />{% endif %}
+          <span class="message-row__play"><svg width="14" height="14"><use href="#i-play"/></svg></span>
+        </a>
+        <div class="message-row__body">
+          <p class="message-row__week">Week {{ week }}{% if isCurrent %} <span class="message-row__now">Now playing</span>{% endif %}</p>
+          <h3 class="message-row__title"><a href="{{ messageUrl }}"{% if isCurrent %} aria-current="page"{% endif %}>{{ message.Title }}</a></h3>
+          <details class="message-row__more">
+            <summary>Details <svg width="14" height="14" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
+            <div class="message-row__detail">
+              <p class="message-row__meta">{{ message.StartDateTime | Date:'MMMM d, yyyy' }}{% if rowSpeaker != empty %} · {{ rowSpeaker }}{% endif %}</p>
+              {%- if rowDesc != '' %}
+              <p>{{ rowDesc | Escape }}</p>
+              {%- endif %}
+            </div>
+          </details>
+        </div>
+      </li>
+      {%- endfor %}
+    </ol>
+  </aside>
+
+</section>
+{%- else %}
+<p class="sermons-latest__content">Messages in this series are on their way. Check back soon.</p>
+{%- endif %}
+
+{%- comment -%}
+    ===== POPULAR MESSAGES =====
+    Page views of this page's message URLs (/{series}/{message}) over the
+    last `popularDays` days, matched to message slugs; cached for an hour.
+    Messages from this series are left out.
+{%- endcomment -%}
+{%- assign pageId = 'Global' | Page:'Id' -%}
+{%- capture popularIds -%}
+{% cache key:'series-popular-messages' duration:'3600' %}
+{% sql %}
+    DECLARE @PageId int = {{ pageId }};
+    DECLARE @Since datetime = DATEADD( day, -{{ popularDays }}, GETDATE() );
+    DECLARE @PageEntityTypeId int = ( SELECT [Id] FROM [EntityType] WHERE [Name] = 'Rock.Model.Page' );
+    SELECT TOP 20 s.[ContentChannelItemId] AS [Id], COUNT(*) AS [Views]
+    FROM [Interaction] i
+    INNER JOIN [InteractionComponent] icmp ON icmp.[Id] = i.[InteractionComponentId]
+    INNER JOIN [InteractionChannel] ich ON ich.[Id] = icmp.[InteractionChannelId]
+    INNER JOIN [ContentChannelItemSlug] s
+        ON i.[InteractionData] LIKE '%/' + s.[Slug]
+        OR i.[InteractionData] LIKE '%/' + s.[Slug] + '[?#]%'
+    INNER JOIN [ContentChannelItem] cci ON cci.[Id] = s.[ContentChannelItemId] AND cci.[ContentChannelId] = 5
+    WHERE ich.[ComponentEntityTypeId] = @PageEntityTypeId
+      AND icmp.[EntityId] = @PageId
+      AND i.[InteractionDateTime] >= @Since
+      AND i.[InteractionData] LIKE '%/previous-messages/%/%'
+    GROUP BY s.[ContentChannelItemId]
+    ORDER BY COUNT(*) DESC
+{% endsql %}
+{%- for row in results %}{{ row.Id }},{% endfor -%}
+{% endcache %}
+{%- endcapture -%}
+{%- assign popularIds = popularIds | Trim | Split:',' -%}
+
+{%- assign popularShown = 0 -%}
+{%- capture popularCards -%}
+{%- for popularId in popularIds -%}
+    {%- if popularShown >= popularCount %}{% break %}{% endif -%}
+    {%- assign popularId = popularId | AsInteger -%}
+    {%- if popularId == null or popularId == 0 %}{% continue %}{% endif -%}
+    {%- assign popular = null -%}
+    {% contentchannelitem id:'{{ popularId }}' %}
+        {%- assign popular = contentchannelitem -%}
+    {% endcontentchannelitem %}
+    {%- if popular == null %}{% continue %}{% endif -%}
+    {%- assign minutesUntilStart = 'Now' | DateDiff:popular.StartDateTime,'m' -%}
+    {%- if minutesUntilStart > 0 %}{% continue %}{% endif -%}
+    {%- assign popularSeries = null -%}
+    {%- for association in popular.ParentItems -%}
+        {%- if association.ContentChannelItem.ContentChannelId == 4 %}{% assign popularSeries = association.ContentChannelItem %}{% break %}{% endif -%}
+    {%- endfor -%}
+    {%- if popularSeries == null or popularSeries.Id == series.Id %}{% continue %}{% endif -%}
+    {%- assign popularShown = popularShown | Plus:1 -%}
+    {%- assign popularImage = popularSeries | Attribute:'SeriesImage','RawValue' | Trim %}
+      <li class="series-card" data-card>
+        <div class="series-card__media">
+          {%- if popularImage != '' %}<img src="/GetImage.ashx?guid={{ popularImage }}&w=720&h=405&mode=crop" width="720" height="405" alt="" loading="lazy" decoding="async" />{% endif %}
+        </div>
+        <div class="series-card__body">
+          <p class="series-card__date">{{ popularSeries.Title }}</p>
+          <h3 class="series-card__title"><a href="{{ seriesUrlBase }}{{ popularSeries.PrimarySlug }}/{{ popular.PrimarySlug }}" data-card-link>{{ popular.Title }}</a></h3>
+        </div>
+      </li>
+{%- endfor -%}
+{%- endcapture -%}
+
+{%- if popularShown > 0 %}
+<section class="sermons series-popular" aria-labelledby="series-popular-title">
+    <div class="sermons-divider">
+      <h2 id="series-popular-title">Popular messages</h2>
+    </div>
+    <ul class="sermons-series__list" data-view="grid" role="list">
+      {{ popularCards }}
+    </ul>
+</section>
+{%- endif %}
+
+{%- endif -%}

@@ -19,7 +19,7 @@
 {%- assign livePageUrl = '/watch/live' -%}
 {%- assign contentLength = 280 -%}
 {%- comment -%} Preview: true shows the live bar whatever the time. Set back to false. {%- endcomment -%}
-{%- assign forceLive = true -%}
+{%- assign forceLive = false -%}
 
 {%- comment -%} ===== LIVE WINDOW (24-hour HHmm integers: 745 = 7:45am) ===== {%- endcomment -%}
 {%- assign liveDay = 'Sunday' -%}

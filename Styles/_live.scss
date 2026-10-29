@@ -113,17 +113,6 @@
   .live-bar__title { font-size: 0.75rem; }
 }
 
-// ---------------------------------------------------------------------------
-// The message widget on the dark band (Partials/LatestMessage.lava; its
-// layout and light colours are in _sermons.scss, the series tag in _base.scss)
-// ---------------------------------------------------------------------------
-.live-stage .sermons-latest__player { box-shadow: var(--shadow-card), 0 0 0 1px oklch(1 0 0 / 0.06); }
-.live-stage .sermons-latest__tag { color: var(--brand); }
-.live-stage .sermons-latest__title { color: var(--on-ink); }
-.live-stage .sermons-latest__meta { color: var(--brand); }
-.live-stage .sermons-latest__content { color: var(--on-ink-muted); }
-.live-stage .sermons-latest__archive:is(:link, :visited, :hover, :focus) { color: var(--brand); }
-
 // ===========================================================================
 // WHAT'S NEXT — a swipe rail on phones (one card and a fifth of the next,
 // like the landing cards), two columns from $bp-md, four from $bp-lg

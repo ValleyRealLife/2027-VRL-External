@@ -628,6 +628,48 @@
     });
   });
 
+  // --- Series watch: theater + Show more (Assets/Lava/SeriesDetail.lava) --------------
+  // Theater widens the player to the full width and drops the playlist below
+  // it (data-theater; the layout is CSS). The change runs as a view
+  // transition where supported, so the player and playlist glide to their
+  // new places, and the choice is remembered for the next message.
+  var watch = document.querySelector('[data-watch]');
+  if (watch) {
+    var theaterBtn = watch.querySelector('[data-watch-theater]');
+    var setTheater = function (on) {
+      watch.toggleAttribute('data-theater', on);
+      if (theaterBtn) theaterBtn.setAttribute('aria-pressed', String(on));
+    };
+    var savedTheater = null;
+    try { savedTheater = localStorage.getItem('vrl-theater'); } catch (e) {}
+    setTheater(savedTheater === 'on');
+    if (theaterBtn) {
+      theaterBtn.hidden = false;
+      theaterBtn.addEventListener('click', function () {
+        var on = !watch.hasAttribute('data-theater');
+        try { localStorage.setItem('vrl-theater', on ? 'on' : 'off'); } catch (e) {}
+        if (document.startViewTransition && !reduced.matches) {
+          document.startViewTransition(function () { setTheater(on); });
+        } else {
+          setTheater(on);
+        }
+      });
+    }
+
+    // The description box: Show more only when the clamp hides something
+    var about = watch.querySelector('[data-watch-about]');
+    var desc = about && about.querySelector('.watch__desc');
+    var moreBtn = about && about.querySelector('[data-watch-more]');
+    if (desc && moreBtn && desc.scrollHeight > desc.clientHeight + 1) {
+      moreBtn.hidden = false;
+      moreBtn.addEventListener('click', function () {
+        var open = about.classList.toggle('is-open');
+        moreBtn.setAttribute('aria-expanded', String(open));
+        moreBtn.textContent = open ? 'Show less' : 'Show more';
+      });
+    }
+  }
+
   // --- Esc closes whatever is open ------------------------------------------------
 
   document.addEventListener('keydown', function (e) {

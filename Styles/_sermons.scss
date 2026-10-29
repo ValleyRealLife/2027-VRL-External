@@ -86,8 +86,7 @@
 
 // The text side follows the homepage's Messages band (_home.scss .messages__*):
 // tag · title · date/speaker (small, uppercase, green) · series tag
-// (_base.scss) · description · View previous messages. Dark-band colours for
-// the live page are in _live.scss.
+// (_base.scss) · description · View previous messages. Dark-band colours below.
 .sermons-latest__body { display: grid; justify-items: start; align-content: start; }
 .sermons-latest__tag {
   margin-bottom: var(--space-sm);
@@ -126,6 +125,13 @@
 .sermons-latest__archive:is(:link, :visited, :hover, :focus) { color: var(--brand-text); }
 .sermons-latest__archive svg { transition: transform var(--duration) var(--ease-out); }
 .sermons-latest__archive:hover svg { transform: translateX(3px); }
+
+// On a dark band (.on-ink: the live page and the series page stages)
+.on-ink .sermons-latest__player { box-shadow: var(--shadow-card), 0 0 0 1px oklch(1 0 0 / 0.06); }
+.on-ink :is(.sermons-latest__tag, .sermons-latest__meta) { color: var(--brand); }
+.on-ink .sermons-latest__title { color: var(--on-ink); }
+.on-ink .sermons-latest__content { color: var(--on-ink-muted); }
+.on-ink .sermons-latest__archive:is(:link, :visited, :hover, :focus) { color: var(--brand); }
 
 // ---------------------------------------------------------------------------
 // Divider: the design system's label divider, with the rules fading out
@@ -276,9 +282,220 @@
 .sermons-series__more { display: flex; justify-content: center; margin-top: var(--space-2xl); }
 .sermons-series__more:not(:has(:not([hidden]))) { display: none; }
 
+// ===========================================================================
+// SERIES PAGE  (Assets/Lava/SeriesDetail.lava, in the Main zone)
+// YouTube's watch layout. The page header carries the series title.
+//   phones     player · details · playlist
+//   desktop    player (large) | playlist,  details under the player
+//   theater    player across the full width, then details | playlist
+//              (data-theater on .watch, set by theme.js "Series watch")
+// ===========================================================================
+.watch {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "player" "info" "list";
+  gap: var(--space-lg);
+  align-items: start;
+}
+@media (min-width: #{$bp-nav}) {
+  .watch {
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 400px);
+    grid-template-areas: "player list" "info list";
+    gap: var(--space-lg) var(--space-xl);
+  }
+  .watch[data-theater] { grid-template-areas: "player player" "info list"; }
+}
+@media (max-width: #{$bp-nav - 1px}) { .watch__theater { display: none; } }
+
+.watch__player {
+  grid-area: player;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-xl);
+  background: var(--ink-deep);
+  box-shadow: var(--shadow-lg);
+}
+.watch__player > * { height: 100%; }
+
+// Under the player: tag, title, actions, the description box
+.watch__info { grid-area: info; display: grid; justify-items: start; gap: var(--space-sm); min-width: 0; }
+.watch__title {
+  font-size: clamp(1.375rem, 1rem + 1.4vw, 2rem);
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.watch__actions { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+.watch__btn {
+  display: inline-flex; align-items: center; gap: 0.45em;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
+}
+.watch__btn[hidden] { display: none; }
+.watch__btn:hover,
+.watch__btn[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-wash); }
+
+// The description box (YouTube's): date · speaker, then three lines of the
+// description; Show more (theme.js, only when it's longer) opens the rest
+.watch__about {
+  justify-self: stretch;
+  display: grid; justify-items: start; gap: var(--space-xs);
+  margin-top: var(--space-xs);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+.watch__meta {
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand-text);
+}
+.watch__desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  max-width: 72ch;
+  font-size: 0.9375rem; line-height: 1.6;
+  color: var(--text-secondary);
+}
+.watch__about.is-open .watch__desc { display: block; }
+.watch__more {
+  padding: 0; border: 0; background: none;
+  font-size: 0.8125rem; font-weight: 800;
+  color: var(--text);
+}
+.watch__more[hidden] { display: none; }
+.watch__more:hover { text-decoration: underline; }
+
+// The playlist: a panel with its own scroll beside the player
+.watch__list {
+  grid-area: list;
+  display: flex; flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  background: var(--bg-elevated);
+}
+@media (min-width: #{$bp-nav}) { .watch__list { max-height: min(78vh, 720px); } }
+.watch__list-head { padding: var(--space-md) var(--space-md) var(--space-sm); border-bottom: 1px solid var(--border-subtle); }
+.watch__list-title {
+  font-size: 0.9375rem; line-height: 1.2;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.watch__list-meta { margin-top: 0.15rem; font-size: 0.8125rem; color: var(--text-secondary); }
+.watch__list .message-list { overflow-y: auto; overscroll-behavior: contain; padding: var(--space-xs); }
+
+.series-missing { display: grid; justify-items: start; gap: var(--space-sm); }
+
+// Playlist rows: the thumbnail beside week / title, and Details (a
+// <details>) opening the date, speaker and description
+.message-list { display: grid; gap: 2px; }
+.message-row {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-lg);
+  transition: background var(--duration) var(--ease-out);
+}
+.message-row:hover { background: var(--surface); }
+.message-row.is-current { background: var(--brand-wash); }
+.message-row__thumb {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  background: var(--surface-hover);
+}
+.message-row__thumb img { width: 100%; height: 100%; object-fit: cover; }
+.message-row__play {
+  position: absolute; inset: auto auto 0.4rem 0.4rem;
+  display: grid; place-items: center;
+  width: 1.75rem; height: 1.75rem;
+  border-radius: var(--radius-circle);
+  background: var(--brand); color: var(--text-on-brand);
+  transition: transform var(--duration) var(--ease-out);
+}
+.message-row__play svg { margin-left: 2px; }
+.message-row:hover .message-row__play { transform: scale(1.1); }
+.message-row__body { display: grid; justify-items: start; gap: 0.15rem; padding-top: 0.15rem; }
+.message-row__week {
+  font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--brand-text);
+}
+.message-row__now {
+  margin-left: 0.4em; padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand); color: var(--text-on-brand);
+  font-size: 0.625rem;
+}
+.message-row__title { font-size: 0.875rem; line-height: 1.25; text-transform: uppercase; color: var(--text); }
+.message-row__title a { @include link-draw(2px, ".message-row"); }
+.message-row__title a:is(:hover, :focus) { color: var(--text); }
+
+.message-row__more summary {
+  display: inline-flex; align-items: center; gap: 0.3em;
+  margin-top: 0.2rem;
+  list-style: none;
+  font-size: 0.75rem; font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.message-row__more summary::-webkit-details-marker { display: none; }
+.message-row__more summary:hover { color: var(--text); }
+.message-row__more summary svg { transition: transform var(--duration) var(--ease-out); }
+.message-row__more[open] summary svg { transform: rotate(180deg); }
+.message-row__detail {
+  display: grid; gap: var(--space-xs);
+  padding-top: var(--space-xs);
+  max-width: 62ch;
+  font-size: 0.9375rem; line-height: 1.6;
+  color: var(--text-secondary);
+}
+.message-row__meta {
+  font-size: 0.75rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand-text);
+}
+// Details opens with a height animation where the browser can animate to
+// auto (interpolate-size); elsewhere it opens at once
+@supports (interpolate-size: allow-keywords) {
+  .message-row__more { interpolate-size: allow-keywords; }
+  .message-row__more::details-content {
+    block-size: 0; overflow: hidden;
+    transition: block-size var(--duration-slow) var(--ease-out), content-visibility var(--duration-slow) allow-discrete;
+  }
+  .message-row__more[open]::details-content { block-size: auto; }
+}
+
+// View transitions: between messages (cross-document; the opt-in is in the
+// Lava) and into / out of theater (theme.js). The player, the message text
+// and the playlist move as named parts; the rest cross-fades.
+.series-now__player { view-transition-name: series-player; }
+.series-now__body { view-transition-name: series-now; }
+.watch__list { view-transition-name: series-list; }
+::view-transition-old(series-now) { animation: series-out 180ms var(--ease-out) both; }
+::view-transition-new(series-now) { animation: series-in-vt 320ms var(--ease-out) 80ms both; }
+@keyframes series-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes series-in-vt { from { opacity: 0; transform: translateY(8px); } }
+
 @media (prefers-reduced-motion: reduce) {
   .sermons-livebar__dot, .series-card.is-revealed { animation: none; }
   .view-toggle::before { transition: none; }
+  .message-row__more::details-content { transition: none; }
+  .message-row:hover .message-row__play { transform: none; }
   .series-card:hover .series-card__media, .sermons-livebar:hover .sermons-livebar__cta svg,
   .sermons-latest__archive:hover svg { transform: none; }
 }
