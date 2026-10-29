@@ -4,17 +4,22 @@
 
     Block:                    HTML block in the Main zone, below the latest message
     Block content:            {% include '~~/Assets/Lava/SeriesBrowse.lava' %}
-    Enabled Lava Commands:    RockEntity
+    Enabled Lava Commands:    RockEntity, Sql
     Cache Duration:           600 or so: the list only changes when a series
                               starts (a new series shows within 10 minutes)
 
     Every started series in channel 4 that has a SeriesImage, expired or
     not (the archive keeps past series; expire dates are for promotion),
-    newest first, as cards: the series graphic, title, start month, and a
-    truncated Content (shown in the detail view only).
+    newest first, as cards: the series graphic, title and start month. The
+    detail view adds two tabs under the title: Description (the default; a
+    truncated Content) and Messages (links straight to each message, from
+    one SQL query for every series at once). Tabs only when a series has
+    both; otherwise whichever it has shows on its own.
 
     Behaviour (theme.js, "Series browse"):
       Grid / Detail   the view toggle; the choice is remembered per browser
+      Description / Messages  the detail view's tabs (without JavaScript both
+                      panels show, one under the other)
       Show more       the server renders every series; the browser shows the
                       first `batchSize` and reveals the next batch as the
                       "Show more" button scrolls into view (or is pressed).
@@ -33,6 +38,35 @@
 {%- assign descLength = 220 -%}
 
 {%- assign now = 'Now' | Date:'yyyy-MM-ddTHH:mm:ss' -%}
+
+{%- comment -%}
+    Every series' messages in one query, one row per series: Messages is
+    "title^slug|title^slug…", oldest first. A message counts once it has
+    started and has a video (VimeoMedia), the rule used everywhere else; its
+    slug is its primary (first) one.
+{%- endcomment -%}
+{% sql return:'seriesMessages' %}
+    DECLARE @ItemEntityTypeId int = ( SELECT [Id] FROM [EntityType] WHERE [Name] = 'Rock.Model.ContentChannelItem' );
+    SELECT ser.[Id] AS [SeriesId],
+        STUFF( (
+            SELECT '|' + REPLACE( REPLACE( m.[Title], '|', '' ), '^', '' ) + '^' + ISNULL( sl.[Slug], '' )
+            FROM [ContentChannelItemAssociation] ca
+            INNER JOIN [ContentChannelItem] m ON m.[Id] = ca.[ChildContentChannelItemId]
+            CROSS APPLY ( SELECT TOP 1 s.[Slug] FROM [ContentChannelItemSlug] s WHERE s.[ContentChannelItemId] = m.[Id] ORDER BY s.[Id] ) sl
+            WHERE ca.[ContentChannelItemId] = ser.[Id]
+              AND m.[ContentChannelId] = 5
+              AND m.[StartDateTime] <= GETDATE()
+              AND EXISTS (
+                  SELECT 1 FROM [AttributeValue] av
+                  INNER JOIN [Attribute] a ON a.[Id] = av.[AttributeId]
+                  WHERE a.[Key] = 'VimeoMedia' AND a.[EntityTypeId] = @ItemEntityTypeId
+                    AND av.[EntityId] = m.[Id] AND ISNULL( av.[Value], '' ) <> '' )
+            ORDER BY m.[StartDateTime]
+            FOR XML PATH( '' ), TYPE ).value( '.', 'nvarchar(max)' ), 1, 1, '' ) AS [Messages]
+    FROM [ContentChannelItem] ser
+    WHERE ser.[ContentChannelId] = {{ seriesChannelId }}
+{% endsql %}
+
 {%- assign seriesCount = 0 -%}
 {%- capture seriesCards -%}
 {% contentchannelitem where:'ContentChannelId == {{ seriesChannelId }} && StartDateTime <= "{{ now }}"' sort:'StartDateTime desc' %}
@@ -41,7 +75,10 @@
         {%- if imageGuid == '' %}{% continue %}{% endif -%}
         {%- assign seriesCount = seriesCount | Plus:1 -%}
         {%- assign seriesUrl = seriesUrlBase | Append:series.PrimarySlug -%}
-        {%- assign seriesDesc = series.Content | StripHtml | HtmlDecode | Trim | Truncate:descLength %}
+        {%- assign seriesDesc = series.Content | StripHtml | HtmlDecode | Trim | Truncate:descLength -%}
+        {%- assign seriesRow = seriesMessages | Where:'SeriesId', series.Id | First -%}
+        {%- assign seriesMessageList = seriesRow.Messages | Default:'' | Split:'|' -%}
+        {%- assign seriesMessageCount = seriesMessageList | Size %}
       <li class="series-card" data-card>
         <div class="series-card__media">
           <img src="/GetImage.ashx?guid={{ imageGuid }}&w=720&h=405&mode=crop" width="720" height="405" alt="" loading="lazy" decoding="async" />
@@ -49,8 +86,31 @@
         <div class="series-card__body">
           <h3 class="series-card__title"><a href="{{ seriesUrl }}" data-card-link>{{ series.Title }}</a></h3>
           <p class="series-card__date">{{ series.StartDateTime | Date:'MMMM yyyy' }}</p>
-          {%- if seriesDesc != '' %}
-          <p class="series-card__desc">{{ seriesDesc | Escape }}</p>
+          {%- if seriesDesc != '' or seriesMessageCount > 0 %}
+          {%- comment -%} Detail view only: Description / Messages tabs (theme.js "Tabs") when the series has both; otherwise the one it has {%- endcomment %}
+          <div class="series-card__more" data-tabs>
+            {%- if seriesDesc != '' and seriesMessageCount > 0 %}
+            <div class="series-card__tabs" role="tablist" aria-label="{{ series.Title | Escape }}" hidden>
+              <button class="series-card__tab" type="button" role="tab" id="st-{{ series.Id }}-about" aria-controls="sp-{{ series.Id }}-about" aria-selected="true">Description</button>
+              <button class="series-card__tab" type="button" role="tab" id="st-{{ series.Id }}-messages" aria-controls="sp-{{ series.Id }}-messages" aria-selected="false" tabindex="-1">Messages <span>({{ seriesMessageCount }})</span></button>
+            </div>
+            {%- endif %}
+            {%- if seriesDesc != '' %}
+            <div class="series-card__panel" id="sp-{{ series.Id }}-about" role="tabpanel" aria-labelledby="st-{{ series.Id }}-about">
+              <p class="series-card__desc">{{ seriesDesc | Escape }}</p>
+            </div>
+            {%- endif %}
+            {%- if seriesMessageCount > 0 %}
+            <div class="series-card__panel" id="sp-{{ series.Id }}-messages" role="tabpanel" aria-labelledby="st-{{ series.Id }}-messages">
+              <ol class="series-card__messages" role="list">
+                {%- for entry in seriesMessageList -%}
+                    {%- assign entryParts = entry | Split:'^' %}
+                <li><a class="series-card__message" href="{{ seriesUrl }}/{{ entryParts[1] }}"><span class="series-card__week">{{ forloop.index }}</span> {{ entryParts[0] | Escape }}</a></li>
+                {%- endfor %}
+              </ol>
+            </div>
+            {%- endif %}
+          </div>
           {%- endif %}
         </div>
       </li>

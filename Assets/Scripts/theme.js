@@ -628,6 +628,36 @@
     });
   });
 
+  // --- Tabs ([data-tabs]: the series cards' About / Messages, SeriesBrowse.lava) ----
+  // The markup ships with every panel showing and the tab row hidden, so it
+  // reads fine without JavaScript. Here the row appears and only the selected
+  // panel shows. Arrow keys move between tabs (the ARIA tabs pattern).
+  document.querySelectorAll('[data-tabs]').forEach(function (group) {
+    var tabs = Array.prototype.slice.call(group.querySelectorAll('[role="tab"]'));
+    if (!tabs.length) return;
+    var select = function (tab, focus) {
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        var panel = document.getElementById(t.getAttribute('aria-controls'));
+        if (panel) panel.hidden = !on;
+      });
+      if (focus) tab.focus();
+    };
+    tabs[0].parentNode.hidden = false;
+    select(tabs.filter(function (t) { return t.getAttribute('aria-selected') === 'true'; })[0] || tabs[0]);
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab); });
+      tab.addEventListener('keydown', function (e) {
+        var step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        select(tabs[(i + step + tabs.length) % tabs.length], true);
+      });
+    });
+  });
+
   // --- Series watch: theater (Assets/Lava/SeriesDetail.lava) --------------------------
   // Theater widens the player to the full width and drops the playlist below
   // it (data-theater; the layout is CSS). The change runs as a view
