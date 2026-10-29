@@ -2017,12 +2017,11 @@
   .v5-pillbtn:hover, .v5-pillbtn[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-wash); }
 
   /* Series card */
-  .v5-card { display: grid; gap: var(--space-sm); width: 260px; cursor: pointer; }
-  .v5-card__media { aspect-ratio: 16 / 9; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--v-green-800), var(--v-neutral-800)); box-shadow: var(--shadow-md); transition: transform var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out); }
-  .v5-card:hover .v5-card__media { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .v5-card { display: grid; gap: var(--space-sm); width: 284px; padding: var(--space-sm); border-radius: var(--radius-xl); cursor: pointer; transition: background var(--duration) var(--ease-out); }
+  .v5-card:hover { background: var(--surface); }
+  .v5-card__media { aspect-ratio: 16 / 9; border-radius: var(--radius-lg); background: linear-gradient(135deg, var(--v-green-800), var(--v-neutral-800)); box-shadow: var(--shadow-md); }
   .v5-card__title { font-size: 1.0625rem; font-weight: 800; letter-spacing: var(--tracking-tight); line-height: 1.2; text-transform: uppercase; }
-  .v5-card__title a { color: var(--text); text-decoration: none; background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0% 2px; transition: background-size var(--duration-slow) var(--ease-out); }
-  .v5-card:hover .v5-card__title a { background-size: 100% 2px; }
+  .v5-card__title a { color: var(--text); text-decoration: none; }
   .v5-card__date { font-size: 0.8125rem; color: var(--text-secondary); }
 
   /* Page header styles */
@@ -2047,7 +2046,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .v5-dot { animation: none; }
-    .v5-toggle::before, .v5-prose, .v5-draw, .v5-cta, .v5-card__title a { transition: none; }
+    .v5-toggle::before, .v5-prose, .v5-draw, .v5-cta { transition: none; }
   }
 </style>
 </head>
@@ -3051,7 +3050,7 @@ html {
           </div>
         </div>
       </div>
-      <p class="group-note">Message links: the week number in a small green disc, plain text that turns green on hover. No borders, no full-width highlight, no underline.</p>
+      <p class="group-note">Message links: the week number in a small green disc, plain text that turns green on hover. No borders, no full-width highlight, no underline. Detail rows have no divider lines; the card tint separates them.</p>
     </div>
 
     <div class="group">
@@ -3135,7 +3134,7 @@ html {
 
     <div class="group">
       <h4 class="group-title">Series cards</h4>
-      <p class="group-note">The series graphic (16:9, lifts on hover) over the title (its underline draws in when the card is hovered) and start month. Grid: 1 → 2 → 3 columns. Detail view: the graphic beside the title, month and the Description / Messages tabs. Lists reveal 12 at a time as the Show more button nears the viewport; thumbnails lazy-load; new cards fade up.</p>
+      <p class="group-note">The series graphic (16:9) over the title and start month. The whole card is the link, and hovering tints the whole card (the playlist rows' highlight), with no title underline; the padding is pulled back with a negative margin so content still lines up with the grid. Popular messages on the series page use the same card. Grid: 1 → 2 → 3 columns. Detail view: the graphic beside the title, month and the Description / Messages tabs. Lists reveal 12 at a time as the Show more button nears the viewport; thumbnails lazy-load; new cards fade up.</p>
       <div class="preview">
         <div class="v5-card">
           <div class="v5-card__media"></div>
@@ -3180,7 +3179,7 @@ html {
       <h4 class="group-title">Interaction</h4>
       <ul class="v5-list">
         <li><strong>Clickable cards keep their text selectable.</strong> Mark the card <code>data-card</code> and its one real link (the title) <code>data-card-link</code>; theme.js follows the link on a card click unless text was just selected (Ctrl/⌘-click opens a new tab). Never a stretched <code>::after</code> overlay.</li>
-        <li><strong>Hover highlight or underline, not both.</strong> Rows and cards that tint on hover don't also underline their text.</li>
+        <li><strong>Lists highlight, they don't underline.</strong> Cards and rows in a listing (series cards in both views, playlist rows) tint the whole item on hover; their titles never underline. Draw-in underlines are for standalone links and prose.</li>
         <li><strong>Few clicks to watch.</strong> Messages play in place; picking another is one click.</li>
         <li><strong>Reveal, don't paginate.</strong> Long lists render on the server and reveal in batches as you scroll (with a real Show more button for keyboards). Images lazy-load.</li>
         <li><strong>Motion respects reduced motion.</strong> Every animation, including view transitions and the Show more slide, turns off under <code>prefers-reduced-motion</code>.</li>

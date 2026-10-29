@@ -215,17 +215,27 @@
 // Not yet revealed (theme.js): out of the layout, so their images aren't fetched
 .series-card.is-pending { display: none; }
 
-.series-card { display: grid; align-content: start; gap: var(--space-sm); }
+// The whole card is the link (data-card, theme.js) and its hover is a tint
+// behind the whole card, like the series page's playlist rows. The padding
+// is pulled back out with a matching negative margin, so the card's content
+// still lines up with the grid and the page.
+.series-card {
+  display: grid; align-content: start; gap: var(--space-sm);
+  margin: calc(var(--space-sm) * -1);
+  padding: var(--space-sm);
+  border-radius: var(--radius-xl);
+  transition: background var(--duration) var(--ease-out);
+}
+.series-card:hover { background: var(--surface); }
+.series-card:focus-within { outline: 3px solid var(--brand-text); outline-offset: -3px; }
 .series-card__media {
   overflow: hidden;
   aspect-ratio: 16 / 9;
   border-radius: var(--radius-lg);
   background: var(--surface-hover);
   box-shadow: var(--shadow-md);
-  transition: transform var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
 }
 .series-card__media img { width: 100%; height: 100%; object-fit: cover; }
-.series-card:hover .series-card__media { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 
 .series-card__body { display: grid; gap: 0.2rem; }
 .series-card__title {
@@ -233,8 +243,9 @@
   text-transform: uppercase;
   color: var(--text);
 }
-.series-card__title a { @include link-draw(2px, ".series-card"); }
-.series-card__title a:is(:hover, :focus) { color: var(--text); }
+.series-card__title a { text-decoration: none; }
+.series-card__title a:is(:link, :visited, :hover, :focus) { color: var(--text); text-decoration: none; }
+.series-card__title a:focus-visible { outline: none; }   // the card shows focus
 .series-card__date { font-size: 0.8125rem; color: var(--text-secondary); }
 .series-card__desc { display: none; }
 
@@ -245,15 +256,14 @@
 // Detail view: the graphic beside the title and month, then the
 // Description / Messages tabs (.series-card__more; grid view hides them)
 .series-card__more { display: none; }
+// (No divider lines between rows: the hover tint separates them, and a line
+// under a tinted, rounded row looked wrong.)
 .sermons-series__list[data-view="detail"] { gap: var(--space-lg); }
 .sermons-series__list[data-view="detail"] .series-card {
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   align-items: start;
   gap: var(--space-md);
-  padding-bottom: var(--space-lg);
-  border-bottom: 1px solid var(--border-subtle);
 }
-.sermons-series__list[data-view="detail"] .series-card:last-child { border-bottom: 0; }
 @media (min-width: #{$bp-md}) {
   .sermons-series__list[data-view="detail"] .series-card {
     grid-template-columns: 360px minmax(0, 1fr);
@@ -535,6 +545,6 @@
 @media (prefers-reduced-motion: reduce) {
   .sermons-livebar__dot, .series-card.is-revealed { animation: none; }
   .view-toggle::before { transition: none; }
-  .series-card:hover .series-card__media, .sermons-livebar:hover .sermons-livebar__cta svg,
+  .sermons-livebar:hover .sermons-livebar__cta svg,
   .sermons-latest__archive:hover svg { transform: none; }
 }
