@@ -560,51 +560,6 @@
     new MutationObserver(syncLoginTabs).observe(loginRoot, { childList: true, subtree: true, characterData: true });
   }
 
-  // --- Live page: message panel collapse (Assets/Lava/LiveService.lava) ------------
-  // The toggle beside the message title folds the panel down to the title.
-  // Phones start folded so the page below is reachable without a long scroll.
-  // The height animates with the Web Animations API (no GSAP on this page);
-  // opacity leads on the way out and trails on the way in, so text never
-  // shows clipped mid-line. The open/closed end states belong to the CSS.
-  var liveInfo = document.querySelector('[data-live-info]');
-  var liveToggle = liveInfo && liveInfo.querySelector('[data-live-info-toggle]');
-  var liveBody = liveInfo && document.getElementById(liveToggle && liveToggle.getAttribute('aria-controls'));
-  if (liveToggle && liveBody) {
-    var setLiveCollapsed = function (on) {
-      var label = on ? 'Show details' : 'Hide details';
-      liveInfo.classList.toggle('is-collapsed', on);
-      liveToggle.setAttribute('aria-expanded', String(!on));
-      liveToggle.setAttribute('aria-label', label);
-      liveToggle.title = label;
-    };
-    var liveBusy = false;
-    liveToggle.hidden = false;
-    if (window.matchMedia('(max-width: 699px)').matches) setLiveCollapsed(true);
-    liveToggle.addEventListener('click', function () {
-      if (liveBusy) return;
-      var on = !liveInfo.classList.contains('is-collapsed');
-      if (reduced.matches || typeof liveBody.animate !== 'function') { setLiveCollapsed(on); return; }
-      liveBusy = true;
-      if (!on) setLiveCollapsed(false);                 // measure the open state
-      else liveToggle.setAttribute('aria-expanded', 'false');   // chevron turns with the motion
-      var openPad = parseFloat(getComputedStyle(liveBody).paddingTop) || 0;
-      var open = { height: liveBody.offsetHeight + 'px', paddingTop: openPad + 'px' };
-      var shut = { height: '0px', paddingTop: '0px' };
-      liveBody.style.overflow = 'hidden';
-      var ease = 'cubic-bezier(.45, 0, .55, 1)';
-      var size = liveBody.animate(on ? [open, shut] : [shut, open], { duration: 600, easing: ease });
-      liveBody.animate(on ? [{ opacity: 1 }, { opacity: 0 }] : [{ opacity: 0 }, { opacity: 1 }],
-        on ? { duration: 250, easing: 'ease-out', fill: 'forwards' }
-           : { duration: 350, delay: 200, easing: 'ease-in', fill: 'backwards' });
-      size.onfinish = function () {
-        if (on) setLiveCollapsed(true);
-        liveBody.getAnimations().forEach(function (a) { a.cancel(); });
-        liveBody.style.overflow = '';
-        liveBusy = false;
-      };
-    });
-  }
-
   // --- Series browse: Grid/Detail + reveal in batches (Assets/Lava/SeriesBrowse.lava) ---
   // The server renders every series. Cards past the first batch get
   // .is-pending (display: none, so their images aren't fetched); the next

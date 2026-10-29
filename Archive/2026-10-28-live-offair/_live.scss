@@ -1,0 +1,369 @@
+// LIVE PAGE  (Assets/Lava/LiveService.lava; behaviour in theme.js "Live page")
+//
+// Three self-contained bands, each <section class="live …"> (so each can
+// become its own block later). `.live` is in $theme-scope, so the theme's
+// element reset applies inside: headings and paragraphs take their band's
+// colour, lists lose their bullets, links inherit.
+//
+//   .live-stage    dark band (ink) with soft green edge glows and a green
+//                  stripe along the bottom: the player, then the message panel
+//   .live-next     light band: the What's next cards
+//   .live-events   surface band: featured event photos
+//
+// The page is InnerDefault with PageHeaderStyle None and the block in the
+// Feature zone, so every band is full-bleed; .container does the gutters.
+
+@use "config" as *;
+
+.live-band-heading {
+  margin-bottom: var(--space-lg);
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+// ===========================================================================
+// STAGE
+// ===========================================================================
+.live-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  background: var(--ink);
+  color: var(--on-ink);
+  padding-block: var(--space-xl) var(--space-2xl);
+  border-bottom: 5px solid var(--brand);
+}
+@media (min-width: #{$bp-md}) { .live-stage { padding-block: var(--space-2xl) var(--space-3xl); } }
+
+// Green glow at each edge: the homepage hero's glow exactly (_home.scss,
+// .stage__vp::before/::after). The glow boxes are a screen tall, centred on
+// the band, like the full-screen hero's, so the fade has the same height
+// to spread over; the band clips what overflows (overflow: clip above).
+.live-stage::before,
+.live-stage::after {
+  content: "";
+  position: absolute; top: 50%; z-index: -1;
+  width: 26vw;
+  height: max(100%, 100vh);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.live-stage::before { left: 0;  background: radial-gradient(70% 50% at 0% 40%, var(--brand-glow) 0%, oklch(from var(--brand) l c h / 0.10) 45%, transparent 72%); }
+.live-stage::after  { right: 0; background: radial-gradient(70% 50% at 100% 55%, var(--brand-glow) 0%, oklch(from var(--brand) l c h / 0.10) 45%, transparent 72%); }
+
+// "Connect with us": a tinted pill above the player's top-left corner
+.live-connect {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  margin-bottom: var(--space-sm);
+  padding: 0.45rem 0.9rem 0.45rem 0.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand-wash);
+  border: 1px solid oklch(from var(--brand) l c h / 0.4);
+  box-shadow: 0 0 18px -6px var(--brand-glow);
+  font-size: 0.8125rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background var(--duration) var(--ease-out),
+              border-color var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out);
+}
+.live-connect:is(:link, :visited, :hover, :focus) { color: var(--brand); text-decoration: none; }
+.live-connect:hover { background: oklch(from var(--brand) l c h / 0.24); border-color: var(--brand); transform: translateY(-1px); }
+
+// The player (and its off-air stand-in)
+.live-player {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: #000;
+  box-shadow: var(--shadow-card), 0 0 0 1px oklch(1 0 0 / 0.06);
+}
+@media (min-width: #{$bp-md}) { .live-player { border-radius: var(--radius-xl); } }
+.live-player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+// Off air: keeps the 16:9 footprint as a minimum but grows on small screens
+// so the text never clips
+.live-player--offair {
+  display: grid; place-items: center;
+  overflow: visible;
+  background:
+    radial-gradient(60% 80% at 50% 0%, var(--brand-glow-soft), transparent 70%),
+    var(--v-neutral-800);
+}
+.live-offair {
+  display: flex; flex-direction: column; align-items: center;
+  gap: var(--space-sm);
+  max-width: 34rem;
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+}
+.live-offair__icon {
+  display: grid; place-items: center;
+  width: 3rem; height: 3rem;
+  margin-bottom: var(--space-xs);
+  border-radius: var(--radius-md);
+  background: var(--brand-wash);
+  color: var(--brand);
+}
+.live-offair__title {
+  font-size: clamp(1.5rem, 1.1rem + 2vw, 2.25rem);
+  text-transform: uppercase;
+}
+.live-offair__text { color: var(--on-ink-muted); line-height: 1.7; }
+.live-offair .btn { margin-top: var(--space-sm); }
+
+// The message panel: glass on the dark band, under the player
+.live-info {
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  background: oklch(1 0 0 / 0.05);
+  border: 1px solid oklch(1 0 0 / 0.1);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+@media (min-width: #{$bp-md}) { .live-info { padding: var(--space-lg); border-radius: var(--radius-xl); } }
+
+.live-info__head { display: flex; align-items: flex-start; gap: var(--space-sm); }
+.live-info__title {
+  flex: 1; min-width: 0;
+  font-size: 1.25rem;
+  line-height: 1.15;
+  text-transform: uppercase;
+  color: #fff;
+}
+@media (min-width: #{$bp-md}) { .live-info__title { font-size: 1.625rem; } }
+
+// Collapse: the chevron points up while open, down while collapsed
+.live-info__toggle {
+  flex: none;
+  display: grid; place-items: center;
+  width: 2.25rem; height: 2.25rem;
+  padding: 0;
+  border-radius: var(--radius-circle);
+  border: 1px solid oklch(1 0 0 / 0.16);
+  background: oklch(1 0 0 / 0.06);
+  color: var(--on-ink);
+  transition: border-color var(--duration) var(--ease-out), background var(--duration) var(--ease-out);
+}
+.live-info__toggle[hidden] { display: none; }
+.live-info__toggle:hover { border-color: var(--brand); background: var(--brand-wash); color: #fff; }
+.live-info__toggle svg { transform: rotate(180deg); transition: transform var(--duration-slow) var(--ease-out); }
+.live-info__toggle[aria-expanded="false"] svg { transform: none; }
+
+// Padding, not margin, so the collapse animation measures it exactly
+.live-info__body { padding-top: var(--space-md); }
+.live-info.is-collapsed .live-info__body { display: none; }
+
+.live-info__desc {
+  max-width: 68ch;
+  color: var(--on-ink-muted);
+  line-height: 1.7;
+}
+.live-info__desc p { margin: 0 0 0.75em; }
+.live-info__desc p:last-child { margin-bottom: 0; }
+
+// Series: a tinted pill under the description
+.live-info__series {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  max-width: 100%;
+  margin-top: var(--space-md);
+  padding: 0.4rem 0.7rem 0.4rem 0.85rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand-wash);
+  border: 1px solid oklch(from var(--brand) l c h / 0.3);
+  font-size: 0.875rem; font-weight: 700;
+  text-decoration: none;
+  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
+}
+.live-info__series:is(:link, :visited, :hover, :focus) { color: var(--brand); text-decoration: none; }
+.live-info__series:hover { background: oklch(from var(--brand) l c h / 0.22); border-color: var(--brand); }
+.live-info__series-label {
+  font-size: 0.6875rem;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--on-ink-muted);
+}
+.live-info__series-name { min-width: 0; }
+.live-info__series svg { transition: transform var(--duration) var(--ease-out); }
+.live-info__series:hover svg { transform: translateX(2px); }
+
+// ===========================================================================
+// WHAT'S NEXT — a swipe rail on phones (one card and a fifth of the next,
+// like the landing cards), two columns from $bp-md, four from $bp-lg
+// ===========================================================================
+.live-next { background: var(--bg); padding-block: var(--space-2xl); }
+@media (min-width: #{$bp-md}) { .live-next { padding-block: var(--space-3xl); } }
+
+.live-next__list {
+  display: flex;
+  gap: var(--space-md);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
+  margin-inline: calc(var(--gutter) * -1);
+  padding: var(--space-2xs) var(--gutter) var(--space-sm);   // room for the hover lift
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.live-next__list::-webkit-scrollbar { display: none; }
+.live-next__list > li { flex: 0 0 calc((100% - var(--space-md)) / 1.2); scroll-snap-align: start; display: flex; }
+@media (min-width: #{$bp-md}) {
+  .live-next__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-lg);
+    overflow: visible;
+    margin-inline: 0; padding: 0;
+  }
+}
+@media (min-width: #{$bp-lg}) { .live-next__list { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+.live-card {
+  position: relative;   // anchor for the Give card's stretched button
+  display: flex; flex-direction: column; gap: var(--space-xs);
+  width: 100%;
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  text-decoration: none;
+  transition: border-color var(--duration) var(--ease-out),
+              box-shadow var(--duration) var(--ease-out),
+              transform var(--duration) var(--ease-out);
+}
+// core.css's a / a:hover rules would colour and underline every line in the card
+.live-card:is(:link, :visited, :hover, :focus, :active) { color: var(--text); text-decoration: none; }
+.live-card:hover { border-color: var(--border); box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+
+.live-card__icon {
+  display: grid; place-items: center;
+  width: 2.75rem; height: 2.75rem;
+  margin-bottom: var(--space-2xs);
+  border-radius: var(--radius-md);
+  background: var(--brand-wash);
+  color: var(--brand-text);
+}
+.live-card__title {
+  font-size: 1.0625rem; font-weight: 800;
+  letter-spacing: var(--tracking-snug);
+  text-transform: uppercase;
+}
+.live-card__desc { flex: 1; font-size: 0.9375rem; line-height: 1.6; color: var(--text-secondary); }
+
+// The CTA: a text link whose underline draws in on hover (a background
+// gradient, so it never collides with the Give card's ::after)
+.live-card__cta {
+  align-self: flex-start;
+  margin-top: var(--space-xs);
+  padding-bottom: 0.3rem;
+  font-size: 0.875rem; font-weight: 700;
+  color: var(--brand-text);
+  background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0% 3px;
+  transition: background-size var(--duration-slow) var(--ease-out);
+}
+.live-card:is(:hover, :focus-visible, :focus-within) .live-card__cta { background-size: 100% 3px; }
+
+// Get connected: the primary next step, lifted with a soft green glow
+.live-card--featured {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px var(--brand), 0 10px 30px -10px var(--brand-glow);
+}
+.live-card--featured:hover {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 1px var(--brand), 0 14px 36px -10px var(--brand-glow), var(--shadow-md);
+}
+
+// Give: the Merlin widget's own <button> as the card's text CTA. The widget
+// styles its button (and may inline the primary colour), hence !important.
+.live-card--widget .live-card__cta {
+  display: inline-block;
+  width: auto !important;
+  min-height: 0 !important;
+  padding: 0 0 0.3rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: linear-gradient(currentColor, currentColor) no-repeat left bottom / 0% 3px !important;
+  box-shadow: none !important;
+  color: var(--brand-text) !important;
+  font: 700 0.875rem/1.4 var(--font-sans) !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  text-align: left;
+  cursor: pointer;
+}
+.live-card--widget:is(:hover, :focus-within) .live-card__cta { background-size: 100% 3px !important; }
+// The button's click area covers the whole card
+.live-card__stretch::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius-lg); }
+.live-card--widget:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand); }
+.live-card--widget .live-card__stretch:focus-visible { outline: none; }
+
+// ===========================================================================
+// FEATURED EVENTS — a swipe rail on phones, two columns from 700px, three
+// from $bp-md. Fixed columns, so a short last row stays left-aligned.
+// ===========================================================================
+.live-events {
+  background: var(--surface);
+  border-top: 1px solid var(--border-subtle);
+  padding-block: var(--space-2xl);
+}
+@media (min-width: #{$bp-md}) { .live-events { padding-block: var(--space-3xl); } }
+
+.live-events__grid {
+  display: flex;
+  gap: var(--space-md);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--gutter);
+  margin-inline: calc(var(--gutter) * -1);
+  padding: var(--space-2xs) var(--gutter) var(--space-sm);
+  scrollbar-width: none;
+}
+.live-events__grid::-webkit-scrollbar { display: none; }
+.live-events__grid > li { flex: 0 0 min(82vw, 360px); scroll-snap-align: start; }
+@media (min-width: 700px) {
+  .live-events__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-lg);
+    overflow: visible;
+    margin-inline: 0; padding: 0;
+  }
+}
+@media (min-width: #{$bp-md}) { .live-events__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.live-event {
+  display: block;
+  aspect-ratio: 7 / 3;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--surface-hover);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+  transition: transform var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
+}
+.live-event img { width: 100%; height: 100%; object-fit: cover; }
+.live-event:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+// "View all events": a text link under the rail, left-aligned (the homepage's
+// "View all messages" link, on a light band)
+.live-events__all {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  margin-top: var(--space-md);
+  font-size: 0.6875rem; font-weight: 700;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand-text); text-decoration: none;
+}
+.live-events__all svg { transition: transform var(--duration) var(--ease-out); }
+.live-events__all { @include link-draw(2px); padding-bottom: 0.25rem; }
+.live-events__all:is(:hover, :focus-visible) { color: var(--brand-text); }
+.live-events__all:hover svg { transform: translateX(3px); }
+
+// ===========================================================================
+@media (prefers-reduced-motion: reduce) {
+  .live-card:hover, .live-event:hover, .live-connect:hover,
+  .live-info__series:hover svg, .live-events__all:hover svg { transform: none; }
+}

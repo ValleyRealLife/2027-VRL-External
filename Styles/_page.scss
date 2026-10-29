@@ -167,7 +167,13 @@
 
 // Main content
 .page-content { padding-block: clamp(1.25rem, 3vw, 2rem) clamp(2rem, 5vw, 4rem); }   // lighter on top: the title band already separates
-.page-content > * + * { margin-top: var(--space-xl); }
+// Straight after the breadcrumbs (no Feature band between): they already
+// space the content from the header, so only a small step
+.breadcrumb-container + .page-feature:not(:has(.block-instance)) + .page-content { padding-top: var(--space-sm); }
+// Space between zones, only between zones that hold blocks: Rock's hidden
+// .ajax-error box comes first, and empty zones still render their wrappers,
+// so a plain `* + *` put a gap above the first zone and around empty ones.
+.page-content > :has(.block-instance) ~ :has(.block-instance) { margin-top: var(--space-xl); }
 
 // Zones B/C/D: one column on phones, thirds from the medium breakpoint.
 .page-grid { display: grid; gap: var(--space-lg); grid-template-columns: 1fr; }

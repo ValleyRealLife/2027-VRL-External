@@ -39,9 +39,10 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Assets/Lava/Footer.lava` | HTML block include: the menu reflected (reads the page tree), visit info, bar |
 | `Assets/Lava/SubpageList.lava` | HTML block include for Landing pages: the current page's children as alternating image cards (`PageImage`, optional `CallToAction` page attributes) |
 | `Assets/Lava/PopularPages.lava` | HTML block include (first used on the 404 page): the most-viewed pages one level below the nav sections, ranked from the Interaction table over 90 days |
-| `Assets/Lava/LiveService.lava` | HTML block include for the watch-live page: the Resi player (service window) or an off-air message, the message details, What's next cards and featured events. One block for now; each band is a self-contained section ready to become its own block |
+| `Assets/Lava/LiveService.lava` | HTML block include for the watch-live page: a status bar (Live now / See you next weekend) and the message widget (today's message beside the Resi player in the service window, the latest message otherwise), What's next cards and featured events. One block for now; each band is a self-contained section ready to become its own block |
 | `Assets/Lava/MessagesLatest.lava` | HTML block include for the messages page: a Live now bar during the live window, then the latest message (Rock media player, title, date · speaker, series, Content) |
 | `Assets/Lava/SeriesBrowse.lava` | HTML block include for the messages page: "All series" divider, every started series as cards with a Grid / Detail toggle, revealed in batches as you scroll |
+| `Assets/Lava/Partials/LatestMessage.lava` | The message widget: a player beside the title, date · speaker, shortened Content and series tag. `latest` mode (Rock media player, newest watchable message) or `live` mode (Resi player, today's message); options for a tag above the title and a View previous messages link. Shared by `MessagesLatest.lava` and both states of the live page |
 | `Assets/Lava/LoginMedia.lava` | HTML block include for the login page: the PageImage of the page in `?returnurl=`, shown beside the login form from 900px |
 | `Assets/Lava/SiteSearch.lava` | HTML block include: the search pill with live results (fetched from a Lava Application endpoint as you type; rendered in place when the URL has `?q=`) |
 | `Assets/Lava/SiteSearchResults.lava` | The search results fragment, shared by the endpoint and `SiteSearch.lava`: pages on this site, messages, series, queried directly with SQL |
@@ -58,6 +59,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Styles/_login.scss` | Rock's stock Login block (unchanged in Rock) restyled as a centred card; `theme.js` adds the Phone or email / Username & password tabs |
 | `Styles/_live.scss` | The watch-live page's bands (stage, What's next, featured events) |
 | `Styles/_sermons.scss` | The messages page: live bar, latest message, divider, series cards (grid and detail views) |
+| `Archive/` | Retired versions kept for reference, by date (not loaded by the theme): `2026-10-28-live-offair/` is the live page before the off-air redesign |
 | `tools/` | `build.mjs` (the theme build), `check-theme.mjs` and `check-master-bindings.mjs` (gates) |
 | `Resources/RockNextgenThemeTemplate/` | The boilerplate NextGen starter theme, kept as reference only |
 

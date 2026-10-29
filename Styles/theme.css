@@ -510,6 +510,58 @@ body.is-locked {
   }
 }
 
+.series-tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5em;
+  max-width: 100%;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand-wash);
+  border: 1px solid oklch(from var(--brand) l c h/0.35);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
+}
+
+.series-tag:is(:link, :visited, :hover, :focus) {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.series-tag span {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--brand-text);
+}
+
+.series-tag:hover {
+  background: oklch(from var(--brand) l c h/0.22);
+  border-color: oklch(from var(--brand) l c h/0.6);
+}
+
+.on-ink .series-tag {
+  background: oklch(from var(--brand) l c h/0.16);
+  border-color: oklch(from var(--brand) l c h/0.22);
+}
+
+.on-ink .series-tag:is(:link, :visited, :hover, :focus) {
+  color: var(--on-ink);
+}
+
+.on-ink .series-tag span {
+  color: var(--brand);
+}
+
+.on-ink .series-tag:hover {
+  background: oklch(from var(--brand) l c h/0.28);
+  border-color: oklch(from var(--brand) l c h/0.45);
+}
+
 .site-alert {
   --alert-bg: var(--brand);
   --alert-fg: var(--text-on-brand);
@@ -1983,7 +2035,11 @@ body:is(.zone-highlight, .block-highlight) .site-alert[hidden] {
   padding-block: clamp(1.25rem, 3vw, 2rem) clamp(2rem, 5vw, 4rem);
 }
 
-.page-content > * + * {
+.breadcrumb-container + .page-feature:not(:has(.block-instance)) + .page-content {
+  padding-top: var(--space-sm);
+}
+
+.page-content > :has(.block-instance) ~ :has(.block-instance) {
   margin-top: var(--space-xl);
 }
 
@@ -2843,250 +2899,145 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
 .live-stage::after {
   content: "";
   position: absolute;
-  top: 0;
-  bottom: 0;
+  top: 50%;
   z-index: -1;
-  width: clamp(160px, 26vw, 420px);
+  width: 26vw;
+  height: max(100%, 100vh);
+  transform: translateY(-50%);
   pointer-events: none;
 }
 
 .live-stage::before {
   left: 0;
-  background: radial-gradient(70% 55% at 0% 38%, var(--brand-glow) 0%, var(--brand-glow-soft) 45%, transparent 72%);
+  background: radial-gradient(70% 50% at 0% 40%, var(--brand-glow) 0%, oklch(from var(--brand) l c h/0.1) 45%, transparent 72%);
 }
 
 .live-stage::after {
   right: 0;
-  background: radial-gradient(70% 55% at 100% 58%, var(--brand-glow) 0%, var(--brand-glow-soft) 45%, transparent 72%);
+  background: radial-gradient(70% 50% at 100% 55%, var(--brand-glow) 0%, oklch(from var(--brand) l c h/0.1) 45%, transparent 72%);
 }
 
-.live-connect {
-  display: inline-flex;
+.live-bar {
+  display: flex;
   align-items: center;
-  gap: 0.45rem;
-  margin-bottom: var(--space-sm);
-  padding: 0.45rem 0.9rem 0.45rem 0.75rem;
+  gap: var(--space-sm);
+  min-height: 3rem;
+  margin-bottom: var(--space-xl);
+  padding: 0.5rem 1.25rem 0.5rem 0.5rem;
   border-radius: var(--radius-pill);
-  background: var(--brand-wash);
-  border: 1px solid oklch(from var(--brand) l c h/0.4);
-  box-shadow: 0 0 18px -6px var(--brand-glow);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  text-decoration: none;
-  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out), transform var(--duration) var(--ease-out);
-}
-
-.live-connect:is(:link, :visited, :hover, :focus) {
-  color: var(--brand);
-  text-decoration: none;
-}
-
-.live-connect:hover {
-  background: oklch(from var(--brand) l c h/0.24);
-  border-color: var(--brand);
-  transform: translateY(-1px);
-}
-
-.live-player {
-  position: relative;
-  aspect-ratio: 16/9;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
-  background: #000;
-  box-shadow: var(--shadow-card), 0 0 0 1px oklch(100% 0 0deg / 0.06);
-}
-
-@media (min-width: 900px) {
-  .live-player {
-    border-radius: var(--radius-xl);
-  }
-}
-.live-player iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.live-player--offair {
-  display: grid;
-  place-items: center;
-  overflow: visible;
-  background: radial-gradient(60% 80% at 50% 0%, var(--brand-glow-soft), transparent 70%), var(--v-neutral-800);
-}
-
-.live-offair {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  max-width: 34rem;
-  padding: var(--space-xl) var(--space-lg);
-  text-align: center;
-}
-
-.live-offair__icon {
-  display: grid;
-  place-items: center;
-  width: 3rem;
-  height: 3rem;
-  margin-bottom: var(--space-xs);
-  border-radius: var(--radius-md);
-  background: var(--brand-wash);
-  color: var(--brand);
-}
-
-.live-offair__title {
-  font-size: clamp(1.5rem, 1.1rem + 2vw, 2.25rem);
-  text-transform: uppercase;
-}
-
-.live-offair__text {
-  color: var(--on-ink-muted);
-  line-height: 1.7;
-}
-
-.live-offair .btn {
-  margin-top: var(--space-sm);
-}
-
-.live-info {
-  margin-top: var(--space-lg);
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
-  background: oklch(100% 0 0deg / 0.05);
-  border: 1px solid oklch(100% 0 0deg / 0.1);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-
-@media (min-width: 900px) {
-  .live-info {
-    padding: var(--space-lg);
-    border-radius: var(--radius-xl);
-  }
-}
-.live-info__head {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-}
-
-.live-info__title {
-  flex: 1;
-  min-width: 0;
-  font-size: 1.25rem;
-  line-height: 1.15;
-  text-transform: uppercase;
-  color: #fff;
-}
-
-@media (min-width: 900px) {
-  .live-info__title {
-    font-size: 1.625rem;
-  }
-}
-.live-info__toggle {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  padding: 0;
-  border-radius: var(--radius-circle);
-  border: 1px solid oklch(100% 0 0deg / 0.16);
   background: oklch(100% 0 0deg / 0.06);
-  color: var(--on-ink);
-  transition: border-color var(--duration) var(--ease-out), background var(--duration) var(--ease-out);
+  border: 1px solid oklch(100% 0 0deg / 0.12);
 }
 
-.live-info__toggle[hidden] {
-  display: none;
-}
-
-.live-info__toggle:hover {
-  border-color: var(--brand);
-  background: var(--brand-wash);
-  color: #fff;
-}
-
-.live-info__toggle svg {
-  transform: rotate(180deg);
-  transition: transform var(--duration-slow) var(--ease-out);
-}
-
-.live-info__toggle[aria-expanded=false] svg {
-  transform: none;
-}
-
-.live-info__body {
-  padding-top: var(--space-md);
-}
-
-.live-info.is-collapsed .live-info__body {
-  display: none;
-}
-
-.live-info__desc {
-  max-width: 68ch;
+.live-bar__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-circle);
+  background: oklch(100% 0 0deg / 0.08);
   color: var(--on-ink-muted);
-  line-height: 1.7;
 }
 
-.live-info__desc p {
-  margin: 0 0 0.75em;
+.live-bar__dot {
+  flex-shrink: 0;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-inline: 0.7rem 0.2rem;
+  border-radius: var(--radius-circle);
+  background: #e5484d;
+  box-shadow: 0 0 0 4px oklch(63% 0.2 25deg / 0.28);
+  animation: live-pulse 1.6s var(--ease-in-out) infinite;
 }
 
-.live-info__desc p:last-child {
-  margin-bottom: 0;
+@keyframes live-pulse {
+  50% {
+    box-shadow: 0 0 0 7px oklch(63% 0.2 25deg / 0.12);
+  }
 }
-
-.live-info__series {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  max-width: 100%;
-  margin-top: var(--space-md);
-  padding: 0.4rem 0.7rem 0.4rem 0.85rem;
-  border-radius: var(--radius-pill);
-  background: var(--brand-wash);
-  border: 1px solid oklch(from var(--brand) l c h/0.3);
-  font-size: 0.875rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
-}
-
-.live-info__series:is(:link, :visited, :hover, :focus) {
-  color: var(--brand);
-  text-decoration: none;
-}
-
-.live-info__series:hover {
-  background: oklch(from var(--brand) l c h/0.22);
-  border-color: var(--brand);
-}
-
-.live-info__series-label {
-  font-size: 0.6875rem;
+.live-bar__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.2;
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
-  color: var(--on-ink-muted);
 }
 
-.live-info__series-name {
-  min-width: 0;
+.live-bar__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  flex-shrink: 0;
+  padding-bottom: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--brand);
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) no-repeat left bottom/0% 2px;
+  transition: background-size var(--duration-slow) var(--ease-out), color var(--duration) var(--ease-out);
+}
+.live-bar__cta:is(:hover, :focus-visible) {
+  background-size: 100% 2px;
+  text-decoration: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-bar__cta {
+    transition: none;
+  }
 }
 
-.live-info__series svg {
+.live-bar__cta:is(:link, :visited, :hover, :focus) {
+  color: var(--brand);
+}
+
+.live-bar__cta svg {
   transition: transform var(--duration) var(--ease-out);
 }
 
-.live-info__series:hover svg {
-  transform: translateX(2px);
+.live-bar__cta:hover svg {
+  transform: translateX(3px);
+}
+
+@media (max-width: 559px) {
+  .live-bar__icon {
+    display: none;
+  }
+  .live-bar {
+    padding-inline: 1rem;
+  }
+  .live-bar__dot {
+    margin-left: 0;
+  }
+  .live-bar__title {
+    font-size: 0.75rem;
+  }
+}
+.live-stage .sermons-latest__player {
+  box-shadow: var(--shadow-card), 0 0 0 1px oklch(100% 0 0deg / 0.06);
+}
+
+.live-stage .sermons-latest__tag {
+  color: var(--brand);
+}
+
+.live-stage .sermons-latest__title {
+  color: var(--on-ink);
+}
+
+.live-stage .sermons-latest__meta {
+  color: var(--brand);
+}
+
+.live-stage .sermons-latest__content {
+  color: var(--on-ink-muted);
+}
+
+.live-stage .sermons-latest__archive:is(:link, :visited, :hover, :focus) {
+  color: var(--brand);
 }
 
 .live-next {
@@ -3360,19 +3311,14 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .live-card:hover, .live-event:hover, .live-connect:hover,
-  .live-info__series:hover svg, .live-events__all:hover svg {
+  .live-card:hover, .live-event:hover,
+  .live-bar__cta:hover svg, .live-events__all:hover svg {
     transform: none;
   }
+  .live-bar__dot {
+    animation: none;
+  }
 }
-.sermons-eyebrow {
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: var(--tracking-wider);
-  text-transform: uppercase;
-  color: var(--brand-text);
-}
-
 .sermons-livebar {
   display: flex;
   flex-wrap: wrap;
@@ -3480,58 +3426,97 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   height: 100%;
 }
 
+.sermons-latest__player--live {
+  position: relative;
+  background: #000;
+}
+
+.sermons-latest__player--live iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 .sermons-latest__body {
   display: grid;
   justify-items: start;
-  gap: var(--space-sm);
+  align-content: start;
+}
+
+.sermons-latest__tag {
+  margin-bottom: var(--space-sm);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--brand-text);
 }
 
 .sermons-latest__title {
-  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
   text-transform: uppercase;
   color: var(--text);
 }
 
 .sermons-latest__meta {
-  font-size: 0.9375rem;
-  color: var(--text-secondary);
-}
-
-.sermons-latest__series {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.5em;
-  padding: 0.35rem 0.8rem;
-  border-radius: var(--radius-pill);
-  background: var(--brand-wash);
-  font-size: 0.8125rem;
+  margin-top: var(--space-xs);
+  font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text);
-  text-decoration: none;
-}
-
-.sermons-latest__series:is(:hover, :focus) {
-  color: var(--text);
-  text-decoration: none;
-}
-
-.sermons-latest__series:hover {
-  background: oklch(from var(--brand) l c h/0.22);
-}
-
-.sermons-latest__series span {
-  font-size: 0.6875rem;
-  font-weight: 800;
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
   color: var(--brand-text);
 }
 
 .sermons-latest__content {
-  margin-top: var(--space-xs);
-  font-size: 1rem;
-  line-height: 1.65;
+  margin-top: var(--space-md);
+  max-width: 46ch;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.6;
   color: var(--text-secondary);
+}
+
+.sermons-latest__body .series-tag {
+  margin-top: var(--space-md);
+}
+
+.sermons-latest__archive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  margin-top: var(--space-lg);
+  padding-bottom: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--brand-text);
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) no-repeat left bottom/0% 2px;
+  transition: background-size var(--duration-slow) var(--ease-out), color var(--duration) var(--ease-out);
+}
+.sermons-latest__archive:is(:hover, :focus-visible) {
+  background-size: 100% 2px;
+  text-decoration: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sermons-latest__archive {
+    transition: none;
+  }
+}
+
+.sermons-latest__archive:is(:link, :visited, :hover, :focus) {
+  color: var(--brand-text);
+}
+
+.sermons-latest__archive svg {
+  transition: transform var(--duration) var(--ease-out);
+}
+
+.sermons-latest__archive:hover svg {
+  transform: translateX(3px);
 }
 
 .sermons-divider {
@@ -3539,6 +3524,10 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   align-items: center;
   gap: var(--space-lg);
   margin-block: var(--space-3xl) var(--space-xl);
+}
+
+.sermons-latest .sermons-divider {
+  margin-top: 0;
 }
 
 .sermons-divider::before,
@@ -3795,7 +3784,8 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   .view-toggle::before {
     transition: none;
   }
-  .series-card:hover .series-card__media, .sermons-livebar:hover .sermons-livebar__cta svg {
+  .series-card:hover .series-card__media, .sermons-livebar:hover .sermons-livebar__cta svg,
+  .sermons-latest__archive:hover svg {
     transform: none;
   }
 }
@@ -4727,8 +4717,8 @@ button.messages__art:hover .messages__art-play {
   margin-top: var(--space-lg);
 }
 
-.messages__body .messages__series-link {
-  margin-top: var(--space-lg);
+.messages__body .series-tag {
+  margin-top: var(--space-md);
 }
 
 .messages__title {
@@ -4761,35 +4751,7 @@ button.messages__art:hover .messages__art-play {
   gap: var(--space-md);
 }
 
-/* Current series: a tinted tag beside the main button */
-.messages__series-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.45rem 0.8rem;
-  border-radius: var(--radius-sm);
-  background: oklch(from var(--brand) l c h/0.14);
-  border: 1px solid oklch(from var(--brand) l c h/0.35);
-  color: var(--brand);
-  font-size: 0.8125rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
-}
-
-.messages__series-link span {
-  color: var(--on-ink-muted);
-  font-size: 0.625rem;
-  letter-spacing: var(--tracking-wider);
-  text-transform: uppercase;
-}
-
-.messages__series-link:is(:hover, :focus) {
-  background: oklch(from var(--brand) l c h/0.24);
-  border-color: oklch(from var(--brand) l c h/0.6);
-  color: var(--brand-bright);
-}
-
+/* Current series: the shared series tag (.series-tag, _base.scss) */
 /* Live: the Resi player sits where the thumbnail would */
 .messages__feature--live {
   max-width: 760px;

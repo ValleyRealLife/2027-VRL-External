@@ -1,0 +1,118 @@
+{% comment %}
+    LATEST MESSAGE — a player beside the message's title, date · speaker,
+    series tag and a shortened Content. Shared by the messages page
+    (MessagesLatest.lava, light) and the live page in both states
+    (LiveService.lava, inside the dark stage, where it's recoloured).
+
+    Needs the RockEntity Lava command on the including block.
+
+    Two modes (latestMode):
+      'latest' (default)  the newest message in channel 5 that has started,
+                          hasn't expired and has a VimeoMedia value (the
+                          homepage's rule), in Rock's media player (it shows
+                          the media element's thumbnail until played)
+      'live'              today's message (the first item dated today or
+                          later), beside the Resi live player. With no
+                          message for today the player still shows, titled
+                          "Sunday service". Needs resiEmbedId.
+
+    Options: assign before the include; each falls back as noted.
+      latestTag          true: a tag above the title, "Latest message" (or
+                         "Today's message" live), for where no section
+                         title says so                                false
+      latestTitleTag     the title's heading level                    'h3'
+      latestArchiveUrl   a "View previous messages" link under the text;
+                         empty = none                                  ''
+      contentLength      characters of Content shown                   280
+{% endcomment %}
+{%- assign latestTitleTag = latestTitleTag | Default:'h3' -%}
+{%- assign contentLength = contentLength | Default:280 -%}
+{%- assign latestSeriesUrlBase = '/watch/previous-messages/' -%}
+{%- assign latestIsLive = false -%}
+{%- if latestMode == 'live' %}{% assign latestIsLive = true %}{% endif -%}
+
+{%- assign latestItem = null -%}
+{%- assign latestSeries = null -%}
+{%- assign latestMedia = null -%}
+{%- if latestIsLive -%}
+    {%- assign latestToday = 'Now' | Date:'yyyy-MM-dd' -%}
+    {% contentchannelitem where:'ContentChannelId == 5 && StartDateTime >= "{{ latestToday }}"' sort:'StartDateTime' limit:'1' %}
+        {%- assign latestItem = contentchannelitemItems | First -%}
+    {% endcontentchannelitem %}
+{%- else -%}
+    {%- assign latestNow = 'Now' | Date:'yyyy-MM-ddTHH:mm:ss' -%}
+    {% contentchannelitem where:'ContentChannelId == 5 && StartDateTime <= "{{ latestNow }}"' sort:'StartDateTime desc' limit:'25' %}
+        {%- for item in contentchannelitemItems -%}
+            {%- if item.ExpireDateTime != null and item.ExpireDateTime != empty -%}
+                {%- assign minutesUntilExpire = 'Now' | DateDiff:item.ExpireDateTime,'m' -%}
+                {%- if minutesUntilExpire < 0 %}{% continue %}{% endif -%}
+            {%- endif -%}
+            {%- assign itemMediaGuid = item | Attribute:'VimeoMedia','RawValue' | Trim -%}
+            {%- if itemMediaGuid == '' %}{% continue %}{% endif -%}
+            {%- assign latestItem = item -%}
+            {%- break -%}
+        {%- endfor -%}
+    {% endcontentchannelitem %}
+{%- endif -%}
+
+{%- if latestItem -%}
+    {%- comment -%} Its series: the parent item in the series channel (4) {%- endcomment -%}
+    {%- for association in latestItem.ParentItems -%}
+        {%- if association.ContentChannelItem.ContentChannelId == 4 -%}
+            {%- assign latestSeries = association.ContentChannelItem -%}
+            {%- break -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {%- assign latestSpeaker = latestItem | Attribute:'Speaker' -%}
+    {%- assign latestDesc = latestItem.Content | StripHtml | HtmlDecode | Trim | Truncate:contentLength -%}
+    {%- unless latestIsLive -%}
+        {%- comment -%} The media element, loaded by its GUID (the attribute's raw value) {%- endcomment -%}
+        {%- assign latestMediaGuid = latestItem | Attribute:'VimeoMedia','RawValue' | Trim -%}
+        {% mediaelement where:'Guid == "{{ latestMediaGuid }}"' limit:'1' %}
+            {%- assign latestMedia = mediaelementItems | First -%}
+        {% endmediaelement %}
+    {%- endunless -%}
+{%- endif -%}
+
+{%- if latestItem or latestIsLive %}
+<div class="sermons-latest__feature">
+  <div class="sermons-latest__player{% if latestIsLive %} sermons-latest__player--live{% endif %}">
+    {%- if latestIsLive %}
+    {%- comment -%}
+        Resi: autoplay needs mute=1 (browsers only autoplay muted video);
+        showUnmuteButton is how viewers turn sound on. Don't use
+        background=1: it hides the controls and disables audio.
+    {%- endcomment %}
+    <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="true" class="resi-video-frame"
+            title="Valley Real Life live stream"
+            src="https://control.resi.io/webplayer/video.html?id={{ resiEmbedId }}&iframe=1&autoplay=1&mute=1&controls=1&showUnmuteButton=1"></iframe>
+    <script defer src="https://control.resi.io/webplayer/page.min.js"></script>
+    {%- elsif latestMedia %}
+    {[ mediaplayer media:'{{ latestMedia.Id }}' autoresumeindays:'14' combineplaystatisticsindays:'14' ]}{[ endmediaplayer ]}
+    {%- endif %}
+  </div>
+  <div class="sermons-latest__body">
+    {%- if latestTag %}
+    <p class="sermons-latest__tag">{% if latestIsLive %}Today's message{% else %}Latest message{% endif %}</p>
+    {%- endif %}
+    <{{ latestTitleTag }} class="sermons-latest__title">{% if latestItem %}{{ latestItem.Title }}{% else %}Sunday service{% endif %}</{{ latestTitleTag }}>
+    {%- if latestItem %}
+    <p class="sermons-latest__meta">{{ latestItem.StartDateTime | Date:'MMMM d, yyyy' }}{% if latestSpeaker != empty %} · {{ latestSpeaker }}{% endif %}</p>
+    {%- endif %}
+    {%- if latestSeries %}
+    <a class="series-tag" href="{{ latestSeriesUrlBase }}{{ latestSeries.PrimarySlug }}"><span>Series</span> {{ latestSeries.Title }}</a>
+    {%- endif %}
+    {%- if latestDesc and latestDesc != '' %}
+    <p class="sermons-latest__content">{{ latestDesc | Escape }}</p>
+    {%- endif %}
+    {%- if latestArchiveUrl and latestArchiveUrl != '' %}
+    <a class="sermons-latest__archive" href="{{ latestArchiveUrl }}">
+      View previous messages
+      <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+    </a>
+    {%- endif %}
+  </div>
+</div>
+{%- else %}
+<p class="sermons-latest__meta">New messages are on their way. Check back soon.</p>
+{%- endif %}

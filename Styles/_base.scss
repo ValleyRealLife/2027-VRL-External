@@ -237,3 +237,36 @@ body.is-locked { overflow: hidden; }
 .page :is(p, li, dd, blockquote, figcaption) > :is(strong, b, em, i, span) > a:not([class]):where(#{$not-admin}) {
   @include link-prose;
 }
+
+// ===========================================================================
+// COMPONENT: series tag  (`<a class="series-tag"><span>Series</span> Name</a>`)
+// The link to a message's series, the same everywhere: the homepage's
+// Messages band, the live page and the messages page
+// (Partials/LatestMessage.lava). A soft green-tinted pill with a faint
+// green outline (it gives the pale tint an edge on light pages): the
+// "SERIES" label in green caps, the name bold in the text colour. Light by
+// default, the dark-band version inside .on-ink.
+// ===========================================================================
+.series-tag {
+  display: inline-flex; align-items: baseline; gap: 0.5em;
+  max-width: 100%;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand-wash);
+  border: 1px solid oklch(from var(--brand) l c h / 0.35);
+  font-size: 0.875rem; font-weight: 700;
+  text-decoration: none;
+  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
+}
+.series-tag:is(:link, :visited, :hover, :focus) { color: var(--text); text-decoration: none; }
+.series-tag span {
+  flex-shrink: 0;
+  font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand-text);
+}
+.series-tag:hover { background: oklch(from var(--brand) l c h / 0.22); border-color: oklch(from var(--brand) l c h / 0.6); }
+.on-ink .series-tag { background: oklch(from var(--brand) l c h / 0.16); border-color: oklch(from var(--brand) l c h / 0.22); }
+.on-ink .series-tag:is(:link, :visited, :hover, :focus) { color: var(--on-ink); }
+.on-ink .series-tag span { color: var(--brand); }
+.on-ink .series-tag:hover { background: oklch(from var(--brand) l c h / 0.28); border-color: oklch(from var(--brand) l c h / 0.45); }

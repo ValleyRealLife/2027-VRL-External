@@ -152,7 +152,7 @@
 <!-- ============================================================
      SECTION: MESSAGES
      ============================================================ -->
-<section class="messages" data-cover id="messages" data-state="{% if isLive %}live{% else %}latest{% endif %}" data-playing="false" aria-labelledby="messages-title">
+<section class="messages on-ink" data-cover id="messages" data-state="{% if isLive %}live{% else %}latest{% endif %}" data-playing="false" aria-labelledby="messages-title">
   <div class="messages__bg" aria-hidden="true">
     {%- if seriesImageGuid != '' %}
     <img src="/GetImage.ashx?guid={{ seriesImageGuid }}&w=960" alt="" />
@@ -177,7 +177,7 @@
       <div class="messages__actions">
         <a class="btn btn--primary" href="{{ livePageUrl }}">Watch on the live page</a>
         {%- if seriesTitle != '' %}
-        <a class="messages__series-link" href="{{ seriesUrlBase }}{{ seriesItem.PrimarySlug }}"><span>Current series</span> {{ seriesTitle }}</a>
+        <a class="series-tag" href="{{ seriesUrlBase }}{{ seriesItem.PrimarySlug }}"><span>Current series</span> {{ seriesTitle }}</a>
         {%- endif %}
       </div>
     </div>
@@ -199,11 +199,11 @@
       <div class="messages__body">
         <h3 class="messages__title">{{ messageTitle }}</h3>
         <p class="messages__meta">{{ messageDate }}{% if messageSpeaker != empty %} · {{ messageSpeaker }}{% endif %}</p>
+        {%- if seriesTitle != '' %}
+        <a class="series-tag" href="{{ seriesUrlBase }}{{ seriesItem.PrimarySlug }}"><span>Series</span> {{ seriesTitle }}</a>
+        {%- endif %}
         {%- if messageDesc != '' %}
         <p class="messages__desc">{{ messageDesc }}</p>
-        {%- endif %}
-        {%- if seriesTitle != '' %}
-        <a class="messages__series-link" href="{{ seriesUrlBase }}{{ seriesItem.PrimarySlug }}"><span>Series</span> {{ seriesTitle }}</a>
         {%- endif %}
       </div>
     </div>

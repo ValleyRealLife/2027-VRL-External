@@ -13,12 +13,6 @@
 
 @use "config" as *;
 
-.sermons-eyebrow {
-  font-size: 0.75rem; font-weight: 800;
-  letter-spacing: var(--tracking-wider); text-transform: uppercase;
-  color: var(--brand-text);
-}
-
 // ---------------------------------------------------------------------------
 // Live bar
 // ---------------------------------------------------------------------------
@@ -86,34 +80,52 @@
   box-shadow: var(--shadow-lg);
 }
 .sermons-latest__player > * { height: 100%; }
+// Live (the live page): the Resi iframe fills the 16:9 frame
+.sermons-latest__player--live { position: relative; background: #000; }
+.sermons-latest__player--live iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
-.sermons-latest__body { display: grid; justify-items: start; gap: var(--space-sm); }
+// The text side follows the homepage's Messages band (_home.scss .messages__*):
+// tag · title · date/speaker (small, uppercase, green) · series tag
+// (_base.scss) · description · View previous messages. Dark-band colours for
+// the live page are in _live.scss.
+.sermons-latest__body { display: grid; justify-items: start; align-content: start; }
+.sermons-latest__tag {
+  margin-bottom: var(--space-sm);
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--brand-text);
+}
 .sermons-latest__title {
-  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
   text-transform: uppercase;
   color: var(--text);
 }
-.sermons-latest__meta { font-size: 0.9375rem; color: var(--text-secondary); }
-.sermons-latest__series {
-  display: inline-flex; align-items: baseline; gap: 0.5em;
-  padding: 0.35rem 0.8rem;
-  border-radius: var(--radius-pill);
-  background: var(--brand-wash);
-  font-size: 0.8125rem; font-weight: 700;
-  color: var(--text); text-decoration: none;
-}
-.sermons-latest__series:is(:hover, :focus) { color: var(--text); text-decoration: none; }
-.sermons-latest__series:hover { background: oklch(from var(--brand) l c h / 0.22); }
-.sermons-latest__series span {
-  font-size: 0.6875rem; font-weight: 800;
+.sermons-latest__meta {
+  margin-top: var(--space-xs);
+  font-size: 0.75rem; font-weight: 700;
   letter-spacing: var(--tracking-wide); text-transform: uppercase;
   color: var(--brand-text);
 }
 .sermons-latest__content {
-  margin-top: var(--space-xs);
-  font-size: 1rem; line-height: 1.65;
+  margin-top: var(--space-md);
+  max-width: 46ch;
+  font-size: 0.9375rem; font-weight: 500; line-height: 1.6;
   color: var(--text-secondary);
 }
+.sermons-latest__body .series-tag { margin-top: var(--space-md); }
+// "View previous messages": a text link, the way into the archive
+.sermons-latest__archive {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  margin-top: var(--space-lg);
+  padding-bottom: 0.2rem;
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand-text);
+  @include link-draw(2px);
+}
+.sermons-latest__archive:is(:link, :visited, :hover, :focus) { color: var(--brand-text); }
+.sermons-latest__archive svg { transition: transform var(--duration) var(--ease-out); }
+.sermons-latest__archive:hover svg { transform: translateX(3px); }
 
 // ---------------------------------------------------------------------------
 // Divider: the design system's label divider, with the rules fading out
@@ -123,6 +135,9 @@
   display: flex; align-items: center; gap: var(--space-lg);
   margin-block: var(--space-3xl) var(--space-xl);
 }
+// The page's first divider (Latest message) starts the page: no step above
+// (under the live bar, the bar's own bottom margin spaces it)
+.sermons-latest .sermons-divider { margin-top: 0; }
 .sermons-divider::before,
 .sermons-divider::after {
   content: "";
@@ -264,5 +279,6 @@
 @media (prefers-reduced-motion: reduce) {
   .sermons-livebar__dot, .series-card.is-revealed { animation: none; }
   .view-toggle::before { transition: none; }
-  .series-card:hover .series-card__media, .sermons-livebar:hover .sermons-livebar__cta svg { transform: none; }
+  .series-card:hover .series-card__media, .sermons-livebar:hover .sermons-livebar__cta svg,
+  .sermons-latest__archive:hover svg { transform: none; }
 }

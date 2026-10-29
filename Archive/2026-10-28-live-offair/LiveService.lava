@@ -1,0 +1,251 @@
+{% comment %}
+    LIVE SERVICE — the watch-live page, as one block for now.
+
+    Block:                    an HTML block in the Feature zone of a page on
+                              InnerDefault.aspx with PageHeaderStyle = None (the
+                              stage is full-bleed and carries the page's h1)
+    Block content:            {% include '~~/Assets/Lava/LiveService.lava' %}
+    Enabled Lava Commands:    RockEntity, Calendar Events  (messages; featured events)
+    Page Cacheability:        No-Store. The page changes with the clock (the
+                              service window) and the Give card's Merlin widget
+                              needs it.
+
+    Three bands, each a self-contained <section class="live …"> so they can
+    become separate blocks later (each band's settings are noted on it):
+      STAGE          dark band: the Resi player in the service window, an
+                     off-air message outside it; the message title,
+                     description and series under the player
+      WHAT'S NEXT    four cards: Get connected, Join us in person, Prayer, Give
+      FEATURED EVENTS  up to six event photos + a "View all events" link
+
+    Styled by Styles/_live.scss; behaviour in Assets/Scripts/theme.js ("Live
+    page"). The Connect and Prayer forms open in the site's care dialog
+    (UtilityBar.lava): links with data-care-frame open it straight to the form,
+    and stay plain links without JavaScript.
+
+    Ported from VRLAgency2/Assets/Lava/Dev/Live/LiveService2.lava. The shelved
+    theater-mode and wide-player toggles (switched off there) were left out.
+{% endcomment %}
+
+{%- comment -%} ── Settings ────────────────────────────────────────────── {%- endcomment -%}
+{%- assign resiEmbedId = '692bc6a6-70a1-4fa1-af72-e1a7e7290763' -%}
+
+{%- comment -%}
+    Service window (server time): the player and message details show only
+    inside it. 24-hour HHmm: 745 = 7:45am, 1215 = 12:15pm. The homepage's
+    Messages block (HomeMessages.lava) uses the same window.
+    ROCK: replace with a schedule check later.
+{%- endcomment -%}
+{%- assign streamDay       = 'Sunday' -%}
+{%- assign streamStartTime = 745 -%}
+{%- assign streamEndTime   = 1215 -%}
+
+{%- comment -%} Rock pages holding each workflow form (loaded into the care dialog; also the no-JS links) {%- endcomment -%}
+{%- assign connectFormUrl = '/watch/live/cta?cta=connect&WorkflowTypeId=391&ConnectionPoint=2279' -%}
+{%- assign prayerFormUrl  = '/watch/live/cta?cta=prayer' -%}
+
+{%- comment -%} Series pages: /watch/previous-messages/{slug} (the series' primary slug), as in HomeMessages.lava {%- endcomment -%}
+{%- assign seriesUrlBase = '/watch/previous-messages/' -%}
+
+{%- assign showConnectButton = true -%}   {%- comment -%} "Connect with us" tag above the player (service window only) {%- endcomment -%}
+{%- assign useGiveWidget     = true -%}   {%- comment -%} Give card: the Merlin widget (needs the page on No-Store); false = a link to /give {%- endcomment -%}
+
+{%- comment -%} ── Data ────────────────────────────────────────────────── {%- endcomment -%}
+{%- comment -%} Today's message: the first item in channel 5 dated today or later {%- endcomment -%}
+{%- assign today = 'Now' | Date:'yyyy-MM-dd' -%}
+{% contentchannelitem where:'ContentChannelId == 5 && StartDateTime >= "{{ today }}"' sort:'StartDateTime' limit:'1' %}
+    {%- assign sermonItem = contentchannelitemItems | First -%}
+    {%- assign sermonTitle = sermonItem.Title -%}
+    {%- assign sermonDescription = sermonItem.Content -%}
+    {%- assign sermonSeriesItem = sermonItem.ParentItems | First -%}
+    {%- assign sermonSeriesName = sermonSeriesItem.ContentChannelItem.Title -%}
+{% endcontentchannelitem %}
+
+{%- assign nowDay  = 'Now' | Date:'dddd' -%}
+{%- assign nowTime = 'Now' | Date:'HHmm' | AsInteger -%}
+{%- assign inServiceWindow = false -%}
+{%- if nowDay == streamDay and nowTime >= streamStartTime and nowTime <= streamEndTime %}{% assign inServiceWindow = true %}{% endif -%}
+{%- assign showInfo = false -%}
+{%- if inServiceWindow and sermonTitle != empty %}{% assign showInfo = true %}{% endif -%}
+
+
+{%- comment -%}
+══════════════════════════════════════════════════════════════════════════
+  STAGE — dark band, green edge glow and a green stripe along the bottom.
+  Needs: resiEmbedId, the service window, today's message, connectFormUrl,
+  seriesUrlBase, showConnectButton.
+══════════════════════════════════════════════════════════════════════════
+{%- endcomment %}
+<section class="live live-stage on-ink" aria-labelledby="live-heading">
+  <div class="container">
+
+    {%- if inServiceWindow and showConnectButton %}
+    <a class="live-connect" href="{{ connectFormUrl }}" data-care-frame="{{ connectFormUrl }}" data-care-title="Get connected">
+      <svg width="16" height="16" aria-hidden="true"><use href="#i-message"/></svg>
+      Connect with us
+    </a>
+    {%- endif %}
+
+    {%- if inServiceWindow %}
+    {%- unless showInfo %}<h1 id="live-heading" class="u-visually-hidden">Watch live</h1>{% endunless %}
+    <div class="live-player">
+      {%- comment -%}
+          Resi: autoplay needs mute=1 (browsers only autoplay muted video);
+          showUnmuteButton is how viewers turn sound on. Don't use
+          background=1: it hides the controls and disables audio.
+      {%- endcomment %}
+      <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="true" class="resi-video-frame"
+              title="Valley Real Life live stream"
+              src="https://control.resi.io/webplayer/video.html?id={{ resiEmbedId }}&iframe=1&autoplay=1&mute=1&controls=1&showUnmuteButton=1"></iframe>
+      <script defer src="https://control.resi.io/webplayer/page.min.js"></script>
+    </div>
+    {%- else %}
+    <div class="live-player live-player--offair">
+      <div class="live-offair">
+        <span class="live-offair__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.364 19.364a9 9 0 1 0 -12.728 0"/><path d="M15.536 16.536a5 5 0 1 0 -7.072 0"/><path d="M11 13a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/></svg>
+        </span>
+        <h1 id="live-heading" class="live-offair__title">
+          {%- if nowDay == streamDay and nowTime < streamStartTime -%}
+            We'll see you this morning
+          {%- elsif nowDay == streamDay -%}
+            See you next {{ streamDay }}
+          {%- else -%}
+            We'll see you {{ streamDay }}
+          {%- endif -%}
+        </h1>
+        <p class="live-offair__text">Our services stream live here every {{ streamDay }} morning. Until then, we'd love to meet you in person.</p>
+        <a class="btn btn--primary" href="/locations">Plan your visit</a>
+      </div>
+    </div>
+    {%- endif %}
+
+    {%- if showInfo %}
+    <div class="live-info" data-live-info>
+      <div class="live-info__head">
+        <h1 id="live-heading" class="live-info__title">{{ sermonTitle }}</h1>
+        {%- comment -%} Collapses the panel to the title (theme.js unhides it; phones start collapsed) {%- endcomment %}
+        <button class="live-info__toggle" type="button" aria-expanded="true" aria-controls="live-info-body" aria-label="Hide details" title="Hide details" data-live-info-toggle hidden>
+          <svg width="18" height="18" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+        </button>
+      </div>
+      <div class="live-info__body" id="live-info-body">
+        {%- if sermonDescription != empty %}<div class="live-info__desc">{{ sermonDescription }}</div>{% endif %}
+        {%- if sermonSeriesName != empty %}
+        <a class="live-info__series" href="{{ seriesUrlBase }}{{ sermonSeriesItem.ContentChannelItem.PrimarySlug }}">
+          <span class="live-info__series-label">Series</span>
+          <span class="live-info__series-name">{{ sermonSeriesName }}</span>
+          <svg width="14" height="14" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+        </a>
+        {%- endif %}
+      </div>
+    </div>
+    {%- endif %}
+
+  </div>
+</section>
+
+
+{%- comment -%}
+══════════════════════════════════════════════════════════════════════════
+  WHAT'S NEXT — four cards. Needs: connectFormUrl, prayerFormUrl,
+  useGiveWidget.
+══════════════════════════════════════════════════════════════════════════
+{%- endcomment %}
+<section class="live live-next" aria-labelledby="live-next-heading">
+  <div class="container">
+    <h2 class="live-band-heading" id="live-next-heading">What's next</h2>
+    <ul class="live-next__list" role="list">
+
+      <li>
+        <a class="live-card live-card--featured" href="{{ connectFormUrl }}" data-care-frame="{{ connectFormUrl }}" data-care-title="Get connected">
+          <span class="live-card__icon" aria-hidden="true"><svg width="24" height="24"><use href="#i-users"/></svg></span>
+          <span class="live-card__title">Get connected</span>
+          <span class="live-card__desc">New here? Tell us a little about you and we'll help you find a next step.</span>
+          <span class="live-card__cta">Say hello</span>
+        </a>
+      </li>
+
+      <li>
+        {%- comment -%} New tab: the visitor keeps the stream playing {%- endcomment %}
+        <a class="live-card" href="/locations" target="_blank" rel="noopener">
+          <span class="live-card__icon" aria-hidden="true"><svg width="24" height="24"><use href="#i-map-pin"/></svg></span>
+          <span class="live-card__title">Join us in person</span>
+          <span class="live-card__desc">Find service times and directions for Sunday.</span>
+          <span class="live-card__cta">Plan your visit</span>
+        </a>
+      </li>
+
+      <li>
+        <a class="live-card" href="{{ prayerFormUrl }}" data-care-frame="{{ prayerFormUrl }}" data-care-title="Prayer request">
+          <span class="live-card__icon" aria-hidden="true"><svg width="24" height="24"><use href="#i-heart"/></svg></span>
+          <span class="live-card__title">Prayer request</span>
+          <span class="live-card__desc">Share what's on your heart. We'd love to pray with you.</span>
+          <span class="live-card__cta">Send a request</span>
+        </a>
+      </li>
+
+      <li>
+        {%- if useGiveWidget %}
+        {%- comment -%}
+            The CTA is the Merlin widget's own button; .live-card__stretch spreads
+            its click area over the whole card so it behaves like the others.
+        {%- endcomment %}
+        <div class="live-card live-card--widget">
+          <span class="live-card__icon" aria-hidden="true"><svg width="24" height="24"><use href="#i-gift"/></svg></span>
+          <span class="live-card__title">Give</span>
+          <span class="live-card__desc">Support the ministry of Valley Real Life online.</span>
+          {[ simplemerlinwidget widgetkey:'01JB2RYN938GRYZTXJKXWM9RV9' buttonclasses:'live-card__cta live-card__stretch' buttontext:'Give now' primarycolor:'#9BC93C' ]}
+        </div>
+        {%- else %}
+        <a class="live-card" href="/give" target="_blank" rel="noopener">
+          <span class="live-card__icon" aria-hidden="true"><svg width="24" height="24"><use href="#i-gift"/></svg></span>
+          <span class="live-card__title">Give</span>
+          <span class="live-card__desc">Support the ministry of Valley Real Life online.</span>
+          <span class="live-card__cta">Give now</span>
+        </a>
+        {%- endif %}
+      </li>
+
+    </ul>
+  </div>
+</section>
+
+
+{%- comment -%}
+══════════════════════════════════════════════════════════════════════════
+  FEATURED EVENTS — up to six (one per event), then a "View all events" link.
+  Calendar 1, audience 150 (the homepage's events use the same). Needs the
+  Calendar Events Lava command. Event links open in a new tab (the stream keeps
+  playing).
+══════════════════════════════════════════════════════════════════════════
+{%- endcomment %}
+<section class="live live-events" aria-labelledby="live-events-heading">
+  <div class="container">
+    <h2 class="live-band-heading" id="live-events-heading">Featured events</h2>
+    <ul class="live-events__grid" role="list">
+      {% calendarevents calendarid:'1' audienceids:'150' %}
+        {%- assign seenIds = '0' -%}
+        {%- assign eventCount = 0 -%}
+        {%- for item in EventScheduledInstances -%}
+          {%- if eventCount >= 6 %}{% break %}{% endif -%}
+          {%- assign thisId = item.EventItemOccurrence.EventItem.Id | ToString -%}
+          {%- assign alreadySeen = seenIds | Split:'-' | Contains:thisId -%}
+          {%- unless alreadySeen -%}
+            {%- assign seenIds = seenIds | Append:'-' | Append:thisId -%}
+            {%- assign eventCount = eventCount | Plus:1 %}
+      <li>
+        <a class="live-event" href="/get-involved/events/details?EventOccurrenceId={{ item.EventItemOccurrence.Id }}&date={{ item.DateTime | Date:'yyyy-MM-ddTHH:mm:ss' }}" target="_blank" rel="noopener">
+          <img src="/GetImage.ashx?guid={{ item.EventItemOccurrence.EventItem.Photo.Guid }}&width=630&height=270&mode=crop" alt="{{ item.EventItemOccurrence.EventItem.Name | Escape }}" loading="lazy" width="630" height="270" />
+        </a>
+      </li>
+          {%- endunless -%}
+        {%- endfor -%}
+      {% endcalendarevents %}
+    </ul>
+    <a class="live-events__all" href="/get-involved/events">
+      View all events
+      <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow-right"/></svg>
+    </a>
+  </div>
+</section>

@@ -629,10 +629,10 @@ button.messages__art:hover img { transform: scale(1.04); }
 button.messages__art:hover .messages__art-play { transform: scale(1.08); background: #fff; }
 
 /* Latest state layout (mobile first, one column):
-     label · thumbnail (plays) · title · date/speaker · description · series.
+     label · thumbnail (plays) · title · date/speaker · series · description.
    Desktop: thumbnail left, the body right. */
 .messages__body { margin-top: var(--space-lg); }
-.messages__body .messages__series-link { margin-top: var(--space-lg); }
+.messages__body .series-tag { margin-top: var(--space-md); }
 .messages__title {
   font-size: clamp(1.5rem, 3vw, 2.25rem);
   text-transform: uppercase;
@@ -653,27 +653,7 @@ button.messages__art:hover .messages__art-play { transform: scale(1.08); backgro
   display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-md);
 }
 
-/* Current series: a tinted tag beside the main button */
-.messages__series-link {
-  display: inline-flex; align-items: center; gap: 0.45rem;
-  padding: 0.45rem 0.8rem;
-  border-radius: var(--radius-sm);
-  background: oklch(from var(--brand) l c h / 0.14);
-  border: 1px solid oklch(from var(--brand) l c h / 0.35);
-  color: var(--brand);
-  font-size: 0.8125rem; font-weight: 700;
-  text-decoration: none;
-  transition: background var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
-}
-.messages__series-link span {
-  color: var(--on-ink-muted);
-  font-size: 0.625rem; letter-spacing: var(--tracking-wider); text-transform: uppercase;
-}
-.messages__series-link:is(:hover, :focus) {
-  background: oklch(from var(--brand) l c h / 0.24);
-  border-color: oklch(from var(--brand) l c h / 0.6);
-  color: var(--brand-bright);
-}
+/* Current series: the shared series tag (.series-tag, _base.scss) */
 
 /* Live: the Resi player sits where the thumbnail would */
 .messages__feature--live { max-width: 760px; }
