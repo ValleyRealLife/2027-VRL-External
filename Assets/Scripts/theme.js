@@ -628,7 +628,7 @@
     });
   });
 
-  // --- Series watch: theater + Show more (Assets/Lava/SeriesDetail.lava) --------------
+  // --- Series watch: theater (Assets/Lava/SeriesDetail.lava) --------------------------
   // Theater widens the player to the full width and drops the playlist below
   // it (data-theater; the layout is CSS). The change runs as a view
   // transition where supported, so the player and playlist glide to their
@@ -655,20 +655,43 @@
         }
       });
     }
-
-    // The description box: Show more only when the clamp hides something
-    var about = watch.querySelector('[data-watch-about]');
-    var desc = about && about.querySelector('.watch__desc');
-    var moreBtn = about && about.querySelector('[data-watch-more]');
-    if (desc && moreBtn && desc.scrollHeight > desc.clientHeight + 1) {
-      moreBtn.hidden = false;
-      moreBtn.addEventListener('click', function () {
-        var open = about.classList.toggle('is-open');
-        moreBtn.setAttribute('aria-expanded', String(open));
-        moreBtn.textContent = open ? 'Show less' : 'Show more';
-      });
-    }
   }
+
+  // --- Show more: clamped text that slides open ([data-clamp]) ---------------------
+  // A [data-clamp] box holds the text (.clamp: a few lines, CSS) and its
+  // button (.clamp-more, hidden until the clamp actually hides something).
+  // The height animates between the clamped and full text; the open / closed
+  // end states belong to the CSS (.is-open on the box). Used by the message
+  // widget (Partials/LatestMessage.lava) and the series page's description.
+  document.querySelectorAll('[data-clamp]').forEach(function (box) {
+    var text = box.querySelector('.clamp');
+    var btn = box.querySelector('.clamp-more');
+    if (!text || !btn || text.scrollHeight <= text.clientHeight + 1) return;
+    var busy = false;
+    btn.hidden = false;
+    btn.addEventListener('click', function () {
+      if (busy) return;
+      var open = !box.classList.contains('is-open');
+      var label = function () {
+        btn.setAttribute('aria-expanded', String(open));
+        btn.textContent = open ? 'Show less' : 'Show more';
+      };
+      var from = text.offsetHeight;
+      box.classList.toggle('is-open', open);
+      var to = text.offsetHeight;
+      if (reduced.matches || typeof text.animate !== 'function') { label(); return; }
+      busy = true;
+      if (!open) box.classList.add('is-open');   // stay unclamped while it closes
+      text.style.overflow = 'hidden';
+      label();
+      text.animate([{ height: from + 'px' }, { height: to + 'px' }],
+        { duration: 420, easing: 'cubic-bezier(.2, .7, .2, 1)' }).onfinish = function () {
+        if (!open) box.classList.remove('is-open');
+        text.style.overflow = '';
+        busy = false;
+      };
+    });
+  });
 
   // --- Esc closes whatever is open ------------------------------------------------
 

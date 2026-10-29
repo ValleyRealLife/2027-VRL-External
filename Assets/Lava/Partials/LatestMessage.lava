@@ -1,6 +1,6 @@
 {% comment %}
     LATEST MESSAGE — a player beside the message's title, date · speaker,
-    series tag and a shortened Content. Shared by the messages page
+    series tag and the Content (its HTML, clamped, with Show more). Shared by the messages page
     (MessagesLatest.lava, light) and the live page in both states
     (LiveService.lava, inside the dark stage, where it's recoloured).
 
@@ -23,10 +23,8 @@
       latestTitleTag     the title's heading level                    'h3'
       latestArchiveUrl   a "View previous messages" link under the text;
                          empty = none                                  ''
-      contentLength      characters of Content shown                   280
 {% endcomment %}
 {%- assign latestTitleTag = latestTitleTag | Default:'h3' -%}
-{%- assign contentLength = contentLength | Default:280 -%}
 {%- assign latestSeriesUrlBase = '/watch/previous-messages/' -%}
 {%- assign latestIsLive = false -%}
 {%- if latestMode == 'live' %}{% assign latestIsLive = true %}{% endif -%}
@@ -64,7 +62,7 @@
         {%- endif -%}
     {%- endfor -%}
     {%- assign latestSpeaker = latestItem | Attribute:'Speaker' -%}
-    {%- assign latestDesc = latestItem.Content | StripHtml | HtmlDecode | Trim | Truncate:contentLength -%}
+    {%- assign latestDesc = latestItem.Content | Trim -%}
     {%- unless latestIsLive -%}
         {%- comment -%} The media element, loaded by its GUID (the attribute's raw value) {%- endcomment -%}
         {%- assign latestMediaGuid = latestItem | Attribute:'VimeoMedia','RawValue' | Trim -%}
@@ -103,7 +101,11 @@
     <a class="series-tag" href="{{ latestSeriesUrlBase }}{{ latestSeries.PrimarySlug }}"><span>Series</span> {{ latestSeries.Title }}</a>
     {%- endif %}
     {%- if latestDesc and latestDesc != '' %}
-    <p class="sermons-latest__content">{{ latestDesc | Escape }}</p>
+    {%- comment -%} The full description as written (HTML: paragraphs, links), height-clamped with Show more (theme.js "Show more") {%- endcomment %}
+    <div class="sermons-latest__desc" data-clamp>
+      <div class="sermons-latest__content clamp clamp--html" id="latest-desc">{{ latestDesc }}</div>
+      <button class="clamp-more" type="button" aria-expanded="false" aria-controls="latest-desc" hidden>Show more</button>
+    </div>
     {%- endif %}
     {%- if latestArchiveUrl and latestArchiveUrl != '' %}
     <a class="sermons-latest__archive" href="{{ latestArchiveUrl }}">

@@ -25,10 +25,10 @@
     (`defaultMessage`), so every view is logged against a message.
 
     Sections:
-      WATCH       YouTube's watch layout: the player, the message's details
-                  under it (Copy link, Theater, the description box), and
-                  the series' messages as a playlist beside it (compact
-                  rows; Details opens the date, speaker and description)
+      WATCH       YouTube's watch layout: the message title and week across
+                  the top, the player, the control strip under it (Share,
+                  Theater, the description box), and the series' messages
+                  as a playlist beside it (compact rows, each one link)
       POPULAR     the most-viewed messages from other series (page views of
                   this page's message URLs, last `popularDays` days).
                   ROCK: becomes "Related" once the related-content attribute
@@ -135,7 +135,7 @@
 
 {%- if current -%}
     {%- assign currentSpeaker = current | Attribute:'Speaker' -%}
-    {%- assign currentDesc = current.Content | StripHtml | HtmlDecode | Trim -%}
+    {%- assign currentDesc = current.Content | Trim -%}
     {%- assign currentUrl = seriesUrl | Append:'/' | Append:current.PrimarySlug -%}
     {%- assign currentMediaGuid = current | Attribute:'VimeoMedia','RawValue' | Trim | Downcase -%}
     {%- assign currentMedia = null -%}
@@ -175,14 +175,20 @@
 
 {%- comment -%}
     ===== WATCH =====  (YouTube's watch page)
-    Desktop: the player large on the left, the series' messages (the
-    playlist) on the right, the message's details under the player. Theater
+    Desktop: the title and week across the top, then the player large on
+    the left and the series' messages (the playlist) on the right, the
+    control strip and description under the player. Theater
     (the button under the player; theme.js "Series watch", remembered per
     browser): the player spans the full width and the playlist drops below
-    it, beside the details. Phones: player, details, playlist.
+    it, beside the details. Phones: title, player, details, playlist.
 {%- endcomment %}
 {%- if current %}
 <section class="sermons watch" aria-label="Now playing" data-watch>
+
+  <header class="watch__head series-now__head">
+    <h2 class="watch__title">{{ current.Title }}</h2>
+    <p class="sermons-latest__tag">Week {{ currentWeek }} of {{ messageCount }}</p>
+  </header>
 
   <div class="watch__player series-now__player">
     {%- if currentMedia %}
@@ -191,23 +197,34 @@
   </div>
 
   <div class="watch__info series-now__body">
-    <p class="sermons-latest__tag">Week {{ currentWeek }} of {{ messageCount }}</p>
-    <h2 class="watch__title">{{ current.Title }}</h2>
     <div class="watch__actions">
-      <button class="watch__btn" type="button" data-copy="{{ siteRoot }}{{ currentUrl }}">
-        <svg width="16" height="16" aria-hidden="true"><use href="#i-copy"/></svg> <span>Copy link</span>
-      </button>
+      {%- comment -%} Share: the design system's share menu (theme.js "Share dropdowns") {%- endcomment %}
+      {%- capture shareUrl %}{{ siteRoot }}{{ currentUrl }}{% endcapture -%}
+      {%- assign shareText = current.Title | Append:' | ' | Append:series.Title %}
+      <div class="share">
+        <button class="watch__btn" type="button" aria-expanded="false" aria-controls="watch-share" data-share-toggle>
+          <svg width="16" height="16" aria-hidden="true"><use href="#i-share"/></svg> Share
+        </button>
+        <div class="share__menu share__menu--down" id="watch-share" data-open="false">
+          <a class="share__item" href="https://www.facebook.com/sharer/sharer.php?u={{ shareUrl | EscapeDataString }}" target="_blank" rel="noopener"><svg width="16" height="16" aria-hidden="true"><use href="#i-facebook"/></svg> Facebook</a>
+          <a class="share__item" href="mailto:?subject={{ shareText | EscapeDataString }}&amp;body={{ shareUrl | EscapeDataString }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-mail"/></svg> Email</a>
+          <a class="share__item" href="sms:?&amp;body={{ shareText | Append:' ' | Append:shareUrl | EscapeDataString }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-message"/></svg> Text message</a>
+          <div class="share__divider"></div>
+          <button class="share__item" type="button" data-copy="{{ shareUrl }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-copy"/></svg> <span>Copy link</span></button>
+        </div>
+      </div>
       <button class="watch__btn watch__theater" type="button" aria-pressed="false" data-watch-theater hidden>
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/></svg>
+        {%- comment -%} Tabler "arrows-horizontal" {%- endcomment %}
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 8l-4 4l4 4"/><path d="M17 8l4 4l-4 4"/><path d="M3 12l18 0"/></svg>
         <span>Theater</span>
       </button>
     </div>
-    {%- comment -%} The description box: date · speaker, then the description, clamped with "Show more" (theme.js) {%- endcomment %}
-    <div class="watch__about" data-watch-about>
+    {%- comment -%} The description box: date · speaker, then the description, clamped with Show more (theme.js "Show more") {%- endcomment %}
+    <div class="watch__about" data-clamp>
       <p class="watch__meta">{{ current.StartDateTime | Date:'MMMM d, yyyy' }}{% if currentSpeaker != empty %} · {{ currentSpeaker }}{% endif %}</p>
       {%- if currentDesc != '' %}
-      <p class="watch__desc" id="watch-desc">{{ currentDesc | Escape }}</p>
-      <button class="watch__more" type="button" aria-expanded="false" aria-controls="watch-desc" data-watch-more hidden>Show more</button>
+      <div class="watch__desc clamp clamp--html" id="watch-desc">{{ currentDesc }}</div>
+      <button class="clamp-more" type="button" aria-expanded="false" aria-controls="watch-desc" hidden>Show more</button>
       {%- endif %}
     </div>
   </div>
@@ -215,11 +232,6 @@
   <aside class="watch__list" aria-labelledby="watch-list-title">
     <header class="watch__list-head">
       <h2 class="watch__list-title" id="watch-list-title">Messages in this series</h2>
-      <p class="watch__list-meta">
-        {{ messageCount }} message{% if messageCount != 1 %}s{% endif %} ·
-        {% assign firstMonth = firstDate | Date:'MMM yyyy' %}{% assign lastMonth = lastDate | Date:'MMM yyyy' -%}
-        {{ firstMonth }}{% if lastMonth != firstMonth %} – {{ lastMonth }}{% endif %}
-      </p>
     </header>
     <ol class="message-list" role="list">
       {%- assign week = 0 -%}
@@ -232,8 +244,6 @@
           {%- assign isCurrent = false -%}
           {%- if current and message.Id == current.Id %}{% assign isCurrent = true %}{% endif -%}
           {%- assign messageUrl = seriesUrl | Append:'/' | Append:message.PrimarySlug -%}
-          {%- assign rowSpeaker = message | Attribute:'Speaker' -%}
-          {%- assign rowDesc = message.Content | StripHtml | HtmlDecode | Trim -%}
           {%- comment -%} Thumbnail: the media element's 4th size (as on the homepage), else its last {%- endcomment -%}
           {%- assign rowThumb = '' -%}
           {%- for media in mediaItems -%}
@@ -246,23 +256,14 @@
               {%- endif -%}
           {%- endfor -%}
           {%- if rowThumb == '' and seriesImageGuid != '' %}{% capture rowThumb %}/GetImage.ashx?guid={{ seriesImageGuid }}&w=480&h=270&mode=crop{% endcapture %}{% endif %}
-      <li class="message-row{% if isCurrent %} is-current{% endif %}">
-        <a class="message-row__thumb" href="{{ messageUrl }}" tabindex="-1" aria-hidden="true">
+      {%- comment -%} The whole row opens the message (data-card: theme.js "Clickable cards"; the title is the one real link) {%- endcomment %}
+      <li class="message-row{% if isCurrent %} is-current{% endif %}" data-card>
+        <div class="message-row__thumb">
           {%- if rowThumb != '' %}<img src="{{ rowThumb }}" alt="" width="480" height="270" loading="lazy" decoding="async" />{% endif %}
-          <span class="message-row__play"><svg width="14" height="14"><use href="#i-play"/></svg></span>
-        </a>
+        </div>
         <div class="message-row__body">
           <p class="message-row__week">Week {{ week }}{% if isCurrent %} <span class="message-row__now">Now playing</span>{% endif %}</p>
-          <h3 class="message-row__title"><a href="{{ messageUrl }}"{% if isCurrent %} aria-current="page"{% endif %}>{{ message.Title }}</a></h3>
-          <details class="message-row__more">
-            <summary>Details <svg width="14" height="14" aria-hidden="true"><use href="#i-chevron-down"/></svg></summary>
-            <div class="message-row__detail">
-              <p class="message-row__meta">{{ message.StartDateTime | Date:'MMMM d, yyyy' }}{% if rowSpeaker != empty %} · {{ rowSpeaker }}{% endif %}</p>
-              {%- if rowDesc != '' %}
-              <p>{{ rowDesc | Escape }}</p>
-              {%- endif %}
-            </div>
-          </details>
+          <h3 class="message-row__title"><a href="{{ messageUrl }}" data-card-link{% if isCurrent %} aria-current="page"{% endif %}>{{ message.Title }}</a></h3>
         </div>
       </li>
       {%- endfor %}

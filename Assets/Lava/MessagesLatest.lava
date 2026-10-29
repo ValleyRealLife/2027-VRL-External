@@ -17,7 +17,6 @@
 
 {%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
 {%- assign livePageUrl = '/watch/live' -%}
-{%- assign contentLength = 280 -%}
 {%- comment -%} Preview: true shows the live bar whatever the time. Set back to false. {%- endcomment -%}
 {%- assign forceLive = false -%}
 

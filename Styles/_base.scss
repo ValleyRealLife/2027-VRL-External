@@ -66,6 +66,8 @@ body.is-locked { overflow: hidden; }
   border-radius: var(--radius-xs);
 }
 .on-ink :where(a, button, summary):focus-visible { outline-color: var(--brand); }
+// Links in running text on dark bands: the brighter green (link-prose)
+.on-ink { --link-color: var(--brand); }
 
 .u-visually-hidden {
   position: absolute; width: 1px; height: 1px;
@@ -270,3 +272,40 @@ body.is-locked { overflow: hidden; }
 .on-ink .series-tag:is(:link, :visited, :hover, :focus) { color: var(--on-ink); }
 .on-ink .series-tag span { color: var(--brand); }
 .on-ink .series-tag:hover { background: oklch(from var(--brand) l c h / 0.28); border-color: oklch(from var(--brand) l c h / 0.45); }
+
+// ===========================================================================
+// COMPONENT: share dropdown (from the design system; theme.js "Share
+// dropdowns"). The homepage event cards (icon button, menu opens upward)
+// and the series page (Share button; .share__menu--down opens downward).
+// ===========================================================================
+.share { position: relative; }
+.share__btn {
+  width: 40px; height: 40px; border-radius: var(--radius-circle);
+  display: grid; place-items: center;
+  background: transparent; border: 0; color: var(--brand-dim);
+  transition: background var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
+}
+.share__btn:hover, .share__btn[aria-expanded="true"] { background: var(--brand-wash); color: var(--brand-text); }
+.share__menu {
+  position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 10;
+  min-width: 176px;
+  padding: var(--space-2xs);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  display: none;
+}
+.share__menu[data-open="true"] { display: block; }
+.share__item {
+  width: 100%;
+  display: flex; align-items: center; gap: var(--space-sm);
+  padding: 0.55rem 0.75rem;
+  background: none; border: 0; border-radius: var(--radius-sm);
+  font-size: 0.8125rem; font-weight: 600; text-align: left;
+  color: var(--text); text-decoration: none;
+}
+.share__item:hover { background: var(--surface); }
+.share__item svg { color: var(--text-muted); }
+.share__divider { height: 1px; margin: var(--space-2xs) 0; background: var(--border-subtle); }
+.share__menu--down { top: calc(100% + 8px); bottom: auto; left: 0; right: auto; }

@@ -888,38 +888,6 @@ button.messages__art:hover .messages__art-play { transform: scale(1.08); backgro
 }
 @container (min-width: 320px) { .event-card__body { padding: var(--space-lg); } }
 
-/* ===== COMPONENT: share dropdown (from the design system) ===== */
-.share { position: relative; }
-.share__btn {
-  width: 40px; height: 40px; border-radius: var(--radius-circle);
-  display: grid; place-items: center;
-  background: transparent; border: 0; color: var(--brand-dim);
-  transition: background var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
-}
-.share__btn:hover, .share__btn[aria-expanded="true"] { background: var(--brand-wash); color: var(--brand-text); }
-.share__menu {
-  position: absolute; right: 0; bottom: calc(100% + 8px); z-index: 10;
-  min-width: 176px;
-  padding: var(--space-2xs);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
-  display: none;
-}
-.share__menu[data-open="true"] { display: block; }
-.share__item {
-  width: 100%;
-  display: flex; align-items: center; gap: var(--space-sm);
-  padding: 0.55rem 0.75rem;
-  background: none; border: 0; border-radius: var(--radius-sm);
-  font-size: 0.8125rem; font-weight: 600; text-align: left;
-  color: var(--text); text-decoration: none;
-}
-.share__item:hover { background: var(--surface); }
-.share__item svg { color: var(--text-muted); }
-.share__divider { height: 1px; margin: var(--space-2xs) 0; background: var(--border-subtle); }
-
 .events__all { display: flex; justify-content: center; margin-top: var(--space-md); }
 
 /* Homepage card (markup: Assets/Lava/HomeEvents.lava): thumbnail, date tag,
