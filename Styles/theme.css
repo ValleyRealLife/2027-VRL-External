@@ -5,6 +5,7 @@
 @import url('/Styles/styles-v2/icons/fontawesome-solid.css?v=4137481333');
 @import url('/Styles/styles-v2/icons/tabler-icon.css?v=225734114');
 /* CSS Overrides Top End */
+
 @import "../../../Styles/summernote/summernote.min.css";
 @import "../../../Styles/styles-v2/core.css";
 :root {
@@ -5942,5 +5943,41 @@ html.stage-static .deck .nextstep-card {
     padding-block: var(--space-sm) var(--space-2xl);
   }
 }
+
 /* CSS Overrides Bottom Start */
+:root {
+    --base-primary: #9bc93c;
+    --base-secondary: #0b0e0a;
+    --base-link: #617e00;
+    --logo-image: url('/Themes/2027 VRL External/Assets/Images/vrl_logo.png');
+    --site-header-background: #ffffff;
+    --page-title-background: #f0f2ef;
+    --page-title-foreground: #0b0e0a;
+    --site-footer-background: #030402;
+    --base-interface-strongest: #030402;
+    --base-interface-stronger: #0b0e0a;
+    --base-interface-strong: #3f443c;
+    --base-interface-medium: #8d918b;
+    --base-interface-soft: #dfe2de;
+    --base-interface-softer: #f0f2ef;
+    --base-interface-softest: #f7f9f6;
+    --base-danger: #d70015;
+    --base-success: #01a11e;
+    --base-warning: #e58600;
+    --base-info: #005dd7;
+    --base-critical: #ee7725;
+    --font-family-title: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-family-body: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-size-regular: 16px;
+    --font-size-h1: 48px;
+    --font-size-h2: 40px;
+    --font-size-h3: 28px;
+    --font-size-h4: 22px;
+    --font-size-h5: 18px;
+    --font-size-h6: 16px;
+}
+
+/* Insert overrides from Rock theme admin */
+
+h1 { font-size: 20rem;}
 /* CSS Overrides Bottom End */
