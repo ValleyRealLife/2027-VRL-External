@@ -4,7 +4,7 @@
     Use an icon anywhere (layouts, Lava, HTML blocks) with:
         <svg width="16" height="16" aria-hidden="true"><use href="#i-name"/></svg>
     Icons inherit `currentColor`. Available ids:
-        i-arrow-right, i-arrow-up-right, i-chevron-down, i-chevron-left, i-chevron-right, i-clock, i-copy, i-facebook, i-gift, i-heart, i-instagram, i-lifebuoy, i-mail, i-map-pin, i-menu, i-message, i-message-question, i-microphone, i-notebook, i-phone, i-play, i-rss, i-share, i-user-circle, i-users, i-x, i-youtube
+        i-arrow-right, i-arrow-up-right, i-chevron-down, i-chevron-left, i-chevron-right, i-clock, i-copy, i-facebook, i-gift, i-heart, i-home, i-instagram, i-lifebuoy, i-link, i-lock, i-mail, i-map-pin, i-menu, i-message, i-message-question, i-microphone, i-notebook, i-phone, i-play, i-rss, i-share, i-user-circle, i-users, i-x, i-youtube
 
     These are Tabler Icons (MIT) as drawn in the concept, under a neutral `i-`
     prefix so they can be swapped for custom artwork one symbol at a time
@@ -42,6 +42,9 @@
   <symbol id="i-microphone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5a3 3 0 0 1 3 -3a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3a3 3 0 0 1 -3 -3z"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M8 21h8"/><path d="M12 17v4"/></symbol>
   <symbol id="i-notebook" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-11a1 1 0 0 1 -1 -1v-14a1 1 0 0 1 1 -1m3 0v18"/><path d="M13 8l2 0"/><path d="M13 12l2 0"/></symbol>
   <symbol id="i-message-question" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9h8"/><path d="M8 13h6"/><path d="M14 18h-1l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3h12a3 3 0 0 1 3 3v4.5"/><path d="M19 22v.01"/><path d="M19 19a2.003 2.003 0 0 0 .914 -3.782a1.98 1.98 0 0 0 -2.414 .483"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l-2 0l9 -9l9 9l-2 0"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7"/><path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6 -6"/><path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464"/><path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z"/><path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0"/><path d="M8 11v-4a4 4 0 1 1 8 0v4"/></symbol>
   <symbol id="i-rss" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4a16 16 0 0 1 16 16"/><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 18m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/></symbol>
   <!-- Logo ink filter: maps the lockup's white wordmark to ink for light
        grounds while the mark's green (#97C940) passes through unchanged.

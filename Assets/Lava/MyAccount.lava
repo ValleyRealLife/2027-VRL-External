@@ -1,0 +1,386 @@
+{% comment %}
+    MY ACCOUNT — a bento grid of tiles for the signed-in person, for an HTML
+    block in the Main zone of an InnerDefault page.
+
+    Block content:            {% include '~~/Assets/Lava/MyAccount.lava' %}
+    Enabled Lava Commands:    Sql
+    Cache Duration:           0 (every tile is personal)
+
+    Tiles, placed by grid areas in Styles/_account.scss (desktop: greeting;
+    family | giving; communication | groups; connections). A tile with
+    nothing to show is left out and its row partner takes the full width:
+      Profile         full-width greeting: photo, email / mobile, the
+                      family's home address, "Update
+                      profile", and "Change password" when the person has a
+                      password login (not for passwordless-only people)
+      Family          the primary family, adults first, each with Edit
+      Giving          this year's total and last gift (tax-deductible
+                      contributions to the family's giving id) + giving links
+      Communication   whether email and texts are on at all (email address,
+                      active, preference; a texting-enabled mobile), then the
+                      lists the person subscribes to (person attributes
+                      CommGroups_1 email, _2 text, _3 app, _4 special text:
+                      group guids, set by the "PersonProfile - Communication
+                      Preferences" workflow); Update opens that workflow
+                      (commPrefsUrl) in the care dialog's iframe and reloads
+                      this page when the dialog closes
+      Groups          active groups of types 23 and 25, and children of group
+                      46 (organizational units); leaders first, with a Manage
+                      link and the member count
+      Connections     requests assigned to the person as connector, as
+                      swipeable cards in up to three tabs (only the ones
+                      with cards; no tab row for just one): Open (active /
+                      future follow-up), Recently closed (inactive or
+                      connected in the last 14 days), Last 90 days (closed
+                      15-90 days ago). Each card links to the request on the
+                      staff site (Global attribute InternalApplicationRoot)
+
+    Edit links all open profileEditUrl: Rock's Public Profile Edit block
+    can't be told which person to edit from a URL, so that page shows the
+    family with an edit button per person (the block's own buttons).
+
+    Styled by Styles/_account.scss.
+{% endcomment %}
+{%- comment -%} Settings {%- endcomment -%}
+{%- assign profileEditUrl = '/myaccount/profile' -%}
+{%- assign commPrefsUrl = '/page/42023?WorkflowTypeId=227' -%}
+{%- assign changePasswordUrl = '/ChangePassword' -%}
+{%- assign groupManageUrl = '/page/1128?GroupId=' -%}
+
+{%- if CurrentPerson == null -%}
+<section class="my-account">
+  <div class="account-tile account-tile--signin">
+    <h2 class="account-tile__title">Sign in to see your account</h2>
+    <p class="account-tile__lede">Your family, groups and giving, in one place.</p>
+    <a class="btn btn--primary" href="/login?returnurl=%2fmyaccount">Sign in</a>
+  </div>
+</section>
+{%- else -%}
+{%- assign me = CurrentPerson -%}
+
+{%- comment -%} Family: primary family, adults (role order 0) first, then oldest first {%- endcomment -%}
+{%- assign familyMembers = me.PrimaryFamily.Members | OrderBy:'GroupRole.Order, Person.BirthDate' -%}
+{%- assign homeStreet = me | Address:'Home','[[Street1]] [[Street2]]' | Trim -%}
+{%- assign homeCity = me | Address:'Home','[[City]], [[State]] [[PostalCode]]' | Trim -%}
+
+{%- comment -%} Giving: tax-deductible contributions on the family's giving id {%- endcomment -%}
+{%- sql personid:'{{ me.Id }}' return:'givingRows' -%}
+SELECT
+    SUM(CASE WHEN ft.TransactionDateTime >= DATEFROMPARTS(YEAR(GETDATE()), 1, 1) THEN ftd.Amount ELSE 0 END) AS YearTotal,
+    MAX(ft.TransactionDateTime) AS LastGift
+FROM FinancialTransaction ft
+JOIN FinancialTransactionDetail ftd ON ftd.TransactionId = ft.Id
+JOIN FinancialAccount fa ON fa.Id = ftd.AccountId
+JOIN PersonAlias pa ON pa.Id = ft.AuthorizedPersonAliasId
+JOIN Person p ON p.Id = pa.PersonId
+WHERE p.GivingId = (SELECT GivingId FROM Person WHERE Id = @personid)
+  AND fa.IsTaxDeductible = 1
+  AND ft.TransactionTypeValueId = (SELECT Id FROM DefinedValue WHERE Guid = '2D607262-52D6-4724-910D-5C6E8FB89ACC')
+{%- endsql -%}
+{%- assign giving = givingRows | First -%}
+
+{%- comment -%} Groups: group types 23 and 25, plus the organizational units under group 46.
+     One row per group; leader if any of the person's roles in it leads {%- endcomment -%}
+{%- sql personid:'{{ me.Id }}' return:'groupRows' -%}
+SELECT g.Id, g.Name, gt.Name AS TypeName,
+    MAX(CAST(r.IsLeader AS int)) AS IsLeader,
+    MIN(r.Name) AS RoleName,
+    (SELECT COUNT(*) FROM GroupMember m2 WHERE m2.GroupId = g.Id AND m2.GroupMemberStatus = 1 AND m2.IsArchived = 0) AS MemberCount
+FROM GroupMember gm
+JOIN [Group] g ON g.Id = gm.GroupId
+JOIN GroupType gt ON gt.Id = g.GroupTypeId
+JOIN GroupTypeRole r ON r.Id = gm.GroupRoleId
+WHERE gm.PersonId = @personid
+  AND gm.GroupMemberStatus = 1 AND gm.IsArchived = 0
+  AND g.IsActive = 1 AND g.IsArchived = 0
+  AND (g.GroupTypeId IN (23, 25) OR g.ParentGroupId = 46)
+GROUP BY g.Id, g.Name, gt.Name
+ORDER BY MAX(CAST(r.IsLeader AS int)) DESC, g.Name
+{%- endsql -%}
+
+{%- comment -%} Connection requests assigned to me. Bucket: open (active / future follow-up),
+     recent (closed in the last 14 days), older (closed 15-90 days ago) {%- endcomment -%}
+{%- sql personid:'{{ me.Id }}' return:'requestRows' -%}
+SELECT cr.Id,
+    CASE WHEN cr.ConnectionState IN (0, 2) THEN 'open'
+         WHEN cr.ModifiedDateTime >= DATEADD(day, -14, GETDATE()) THEN 'recent'
+         ELSE 'older' END AS Bucket,
+    p.NickName + ' ' + p.LastName AS PersonName,
+    LEFT(p.NickName, 1) + LEFT(p.LastName, 1) AS Initials,
+    p.PhotoId,
+    COALESCE(NULLIF(co.PublicName, ''), co.Name) AS Opportunity,
+    ct.Name AS TypeName,
+    c.Name AS CampusName,
+    cs.Name AS StatusName,
+    cs.HighlightColor AS StatusColor,
+    cr.ConnectionState, cr.FollowupDate, cr.CreatedDateTime, cr.ModifiedDateTime,
+    la.ActivityName AS LastActivity, la.CreatedDateTime AS LastActivityDate
+FROM ConnectionRequest cr
+JOIN PersonAlias ca ON ca.Id = cr.ConnectorPersonAliasId
+JOIN PersonAlias pa ON pa.Id = cr.PersonAliasId
+JOIN Person p ON p.Id = pa.PersonId
+JOIN ConnectionOpportunity co ON co.Id = cr.ConnectionOpportunityId
+JOIN ConnectionType ct ON ct.Id = co.ConnectionTypeId
+JOIN ConnectionStatus cs ON cs.Id = cr.ConnectionStatusId
+LEFT JOIN Campus c ON c.Id = cr.CampusId
+OUTER APPLY (
+    SELECT TOP 1 cat.Name AS ActivityName, cra.CreatedDateTime
+    FROM ConnectionRequestActivity cra
+    JOIN ConnectionActivityType cat ON cat.Id = cra.ConnectionActivityTypeId
+    WHERE cra.ConnectionRequestId = cr.Id
+    ORDER BY cra.CreatedDateTime DESC
+) la
+WHERE ca.PersonId = @personid
+  AND (cr.ConnectionState IN (0, 2)
+       OR (cr.ConnectionState IN (1, 3) AND cr.ModifiedDateTime >= DATEADD(day, -90, GETDATE())))
+ORDER BY cr.ModifiedDateTime DESC
+{%- endsql -%}
+{%- assign openRequests = requestRows | Where:'Bucket','open' -%}
+{%- assign recentRequests = requestRows | Where:'Bucket','recent' -%}
+{%- assign olderRequests = requestRows | Where:'Bucket','older' -%}
+{%- assign openCount = openRequests | Size -%}
+{%- assign recentCount = recentRequests | Size -%}
+{%- assign olderCount = olderRequests | Size -%}
+{%- assign requestPanelCount = 0 -%}
+{%- if openCount > 0 %}{% assign requestPanelCount = requestPanelCount | Plus:1 %}{% endif -%}
+{%- if recentCount > 0 %}{% assign requestPanelCount = requestPanelCount | Plus:1 %}{% endif -%}
+{%- if olderCount > 0 %}{% assign requestPanelCount = requestPanelCount | Plus:1 %}{% endif -%}
+{%- assign requestUrl = 'Global' | Attribute:'InternalApplicationRoot' | Append:'MyAccount/ConnectionRequests?ConnectionRequestId=' -%}
+
+{%- comment -%} Password login (Database), if any: shows Change password {%- endcomment -%}
+{%- sql personid:'{{ me.Id }}' return:'loginRows' -%}
+SELECT TOP 1 ul.UserName
+FROM UserLogin ul
+JOIN EntityType et ON et.Id = ul.EntityTypeId
+WHERE ul.PersonId = @personid AND et.Name = 'Rock.Security.Authentication.Database'
+ORDER BY ul.LastLoginDateTime DESC
+{%- endsql -%}
+{%- assign passwordLogin = loginRows | First -%}
+
+{%- comment -%} Communication: subscribed lists, one row per list, in each parent group's order {%- endcomment -%}
+{%- assign mobile = me | PhoneNumber:'Mobile' -%}
+{%- comment -%} Global switches: email needs an active address not set to Do Not Email;
+     texts need a mobile number with messaging enabled {%- endcomment -%}
+{%- assign emailStatus = 'On' -%}
+{%- if me.Email == empty %}{% assign emailStatus = 'No email address' -%}
+{%- elseif me.IsEmailActive == false %}{% assign emailStatus = 'Off (address inactive)' -%}
+{%- elseif me.EmailPreference == 'DoNotEmail' %}{% assign emailStatus = 'Off' -%}
+{%- elseif me.EmailPreference == 'NoMassEmails' %}{% assign emailStatus = 'Personal only' -%}
+{%- endif -%}
+{%- assign textStatus = 'Off' -%}
+{%- if mobile == empty %}{% assign textStatus = 'No mobile number' -%}
+{%- else -%}
+    {%- for phone in me.PhoneNumbers -%}
+        {%- if phone.NumberTypeValue.Value == 'Mobile' and phone.IsMessagingEnabled %}{% assign textStatus = 'On' %}{% endif -%}
+    {%- endfor -%}
+{%- endif -%}
+{%- sql personid:'{{ me.Id }}' return:'listRows' -%}
+SELECT a.[Key] AS Channel, g.Name
+FROM AttributeValue av
+JOIN Attribute a ON a.Id = av.AttributeId
+JOIN EntityType et ON et.Id = a.EntityTypeId AND et.Guid = '72657ED8-D16E-492E-AC12-144C5E7567E7'
+CROSS APPLY STRING_SPLIT(av.Value, ',') v
+JOIN [Group] g ON g.Guid = TRY_CAST(LTRIM(RTRIM(v.value)) AS uniqueidentifier)
+WHERE av.EntityId = @personid
+  AND a.[Key] IN ('CommGroups_1', 'CommGroups_2', 'CommGroups_3', 'CommGroups_4')
+ORDER BY a.[Key], g.[Order], g.Name
+{%- endsql -%}
+{%- assign emailLists = listRows | Where:'Channel','CommGroups_1' -%}
+{%- assign textLists = listRows | Where:'Channel','CommGroups_2' -%}
+{%- assign appLists = listRows | Where:'Channel','CommGroups_3' -%}
+{%- assign specialLists = listRows | Where:'Channel','CommGroups_4' -%}
+
+<section class="my-account" aria-label="My account">
+
+  {%- comment -%} Profile {%- endcomment %}
+  <div class="account-tile account-tile--profile">
+    <img class="account-profile__photo" src="{{ me.PhotoUrl }}" alt="" width="96" height="96" />
+    <div class="account-profile__body">
+      <h2 class="account-profile__name">Hi, {{ me.NickName }}</h2>
+      <ul class="account-profile__contact">
+        {%- if me.Email != empty %}<li>{{ me.Email }}</li>{% endif %}
+        {%- if mobile != empty %}<li>{{ mobile }}</li>{% endif %}
+      </ul>
+      <p class="account-address">
+        <svg width="16" height="16" aria-hidden="true"><use href="#i-map-pin"/></svg>
+        {%- if homeStreet != empty %}
+        <span>{{ homeStreet }}, {{ homeCity }}</span>
+        {%- else %}
+        <span>No home address yet. <a class="account-link" href="{{ profileEditUrl }}">Add one</a></span>
+        {%- endif %}
+      </p>
+    </div>
+    <div class="account-profile__actions">
+      <a class="pill-btn" href="{{ profileEditUrl }}">Update profile</a>
+      {%- if passwordLogin %}
+      <a class="pill-btn" href="{{ changePasswordUrl }}"><svg width="14" height="14" aria-hidden="true"><use href="#i-lock"/></svg> Change password</a>
+      {%- endif %}
+    </div>
+  </div>
+
+  {%- comment -%} Family {%- endcomment %}
+  {%- if familyMembers != empty %}
+  <div class="account-tile account-tile--family">
+    <div class="account-tile__head">
+      <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-home"/></svg> My family</h2>
+      <a class="account-link" href="{{ profileEditUrl }}">Add a family member</a>
+    </div>
+    <ul class="account-family">
+      {%- for member in familyMembers %}
+        {%- assign person = member.Person -%}
+        {%- if member.IsArchived or person.IsDeceased %}{% continue %}{% endif %}
+      <li class="account-person">
+        <img class="account-person__photo" src="{{ person.PhotoUrl }}" alt="" width="48" height="48" loading="lazy" />
+        <div class="account-person__body">
+          <span class="account-person__name">{{ person.NickName }} {{ person.LastName }}{% if person.Id == me.Id %} <span class="account-person__you">(you)</span>{% endif %}</span>
+          <span class="account-person__meta">
+            {%- if member.GroupRole.Name == 'Child' -%}
+              {%- if person.Age %}{{ person.Age }} yrs{% endif %}{% if person.GradeFormatted != empty %} · {{ person.GradeFormatted }}{% endif -%}
+            {%- else -%}
+              {{ member.GroupRole.Name }}
+            {%- endif -%}
+          </span>
+        </div>
+        <a class="account-link account-person__edit" href="{{ profileEditUrl }}">Edit<span class="u-visually-hidden"> {{ person.NickName }}</span></a>
+      </li>
+      {%- endfor %}
+    </ul>
+  </div>
+  {%- endif %}
+
+  {%- comment -%} Giving {%- endcomment %}
+  <div class="account-tile account-tile--giving">
+    <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-gift"/></svg> Giving</h2>
+    {%- if giving.YearTotal and giving.YearTotal > 0 %}
+    <p class="account-stat">
+      <span class="account-stat__value">{{ giving.YearTotal | FormatAsCurrency }}</span>
+      <span class="account-stat__label">given in {{ 'Now' | Date:'yyyy' }}{% if giving.LastGift %} · last gift {{ giving.LastGift | Date:'MMM d' }}{% endif %}</span>
+    </p>
+    {%- endif %}
+    <ul class="account-links">
+      <li><a class="account-link" href="/give">Give now</a></li>
+      <li><a class="account-link" href="/MyAccount/ManageRecurring">Recurring gifts</a></li>
+      <li><a class="account-link" href="/MyAccount/ManagePayments">Payment methods</a></li>
+      <li><a class="account-link" href="/MyAccount/GivingHistory">Giving history</a></li>
+    </ul>
+  </div>
+
+  {%- comment -%} Communication {%- endcomment %}
+  <div class="account-tile account-tile--comms">
+    <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-mail"/></svg> Communication</h2>
+    <ul class="account-status">
+      <li data-on="{% if emailStatus == 'On' or emailStatus == 'Personal only' %}true{% else %}false{% endif %}" title="Email: {{ emailStatus }}">Email<span class="u-visually-hidden">: {{ emailStatus }}</span></li>
+      <li data-on="{% if textStatus == 'On' %}true{% else %}false{% endif %}" title="Texts: {{ textStatus }}">Texts<span class="u-visually-hidden">: {{ textStatus }}</span></li>
+    </ul>
+    {%- if listRows != empty %}
+    <dl class="account-lists">
+      {%- if emailLists != empty %}
+      <div><dt>Email</dt><dd>{% for list in emailLists %}<span class="account-chip">{{ list.Name }}</span>{% endfor %}</dd></div>
+      {%- endif %}
+      {%- if textLists != empty or specialLists != empty %}
+      <div><dt>Texts</dt><dd>{% for list in textLists %}<span class="account-chip">{{ list.Name }}</span>{% endfor %}{% for list in specialLists %}<span class="account-chip">{{ list.Name }}</span>{% endfor %}</dd></div>
+      {%- endif %}
+      {%- if appLists != empty %}
+      <div><dt>App</dt><dd>{% for list in appLists %}<span class="account-chip">{{ list.Name }}</span>{% endfor %}</dd></div>
+      {%- endif %}
+    </dl>
+    {%- else %}
+    <p class="account-tile__lede">You're not subscribed to any lists yet.</p>
+    {%- endif %}
+    <a class="account-link" href="{{ commPrefsUrl }}" data-care-frame="{{ commPrefsUrl }}" data-care-title="Communication preferences" data-care-reload>Update preferences</a>
+  </div>
+
+  {%- comment -%} Groups {%- endcomment %}
+  {%- if groupRows != empty %}
+  <div class="account-tile account-tile--groups">
+    <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-users"/></svg> My groups</h2>
+    <ul class="account-rows">
+      {%- for group in groupRows %}
+      <li class="account-row">
+        <div class="account-row__body">
+          <span class="account-row__title">{{ group.Name }}</span>
+          <span class="account-row__meta">{{ group.TypeName }}{% if group.IsLeader == 1 %} · {{ group.MemberCount }} {{ 'member' | PluralizeForQuantity:group.MemberCount }}{% endif %}</span>
+        </div>
+        {%- if group.IsLeader == 1 %}
+        <span class="account-badge">{{ group.RoleName }}</span>
+        <a class="pill-btn" href="{{ groupManageUrl }}{{ group.Id }}">Manage<span class="u-visually-hidden"> {{ group.Name }}</span></a>
+        {%- else %}
+        <span class="account-badge account-badge--quiet">{{ group.RoleName }}</span>
+        {%- endif %}
+      </li>
+      {%- endfor %}
+    </ul>
+  </div>
+  {%- endif %}
+
+  {%- comment -%} Connection requests (assigned to me): tabs of swipeable cards {%- endcomment %}
+  {%- if requestPanelCount > 0 %}
+  <div class="account-tile account-tile--requests" data-tabs>
+    <div class="account-tile__head">
+      <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-link"/></svg> Connection requests</h2>
+      {%- if requestPanelCount > 1 %}
+      <div class="series-card__tabs" role="tablist" aria-label="Connection requests" hidden>
+        {%- assign firstTab = true -%}
+        {%- if openCount > 0 %}
+        <button class="series-card__tab" type="button" role="tab" id="crt-open" aria-controls="crp-open" aria-selected="true">Open <span>({{ openCount }})</span></button>
+        {%- assign firstTab = false -%}
+        {%- endif %}
+        {%- if recentCount > 0 %}
+        <button class="series-card__tab" type="button" role="tab" id="crt-recent" aria-controls="crp-recent" aria-selected="{{ firstTab }}"{% unless firstTab %} tabindex="-1"{% endunless %}>Recently closed <span>({{ recentCount }})</span></button>
+        {%- assign firstTab = false -%}
+        {%- endif %}
+        {%- if olderCount > 0 %}
+        <button class="series-card__tab" type="button" role="tab" id="crt-older" aria-controls="crp-older" aria-selected="{{ firstTab }}"{% unless firstTab %} tabindex="-1"{% endunless %}>Last 90 days <span>({{ olderCount }})</span></button>
+        {%- endif %}
+      </div>
+      {%- endif %}
+    </div>
+    {%- assign requestBuckets = 'open,recent,older' | Split:',' -%}
+    {%- for bucket in requestBuckets %}
+      {%- case bucket %}
+        {%- when 'open' %}{% assign bucketRows = openRequests %}{% assign bucketLabel = 'Open' -%}
+        {%- when 'recent' %}{% assign bucketRows = recentRequests %}{% assign bucketLabel = 'Recently closed' -%}
+        {%- else %}{% assign bucketRows = olderRequests %}{% assign bucketLabel = 'Last 90 days' -%}
+      {%- endcase %}
+      {%- if bucketRows == empty %}{% continue %}{% endif %}
+    <div class="account-requests" id="crp-{{ bucket }}"{% if requestPanelCount > 1 %} role="tabpanel" aria-labelledby="crt-{{ bucket }}"{% endif %}>
+      {%- if requestPanelCount == 1 %}<h3 class="account-tile__sub">{{ bucketLabel }}</h3>{% endif %}
+      <ul class="account-rail" role="list">
+        {%- for request in bucketRows %}
+        <li class="request-card" data-card>
+          <div class="request-card__who">
+            {%- if request.PhotoId %}
+            <img class="request-card__photo" src="/GetImage.ashx?id={{ request.PhotoId }}&w=96&h=96&mode=crop" alt="" width="40" height="40" loading="lazy" />
+            {%- else %}
+            <span class="request-card__photo request-card__photo--initials" aria-hidden="true">{{ request.Initials }}</span>
+            {%- endif %}
+            <a class="request-card__name" href="{{ requestUrl }}{{ request.Id }}" data-card-link>{{ request.PersonName }}</a>
+          </div>
+          <p class="request-card__opportunity">{{ request.Opportunity }}</p>
+          <p class="request-card__meta">{{ request.TypeName }}{% if request.CampusName != empty %} · {{ request.CampusName }}{% endif %}</p>
+          <p class="request-card__status"{% if request.StatusColor != empty %} style="--status-color: {{ request.StatusColor }}"{% endif %}>
+            {{ request.StatusName }}
+            {%- case request.ConnectionState %}
+              {%- when 2 %}<span class="account-badge">Follow up {{ request.FollowupDate | Date:'MMM d' }}</span>
+              {%- when 3 %}<span class="account-badge account-badge--done">Connected</span>
+              {%- when 1 %}<span class="account-badge account-badge--quiet">Inactive</span>
+            {%- endcase %}
+          </p>
+          <dl class="request-card__dates">
+            <div><dt>Requested</dt><dd>{{ request.CreatedDateTime | Date:'MMM d, yyyy' }}</dd></div>
+            {%- if request.LastActivity != empty %}
+            <div><dt>Last activity</dt><dd>{{ request.LastActivity }}, {{ request.LastActivityDate | Date:'MMM d' }}</dd></div>
+            {%- elseif bucket != 'open' %}
+            <div><dt>Closed</dt><dd>{{ request.ModifiedDateTime | Date:'MMM d, yyyy' }}</dd></div>
+            {%- endif %}
+          </dl>
+        </li>
+        {%- endfor %}
+      </ul>
+    </div>
+    {%- endfor %}
+  </div>
+  {%- endif %}
+
+</section>
+{%- endif -%}

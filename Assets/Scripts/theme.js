@@ -306,10 +306,13 @@
   /* Any [data-care-frame] link OUTSIDE the dialog (e.g. the live page's
      Connect and Prayer links) opens the dialog straight to that form.
      data-direct hides the back-to-options button, since the visitor never
-     saw the options. */
+     saw the options. data-care-reload on the link reloads the page when the
+     dialog closes, so what the form changed shows (My Account's
+     communication lists). */
   function openCareFrame(link) {
     var d = careDialog();
     d.setAttribute('data-direct', '');
+    d.toggleAttribute('data-reload', link.hasAttribute('data-care-reload'));
     if (!showCareFrame(link)) { d.removeAttribute('data-direct'); return false; }
     d.showModal();
     var close = d.querySelector('[data-care-close]');
@@ -320,7 +323,10 @@
      so the form doesn't keep loading behind a closed dialog. */
   var careEl = careDialog();
   if (careEl) {
-    careEl.addEventListener('close', showCareOptions);
+    careEl.addEventListener('close', function () {
+      if (careEl.hasAttribute('data-reload')) { window.location.reload(); return; }
+      showCareOptions();
+    });
     careEl.addEventListener('click', function (e) {
       /* A click outside the panel (on the backdrop) closes it. */
       var r = careEl.getBoundingClientRect();

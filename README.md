@@ -43,6 +43,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Assets/Lava/MessagesLatest.lava` | HTML block include for the messages page: a Live now bar during the live window, then the latest message (Rock media player, title, date · speaker, series, Content) |
 | `Assets/Lava/SeriesBrowse.lava` | HTML block include for the messages page: "All series" divider, every started series as cards with a Grid / Detail toggle (Detail adds About / Messages tabs linking to each message), revealed in batches as you scroll |
 | `Assets/Lava/SeriesDetail.lava` | HTML block include for the series page: YouTube's watch layout: the player with the message's details under it and the series' messages as a playlist beside it, plus a Theater mode (each message is its own URL on the same page, `/{series}/{message}`, with cross-document view transitions; `/{series}` alone redirects to its newest message), and popular messages from page views below |
+| `Assets/Lava/MyAccount.lava` | HTML block include for the My Account page: a bento grid of the signed-in person's profile, family (edit links), giving summary and links, communication preferences, groups (leaders get Manage) and connection requests; empty tiles are left out |
 | `Assets/Lava/Partials/LatestMessage.lava` | The message widget: a player beside the title, date · speaker, shortened Content and series tag. `latest` mode (Rock media player, newest watchable message) or `live` mode (Resi player, today's message); options for a tag above the title and a View previous messages link. Shared by `MessagesLatest.lava` and both states of the live page |
 | `Assets/Lava/Partials/MessageResources.lava` | A message's Sermon notes (child item `YouVersionURL`) and Group questions (`GroupQuestions` URL, else `GroupQuestionsFile`) as pill links opening in a new tab; used by the series page's control strip and the message widget |
 | `Assets/Lava/LoginMedia.lava` | HTML block include for the login page: the PageImage of the page in `?returnurl=`, shown beside the login form from 900px |
@@ -61,6 +62,7 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Styles/_login.scss` | Rock's stock Login block (unchanged in Rock) restyled as a centred card; `theme.js` adds the Phone or email / Username & password tabs |
 | `Styles/_live.scss` | The watch-live page's bands (stage, What's next, featured events) |
 | `Styles/_sermons.scss` | The messages page: live bar, latest message, divider, series cards (grid and detail views) |
+| `Styles/_account.scss` | The My Account bento grid: tiles, family people, rows and badges |
 | `Archive/` | Retired versions kept for reference, by date (not loaded by the theme): `2026-10-28-live-offair/` is the live page before the off-air redesign |
 | `tools/` | `build.mjs` (the theme build), `check-theme.mjs` and `check-master-bindings.mjs` (gates) |
 | `Resources/RockNextgenThemeTemplate/` | The boilerplate NextGen starter theme, kept as reference only |
@@ -82,6 +84,7 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 | Main (messages page on InnerDefault), first block | HTML Content | content: `{% include '~~/Assets/Lava/MessagesLatest.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration 0 |
 | Main (messages page), second block | HTML Content | content: `{% include '~~/Assets/Lava/SeriesBrowse.lava' %}` · Enabled Lava Commands: **RockEntity, Sql** · Cache Duration 600 |
 | Main (series page on InnerDefault, PageHeaderStyle SimpleGrayStripe; routes `watch/previous-messages/{slug}` and `watch/previous-messages/{slug}/{message}`) | HTML Content | content: `{% include '~~/Assets/Lava/SeriesDetail.lava' %}` · Enabled Lava Commands: **RockEntity, Sql, Cache** · Cache Duration 0 |
+| Main (My Account page on InnerDefault; page security: authenticated users) | HTML Content | content: `{% include '~~/Assets/Lava/MyAccount.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration **0** (personal) |
 | Main (login page, Page level, same zone as the Login block; other blocks there hide while the photo shows) | HTML Content | content: `{% include '~~/Assets/Lava/LoginMedia.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 |
 | Main (404 page, or any page that offers search, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/SiteSearch.lava' %}` · Enabled Lava Commands: **RockEntity, Sql** |
 | Section A (404 page, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/PopularPages.lava' %}` · Enabled Lava Commands: **Cache, RockEntity, Sql** |
