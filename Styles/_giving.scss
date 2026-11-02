@@ -1,0 +1,189 @@
+// MANAGE GIVING  (Assets/Lava/ManageGiving.lava, GivingStatements.lava,
+// GivingRecurringEmpty.lava, Partials/MerlinGive.lava; tabs in theme.js
+// "Pill tabs")
+//
+// One page, four tabs. The tab bar and Summary are one HTML block; the other
+// panels are Rock blocks below it, shown and hidden by their CSS Class
+// (giving-panel giving-…). Tiles reuse My Account's .account-tile family
+// (Styles/_account.scss), so both pages read as one system.
+//
+// `.manage-giving`, `.giving-statements` and `.giving-empty` are in
+// $theme-scope; the Rock blocks in the panels keep core.css as they are.
+
+@use "config" as *;
+
+.manage-giving { display: grid; gap: clamp(1rem, 2vw, 1.5rem); }
+
+// Tab bar + Give button: one row, wrapping under on narrow screens
+.manage-giving__bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+}
+.merlin-give { display: inline-flex; align-items: center; gap: 0.5em; }
+
+// ---------------------------------------------------------------------------
+// Pill tabs: the login tabs' sliding white pill, for any number of tabs of
+// any width. theme.js measures the selected tab into --pill-x / --pill-w; the
+// row scrolls sideways if the labels don't fit.
+// ---------------------------------------------------------------------------
+.pill-tabs {
+  position: relative;
+  isolation: isolate;
+  display: flex; gap: 4px;
+  max-width: 100%;
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+.pill-tabs::-webkit-scrollbar { display: none; }
+.pill-tabs[hidden] { display: none; }
+.pill-tabs::before {
+  content: "";
+  position: absolute; z-index: -1;
+  top: 4px; bottom: 4px;
+  left: var(--pill-x, 4px);
+  width: var(--pill-w, 0);
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+}
+.pill-tabs[data-ready]::before {
+  opacity: 1;
+  transition: left var(--duration-slow) var(--ease-out), width var(--duration-slow) var(--ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .pill-tabs[data-ready]::before { transition: none; }
+}
+.pill-tabs__tab {
+  flex: none;
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8125rem; font-weight: 700; line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--duration) var(--ease-out);
+}
+.pill-tabs__tab:hover { color: var(--text); }
+.pill-tabs__tab[aria-selected="true"] { color: var(--text); cursor: default; }
+.pill-tabs__tab:focus-visible { outline: 3px solid var(--brand-text); outline-offset: -3px; }
+
+// ---------------------------------------------------------------------------
+// Panels. A Rock block in a panel gets the tile's card look, unless it
+// already draws its own tile (the statements and empty-state templates).
+//
+// A hidden panel is laid out but invisible (out of the flow, zero height),
+// not display:none, so an iframe in it (Simple Donation's payment methods)
+// sizes itself at the real width while another tab is showing; under
+// display:none it measures 0 and stays collapsed when its tab opens.
+// In Rock's zone / block edit mode every panel shows, so blocks stay editable.
+// ---------------------------------------------------------------------------
+.zone-content:has(> .giving-panel) {
+  position: relative;
+  display: grid; gap: clamp(1rem, 2vw, 1.5rem);
+  grid-template-columns: minmax(0, 1fr);
+}
+.zone-content:has(> .giving-panel) > * { grid-column: 1 / -1; min-width: 0; }
+.giving-panel[hidden] {
+  display: block !important;
+  position: absolute; inset-inline: 0; top: 0;
+  height: 0; margin: 0; overflow: hidden;
+  visibility: hidden; pointer-events: none;
+}
+body:is(.zone-highlight, .block-highlight) .giving-panel[hidden] {
+  position: static; height: auto; overflow: visible;
+  visibility: visible; pointer-events: auto;
+}
+.block-instance.giving-panel:not(:has(.account-tile)) {
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+.giving-summary { display: grid; gap: clamp(1rem, 2vw, 1.5rem); }
+
+// History: statements as a sidebar beside the Transaction Report. The report
+// is a Rock table, so below md it's dropped and the sidebar's note says to
+// use a bigger screen.
+@media (min-width: #{$bp-md}) {
+  .zone-content:has(> .giving-panel) > :has(.giving-statements) {
+    grid-column: 1; align-self: start;
+    position: sticky; top: var(--space-lg);
+  }
+  .zone-content:has(> .giving-panel):has(> .giving-report:not([hidden])) {
+    grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  }
+  .zone-content:has(> .giving-panel) > .giving-report { grid-column: 2; }
+}
+@media (max-width: #{$bp-md - 1px}) {
+  body:not(.zone-highlight, .block-highlight) .block-instance.giving-report { display: none !important; }
+}
+
+// ---------------------------------------------------------------------------
+// Summary: four stat tiles (1 → 2 → 4 across), then recent gifts
+// ---------------------------------------------------------------------------
+.giving-stats {
+  display: grid; gap: clamp(1rem, 2vw, 1.5rem);
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: #{$bp-sm}) { .giving-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: #{$bp-md}) { .giving-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.giving-stat { gap: 0.3rem; }
+.giving-stat__label {
+  font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.giving-stat__value {
+  font-family: var(--font-family-title);
+  font-size: clamp(1.25rem, 2vw, 1.5rem); font-weight: 800; line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.giving-stat__note { margin-top: auto; font-size: 0.8125rem; color: var(--text-secondary); }
+a.giving-stat__note { color: var(--brand-text); }
+.giving-recent__amount { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+// ---------------------------------------------------------------------------
+// Statements: a list of year links
+// ---------------------------------------------------------------------------
+.giving-statements { gap: var(--space-sm); }
+.giving-statements__list { display: grid; align-self: stretch; }
+.giving-statements__year {
+  display: flex; align-items: center; gap: var(--space-xs);
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text); text-decoration: none;
+}
+.giving-statements__list li:first-child .giving-statements__year { border-top: 0; }
+.giving-statements__year:is(:link, :visited, :hover, :focus) { color: var(--text); text-decoration: none; }
+.giving-statements__label {
+  font-family: var(--font-family-title);
+  font-size: 1.0625rem; font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.giving-statements__note {
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand-wash);
+  font-size: 0.6875rem; font-weight: 700;
+}
+.giving-statements__year svg { margin-left: auto; color: var(--brand-text); transition: transform var(--duration) var(--ease-out); }
+.giving-statements__year:hover svg { transform: translateX(3px); }
+.giving-statements__year:hover .giving-statements__label { color: var(--brand-text); }
+.giving-statements__device {
+  align-self: stretch;
+  margin: 0; padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.8125rem; color: var(--text-secondary);
+}
+@media (min-width: #{$bp-md}) { .giving-statements__device { display: none; } }
+
+// Recurring: the "no recurring gifts" tile
+.giving-empty { align-items: flex-start; }

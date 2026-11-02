@@ -1,0 +1,152 @@
+{% comment %}
+    MANAGE GIVING — the first block on the manage-giving page (InnerDefault,
+    Main zone): the tab bar, the Give button, and the Summary panel.
+
+    Block content:            {% include '~~/Assets/Lava/ManageGiving.lava' %}
+    Enabled Lava Commands:    Sql
+    Cache Duration:           0 (personal)
+
+    The other panels are separate blocks below this one. Each tab shows the
+    blocks whose CSS Class (Block Properties → Advanced Settings) includes its
+    panel class, and hides the rest (theme.js "Pill tabs"):
+
+      Summary           giving-panel giving-summary   (this block's panel)
+      Payment methods   giving-panel giving-methods   HTML block:
+                        {[ simpleeditpaymentmethods bgcolor:'ffffff' ]}
+      Recurring         giving-panel giving-recurring Scheduled Transaction
+                        List block + an HTML block with GivingRecurringEmpty.lava
+      History           giving-panel giving-history   Contribution Statement
+                        List Lava (template: GivingStatements.lava) +
+                        Transaction Report block
+
+    The selected tab is in the URL hash (/manage-giving#history) and is kept
+    across Rock postbacks (sessionStorage), so a block's filter or paging
+    doesn't jump back to Summary. In Rock's zone/block edit mode every panel
+    shows, so blocks stay editable.
+
+    Summary: tax-deductible contributions on the family's giving id: this
+    year, last year, the last gift, active recurring gifts, recent gifts.
+
+    Styled by Styles/_giving.scss.
+{% endcomment %}
+{%- if CurrentPerson == null -%}
+<section class="manage-giving">
+  <div class="account-tile account-tile--signin">
+    <h2 class="account-tile__title">Sign in to manage your giving</h2>
+    <a class="btn btn--primary" href="/login?returnurl=%2fmanage-giving">Sign in</a>
+  </div>
+</section>
+{%- else -%}
+{%- assign me = CurrentPerson -%}
+
+{%- comment -%} Totals for this year and last, the last gift, and active schedules {%- endcomment -%}
+{%- sql personid:'{{ me.Id }}' return:'summaryRows' -%}
+DECLARE @givingId nvarchar(50) = (SELECT GivingId FROM Person WHERE Id = @personid);
+DECLARE @contribution int = (SELECT Id FROM DefinedValue WHERE Guid = '2D607262-52D6-4724-910D-5C6E8FB89ACC');
+DECLARE @yearStart date = DATEFROMPARTS(YEAR(GETDATE()), 1, 1);
+WITH gifts AS (
+    SELECT ft.Id, ft.TransactionDateTime, ftd.Amount
+    FROM FinancialTransaction ft
+    JOIN FinancialTransactionDetail ftd ON ftd.TransactionId = ft.Id
+    JOIN FinancialAccount fa ON fa.Id = ftd.AccountId
+    JOIN PersonAlias pa ON pa.Id = ft.AuthorizedPersonAliasId
+    JOIN Person p ON p.Id = pa.PersonId
+    WHERE p.GivingId = @givingId AND fa.IsTaxDeductible = 1 AND ft.TransactionTypeValueId = @contribution
+)
+SELECT
+    (SELECT SUM(Amount) FROM gifts WHERE TransactionDateTime >= @yearStart) AS YearTotal,
+    (SELECT COUNT(DISTINCT Id) FROM gifts WHERE TransactionDateTime >= @yearStart) AS YearGifts,
+    (SELECT SUM(Amount) FROM gifts WHERE TransactionDateTime >= DATEADD(year, -1, @yearStart) AND TransactionDateTime < @yearStart) AS LastYearTotal,
+    (SELECT TOP 1 TransactionDateTime FROM gifts ORDER BY TransactionDateTime DESC) AS LastGiftDate,
+    (SELECT SUM(Amount) FROM gifts WHERE Id = (SELECT TOP 1 Id FROM gifts ORDER BY TransactionDateTime DESC)) AS LastGiftAmount,
+    (SELECT COUNT(*) FROM FinancialScheduledTransaction fst
+        JOIN PersonAlias pa ON pa.Id = fst.AuthorizedPersonAliasId
+        JOIN Person p ON p.Id = pa.PersonId
+        WHERE p.GivingId = @givingId AND fst.IsActive = 1) AS ActiveSchedules,
+    (SELECT MIN(fst.NextPaymentDate) FROM FinancialScheduledTransaction fst
+        JOIN PersonAlias pa ON pa.Id = fst.AuthorizedPersonAliasId
+        JOIN Person p ON p.Id = pa.PersonId
+        WHERE p.GivingId = @givingId AND fst.IsActive = 1 AND fst.NextPaymentDate >= CAST(GETDATE() AS date)) AS NextScheduled
+{%- endsql -%}
+{%- assign summary = summaryRows | First -%}
+
+{%- comment -%} The six most recent gift lines (one per fund) {%- endcomment -%}
+{%- sql personid:'{{ me.Id }}' return:'recentGifts' -%}
+SELECT TOP 6 ft.TransactionDateTime, ftd.Amount,
+    COALESCE(NULLIF(fa.PublicName, ''), fa.Name) AS Fund
+FROM FinancialTransaction ft
+JOIN FinancialTransactionDetail ftd ON ftd.TransactionId = ft.Id
+JOIN FinancialAccount fa ON fa.Id = ftd.AccountId
+JOIN PersonAlias pa ON pa.Id = ft.AuthorizedPersonAliasId
+JOIN Person p ON p.Id = pa.PersonId
+WHERE p.GivingId = (SELECT GivingId FROM Person WHERE Id = @personid)
+  AND fa.IsTaxDeductible = 1
+  AND ft.TransactionTypeValueId = (SELECT Id FROM DefinedValue WHERE Guid = '2D607262-52D6-4724-910D-5C6E8FB89ACC')
+ORDER BY ft.TransactionDateTime DESC
+{%- endsql -%}
+{%- assign thisYear = 'Now' | Date:'yyyy' -%}
+{%- assign lastYear = thisYear | Minus:1 -%}
+
+<section class="manage-giving" aria-label="Manage giving">
+  <div class="manage-giving__bar">
+    <div class="pill-tabs" role="tablist" aria-label="Giving" data-pill-tabs hidden>
+      <button class="pill-tabs__tab" type="button" role="tab" data-panel="giving-summary" data-hash="summary" aria-selected="true">Summary</button>
+      <button class="pill-tabs__tab" type="button" role="tab" data-panel="giving-methods" data-hash="payment-methods" aria-selected="false" tabindex="-1">Payment methods</button>
+      <button class="pill-tabs__tab" type="button" role="tab" data-panel="giving-recurring" data-hash="recurring" aria-selected="false" tabindex="-1">Recurring</button>
+      <button class="pill-tabs__tab" type="button" role="tab" data-panel="giving-history" data-hash="history" aria-selected="false" tabindex="-1">History</button>
+    </div>
+    {%- include '~~/Assets/Lava/Partials/MerlinGive.lava' %}
+  </div>
+
+  <div class="giving-panel giving-summary" role="tabpanel" aria-label="Summary">
+    <div class="giving-stats">
+      <div class="account-tile giving-stat">
+        <span class="giving-stat__label">Given in {{ thisYear }}</span>
+        <span class="giving-stat__value">{{ summary.YearTotal | Default:0 | FormatAsCurrency }}</span>
+        <span class="giving-stat__note">{{ summary.YearGifts | Default:0 }} {{ 'gift' | PluralizeForQuantity:summary.YearGifts }}</span>
+      </div>
+      <div class="account-tile giving-stat">
+        <span class="giving-stat__label">Last gift</span>
+        {%- if summary.LastGiftDate %}
+        <span class="giving-stat__value">{{ summary.LastGiftAmount | FormatAsCurrency }}</span>
+        <span class="giving-stat__note">{{ summary.LastGiftDate | Date:'MMMM d, yyyy' }}</span>
+        {%- else %}
+        <span class="giving-stat__value">None yet</span>
+        {%- endif %}
+      </div>
+      <div class="account-tile giving-stat">
+        <span class="giving-stat__label">Given in {{ lastYear }}</span>
+        <span class="giving-stat__value">{{ summary.LastYearTotal | Default:0 | FormatAsCurrency }}</span>
+        <a class="account-link giving-stat__note" href="#history" data-pill-goto="giving-history">Statements</a>
+      </div>
+      <div class="account-tile giving-stat">
+        <span class="giving-stat__label">Recurring gifts</span>
+        <span class="giving-stat__value">{{ summary.ActiveSchedules | Default:0 }} active</span>
+        {%- if summary.NextScheduled %}
+        <span class="giving-stat__note">Next on {{ summary.NextScheduled | Date:'MMM d' }}</span>
+        {%- else %}
+        <a class="account-link giving-stat__note" href="#recurring" data-pill-goto="giving-recurring">Set one up</a>
+        {%- endif %}
+      </div>
+    </div>
+
+    {%- if recentGifts != empty %}
+    <div class="account-tile giving-recent">
+      <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-clock"/></svg> Recent gifts</h2>
+      <ul class="account-rows">
+        {%- for gift in recentGifts %}
+        <li class="account-row">
+          <div class="account-row__body">
+            <span class="account-row__title">{{ gift.Fund }}</span>
+            <span class="account-row__meta">{{ gift.TransactionDateTime | Date:'MMM d, yyyy' }}</span>
+          </div>
+          <span class="giving-recent__amount">{{ gift.Amount | FormatAsCurrency }}</span>
+        </li>
+        {%- endfor %}
+      </ul>
+      <a class="account-link" href="#history" data-pill-goto="giving-history">All giving history</a>
+    </div>
+    {%- endif %}
+  </div>
+</section>
+{%- endif -%}

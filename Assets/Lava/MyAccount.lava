@@ -15,7 +15,8 @@
                       password login (not for passwordless-only people)
       Family          the primary family, adults first, each with Edit
       Giving          this year's total and last gift (tax-deductible
-                      contributions to the family's giving id) + giving links
+                      contributions to the family's giving id), the Merlin
+                      Give button and a link to the manage-giving page
       Communication   whether email and texts are on at all (email address,
                       active, preference; a texting-enabled mobile), then the
                       lists the person subscribes to (person attributes
@@ -45,6 +46,7 @@
 {%- assign profileEditUrl = '/myaccount/profile' -%}
 {%- assign commPrefsUrl = '/page/42023?WorkflowTypeId=227' -%}
 {%- assign changePasswordUrl = '/ChangePassword' -%}
+{%- assign manageGivingUrl = '/manage-giving' -%}
 {%- assign groupManageUrl = '/page/1128?GroupId=' -%}
 
 {%- if CurrentPerson == null -%}
@@ -257,12 +259,11 @@ ORDER BY a.[Key], g.[Order], g.Name
       <span class="account-stat__label">given in {{ 'Now' | Date:'yyyy' }}{% if giving.LastGift %} · last gift {{ giving.LastGift | Date:'MMM d' }}{% endif %}</span>
     </p>
     {%- endif %}
-    <ul class="account-links">
-      <li><a class="account-link" href="/give">Give now</a></li>
-      <li><a class="account-link" href="/MyAccount/ManageRecurring">Recurring gifts</a></li>
-      <li><a class="account-link" href="/MyAccount/ManagePayments">Payment methods</a></li>
-      <li><a class="account-link" href="/MyAccount/GivingHistory">Giving history</a></li>
-    </ul>
+    <div class="account-giving-actions">
+      {%- assign merlinClass = 'btn--sm' -%}
+      {%- include '~~/Assets/Lava/Partials/MerlinGive.lava' %}
+      <a class="pill-btn" href="{{ manageGivingUrl }}">Manage giving</a>
+    </div>
   </div>
 
   {%- comment -%} Communication {%- endcomment %}

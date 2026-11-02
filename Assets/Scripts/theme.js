@@ -664,6 +664,73 @@
     });
   });
 
+  // --- Pill tabs ([data-pill-tabs]: ManageGiving.lava) -------------------------------
+  // Tabs over whole Rock blocks: each tab's data-panel is a class, and every
+  // element with it (usually a block whose CSS Class setting includes it)
+  // shows only while that tab is selected. The white pill slides to the
+  // selected tab (--pill-x / --pill-w). The choice goes in the URL hash and in
+  // sessionStorage, so a Rock postback inside a panel (paging, filters)
+  // reloads on the same tab. Links with data-pill-goto="panel" switch tabs.
+  document.querySelectorAll('[data-pill-tabs]').forEach(function (bar) {
+    var tabs = Array.prototype.slice.call(bar.querySelectorAll('[role="tab"]'));
+    if (!tabs.length) return;
+    var storeKey = 'vrl-tab:' + location.pathname.toLowerCase();
+    var current = null;
+    var place = function (tab) {
+      bar.style.setProperty('--pill-x', tab.offsetLeft + 'px');
+      bar.style.setProperty('--pill-w', tab.offsetWidth + 'px');
+    };
+    var select = function (tab, focus, remember) {
+      current = tab;
+      tabs.forEach(function (t) {
+        var on = t === tab;
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+        document.querySelectorAll('.' + t.getAttribute('data-panel')).forEach(function (panel) { panel.hidden = !on; });
+      });
+      place(tab);
+      // An iframe that resizes itself (Simple Donation) re-measures on resize
+      window.dispatchEvent(new Event('resize'));
+      if (remember) {
+        try { sessionStorage.setItem(storeKey, tab.getAttribute('data-hash')); } catch (err) {}
+        if (history.replaceState) history.replaceState(null, '', '#' + tab.getAttribute('data-hash'));
+      }
+      if (focus) tab.focus();
+    };
+    var byHash = function (hash) {
+      return tabs.filter(function (t) { return t.getAttribute('data-hash') === hash; })[0];
+    };
+    var stored = null;
+    try { stored = sessionStorage.getItem(storeKey); } catch (err) {}
+    bar.hidden = false;
+    select(byHash(location.hash.slice(1)) || byHash(stored) || tabs[0]);
+    bar.setAttribute('data-ready', '');
+    tabs.forEach(function (tab, i) {
+      tab.addEventListener('click', function () { select(tab, false, true); });
+      tab.addEventListener('keydown', function (e) {
+        var step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!step) return;
+        e.preventDefault();
+        select(tabs[(i + step + tabs.length) % tabs.length], true, true);
+      });
+    });
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest('[data-pill-goto]');
+      if (!link) return;
+      var tab = tabs.filter(function (t) { return t.getAttribute('data-panel') === link.getAttribute('data-pill-goto'); })[0];
+      if (!tab) return;
+      e.preventDefault();
+      select(tab, false, true);
+      bar.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
+    window.addEventListener('hashchange', function () {
+      var tab = byHash(location.hash.slice(1));
+      if (tab && tab !== current) select(tab, false, true);
+    });
+    // Labels change width when the web font arrives or the bar wraps
+    if (window.ResizeObserver) new ResizeObserver(function () { if (current) place(current); }).observe(bar);
+  });
+
   // --- Series watch: theater (Assets/Lava/SeriesDetail.lava) --------------------------
   // Theater widens the player to the full width and drops the playlist below
   // it (data-theater; the layout is CSS). The change runs as a view

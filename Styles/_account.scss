@@ -135,7 +135,17 @@
   font-variant-numeric: tabular-nums;
 }
 .account-stat__label { font-size: 0.875rem; color: var(--text-secondary); }
-.account-links { display: grid; gap: 0.5rem; }
+// The actions sit under a hairline, clear of the number, as two same-height
+// pills (Give + Manage); on a phone they share the row equally
+.account-giving-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs);
+  align-self: stretch;
+  margin-top: var(--space-xs);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+.account-giving-actions > * { min-height: 2.5rem; justify-content: center; }
+@media (max-width: #{$bp-sm - 1px}) { .account-giving-actions > * { flex: 1 1 0; } }
 
 // ---------------------------------------------------------------------------
 // Family: a wrapping grid of people

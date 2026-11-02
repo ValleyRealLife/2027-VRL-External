@@ -198,7 +198,7 @@ body.is-locked {
   color: var(--text-on-brand);
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account) :is(h1, h2, h3, h4, h5, h6):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) :is(h1, h2, h3, h4, h5, h6):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   margin: 0;
   font-weight: 800;
   line-height: 1.04;
@@ -206,36 +206,36 @@ body.is-locked {
   color: inherit;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account) p:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) p:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   margin: 0;
   color: inherit;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account) :is(img, svg, video):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) :is(img, svg, video):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   display: block;
   max-width: 100%;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account) img:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) img:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   height: auto;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account) button:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) button:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   font: inherit;
   cursor: pointer;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account) a:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) a:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   color: inherit;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account) :is(ul, ol):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) :is(ul, ol):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account) :where(a, button, [tabindex], summary, input, select):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):focus-visible,
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) :where(a, button, [tabindex], summary, input, select):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):focus-visible,
 .care-modal:focus-visible {
   outline: 3px solid var(--brand-text);
   outline-offset: 3px;
@@ -4538,11 +4538,27 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   color: var(--text-secondary);
 }
 
-.account-links {
-  display: grid;
-  gap: 0.5rem;
+.account-giving-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  align-self: stretch;
+  margin-top: var(--space-xs);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
 }
 
+.account-giving-actions > * {
+  min-height: 2.5rem;
+  justify-content: center;
+}
+
+@media (max-width: 559px) {
+  .account-giving-actions > * {
+    flex: 1 1 0;
+  }
+}
 .account-family {
   display: grid;
   gap: var(--space-xs);
@@ -4881,6 +4897,290 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
 .account-tile--signin .account-tile__title {
   font-size: 1.25rem;
   letter-spacing: var(--tracking-wide);
+}
+
+.manage-giving {
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.manage-giving__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+}
+
+.merlin-give {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.pill-tabs {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  gap: 4px;
+  max-width: 100%;
+  padding: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+
+.pill-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.pill-tabs[hidden] {
+  display: none;
+}
+
+.pill-tabs::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 4px;
+  bottom: 4px;
+  left: var(--pill-x, 4px);
+  width: var(--pill-w, 0);
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  opacity: 0;
+}
+
+.pill-tabs[data-ready]::before {
+  opacity: 1;
+  transition: left var(--duration-slow) var(--ease-out), width var(--duration-slow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pill-tabs[data-ready]::before {
+    transition: none;
+  }
+}
+.pill-tabs__tab {
+  flex: none;
+  padding: 0.6rem 1rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--duration) var(--ease-out);
+}
+
+.pill-tabs__tab:hover {
+  color: var(--text);
+}
+
+.pill-tabs__tab[aria-selected=true] {
+  color: var(--text);
+  cursor: default;
+}
+
+.pill-tabs__tab:focus-visible {
+  outline: 3px solid var(--brand-text);
+  outline-offset: -3px;
+}
+
+.zone-content:has(> .giving-panel) {
+  position: relative;
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.zone-content:has(> .giving-panel) > * {
+  grid-column: 1/-1;
+  min-width: 0;
+}
+
+.giving-panel[hidden] {
+  display: block !important;
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body:is(.zone-highlight, .block-highlight) .giving-panel[hidden] {
+  position: static;
+  height: auto;
+  overflow: visible;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.block-instance.giving-panel:not(:has(.account-tile)) {
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.giving-summary {
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+@media (min-width: 900px) {
+  .zone-content:has(> .giving-panel) > :has(.giving-statements) {
+    grid-column: 1;
+    align-self: start;
+    position: sticky;
+    top: var(--space-lg);
+  }
+  .zone-content:has(> .giving-panel):has(> .giving-report:not([hidden])) {
+    grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  }
+  .zone-content:has(> .giving-panel) > .giving-report {
+    grid-column: 2;
+  }
+}
+@media (max-width: 899px) {
+  body:not(.zone-highlight, .block-highlight) .block-instance.giving-report {
+    display: none !important;
+  }
+}
+.giving-stats {
+  display: grid;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 560px) {
+  .giving-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 900px) {
+  .giving-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.giving-stat {
+  gap: 0.3rem;
+}
+
+.giving-stat__label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.giving-stat__value {
+  font-family: var(--font-family-title);
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.giving-stat__note {
+  margin-top: auto;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+a.giving-stat__note {
+  color: var(--brand-text);
+}
+
+.giving-recent__amount {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.giving-statements {
+  gap: var(--space-sm);
+}
+
+.giving-statements__list {
+  display: grid;
+  align-self: stretch;
+}
+
+.giving-statements__year {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.giving-statements__list li:first-child .giving-statements__year {
+  border-top: 0;
+}
+
+.giving-statements__year:is(:link, :visited, :hover, :focus) {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.giving-statements__label {
+  font-family: var(--font-family-title);
+  font-size: 1.0625rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.giving-statements__note {
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--brand-wash);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.giving-statements__year svg {
+  margin-left: auto;
+  color: var(--brand-text);
+  transition: transform var(--duration) var(--ease-out);
+}
+
+.giving-statements__year:hover svg {
+  transform: translateX(3px);
+}
+
+.giving-statements__year:hover .giving-statements__label {
+  color: var(--brand-text);
+}
+
+.giving-statements__device {
+  align-self: stretch;
+  margin: 0;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+@media (min-width: 900px) {
+  .giving-statements__device {
+    display: none;
+  }
+}
+.giving-empty {
+  align-items: flex-start;
 }
 
 /* ============================================================

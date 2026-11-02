@@ -1,0 +1,35 @@
+{% comment %}
+    MERLIN GIVE BUTTON — opens Simple Donation's Merlin giving widget.
+
+    {% assign merlinLabel = 'Give now' %}      (optional; default "Give now")
+    {% assign merlinClass = 'some-class' %}    (optional; extra classes)
+    {% include '~~/Assets/Lava/Partials/MerlinGive.lava' %}
+
+    Merlin's install script opens the widget for any element with class
+    open-merlin and a data-merlin-key, so the button is our own markup
+    (btn btn--primary) and can appear several times on a page, in different
+    blocks. The script is added once however many buttons there are.
+
+    ROCK: merlinPersonId should be the person's Simple Donation id (the
+    SimpleDonationPersonId the old "Giving Shortcuts" block looked up into
+    personRow). Paste that lookup below; until then Merlin opens as a
+    signed-in visitor without their saved Simple Donation profile, which is
+    what the old block fell back to as well ('rockLoggedInNoSdPerson').
+{% endcomment %}
+{%- assign merlinKey = '01JB2RYN938GRYZTXJKXWM9RV9' -%}
+{%- assign merlinColor = '97ca41' -%}
+{%- assign merlinPersonId = '' -%}
+{%- if merlinPersonId == '' %}{% assign merlinPersonId = 'rockLoggedInNoSdPerson' %}{% endif -%}
+<button type="button" class="btn btn--primary merlin-give open-merlin {{ merlinClass }}" data-merlin-key="{{ merlinKey }}" data-merlin-primary-color="{{ merlinColor }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-gift"/></svg> {{ merlinLabel | Default:'Give now' }}</button>
+<script>
+  window.simpleDonationMerlinSettings = { personId: '{{ merlinPersonId }}', rockBusinesses: [] };
+  if (!document.querySelector('script[data-merlin-install]')) {
+    var merlinScript = document.createElement('script');
+    merlinScript.async = true;
+    merlinScript.src = 'https://merlin.simpledonation.com/js/installScript.js';
+    merlinScript.setAttribute('data-merlin-install', '');
+    document.head.appendChild(merlinScript);
+  }
+</script>
+{%- assign merlinLabel = '' -%}
+{%- assign merlinClass = '' -%}

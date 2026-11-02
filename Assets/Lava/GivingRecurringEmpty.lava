@@ -1,0 +1,30 @@
+{% comment %}
+    RECURRING GIVING — EMPTY STATE. An HTML block in the Recurring panel of
+    the manage-giving page, right after the Scheduled Transaction List block.
+    Renders only when the family has no active scheduled gifts.
+
+    Block content:            {% include '~~/Assets/Lava/GivingRecurringEmpty.lava' %}
+    Enabled Lava Commands:    Sql
+    Cache Duration:           0
+    CSS Class:                giving-panel giving-recurring
+{% endcomment %}
+{%- if CurrentPerson != null -%}
+{%- sql personid:'{{ CurrentPerson.Id }}' return:'scheduleRows' -%}
+SELECT COUNT(*) AS Active
+FROM FinancialScheduledTransaction fst
+JOIN PersonAlias pa ON pa.Id = fst.AuthorizedPersonAliasId
+JOIN Person p ON p.Id = pa.PersonId
+WHERE p.GivingId = (SELECT GivingId FROM Person WHERE Id = @personid)
+  AND fst.IsActive = 1
+{%- endsql -%}
+{%- assign scheduleRow = scheduleRows | First -%}
+{%- assign activeSchedules = scheduleRow.Active | AsInteger -%}
+{%- if activeSchedules == 0 %}
+<div class="account-tile giving-empty">
+  <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-clock"/></svg> No recurring gifts yet</h2>
+  <p class="account-tile__lede">Set up a gift that repeats weekly, every two weeks or monthly. You can change or stop it at any time.</p>
+  {%- assign merlinLabel = 'Set up a recurring gift' -%}
+  {%- include '~~/Assets/Lava/Partials/MerlinGive.lava' %}
+</div>
+{%- endif %}
+{%- endif -%}
