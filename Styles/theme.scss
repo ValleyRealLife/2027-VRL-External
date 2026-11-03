@@ -45,6 +45,7 @@
 //   search        site search pill + results (Assets/Lava/SiteSearch.lava)
 //   login         Rock's Login block as a card, with method tabs (theme.js)
 //   live          the watch-live page (Assets/Lava/LiveService.lava)
+//   rock-blocks   any Rock block's panel, fields and buttons on interior pages
 //   home          homepage sections        (Assets/Lava/Home.lava)
 
 /* CSS Overrides Top Start */
@@ -63,9 +64,11 @@
 @use "search";
 @use "login";
 @use "live";
+@use "rock-blocks";
 @use "sermons";
 @use "account";
 @use "giving";
+@use "profile";
 @use "home";
 
 // Rock's HTML editor (Summernote): its toolbar icon font and the rules that

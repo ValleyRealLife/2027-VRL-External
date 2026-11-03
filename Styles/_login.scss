@@ -153,7 +153,7 @@ $login-pair: "body:not(.zone-highlight, .block-highlight) .zone-content:has(> .b
   box-shadow: var(--shadow-sm);
   transition: transform var(--duration-slow) var(--ease-out);
 }
-.login-tabs[data-active="credential"]::before { transform: translateX(calc(100% + 4px)); }
+.login-tabs[data-active="passwordless"]::before { transform: translateX(calc(100% + 4px)); }
 .login-tabs:not([data-active])::before { opacity: 0; }
 @media (prefers-reduced-motion: reduce) {
   .login-tabs::before { transition: none; }

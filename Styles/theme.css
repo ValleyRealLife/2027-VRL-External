@@ -5,7 +5,6 @@
 @import url('/Styles/styles-v2/icons/fontawesome-solid.css?v=4137481333');
 @import url('/Styles/styles-v2/icons/tabler-icon.css?v=225734114');
 /* CSS Overrides Top End */
-
 @import "../../../Styles/summernote/summernote.min.css";
 @import "../../../Styles/styles-v2/core.css";
 :root {
@@ -2772,7 +2771,7 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   transition: transform var(--duration-slow) var(--ease-out);
 }
 
-.login-tabs[data-active=credential]::before {
+.login-tabs[data-active=passwordless]::before {
   transform: translateX(calc(100% + 4px));
 }
 
@@ -3376,6 +3375,204 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
     animation: none;
   }
 }
+:where(.page .block-instance) .panel-block:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  margin: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+}
+
+:where(.page .block-instance) .panel-block > .panel-heading:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  padding: clamp(1.25rem, 2.5vw, 1.75rem) clamp(1.25rem, 2.5vw, 1.75rem) 0;
+  border: 0;
+  background: none;
+}
+
+:where(.page .block-instance) .panel-block > .panel-heading .panel-title:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+:where(.page .block-instance) .panel-block > .panel-heading .panel-title i:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  color: var(--brand-text);
+}
+
+:where(.page .block-instance) .panel-block > .panel-body:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+:where(.page .block-instance) legend:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  margin: 0 0 var(--space-md);
+  padding: 0 0 var(--space-xs);
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+:where(.page .block-instance).change-password legend:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  display: none;
+}
+
+:where(.page .block-instance) .control-label:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+:where(.page .block-instance) :is(.form-control, select.form-control):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  min-height: 2.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  box-shadow: none;
+}
+
+:where(.page .block-instance) .form-control:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-glow-soft);
+  outline: 0;
+}
+
+:where(.page .block-instance) .input-group .input-group-addon:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  border: 1px solid var(--border);
+  border-right: 0;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+:where(.page .block-instance) .input-group :is(.form-control, select.form-control):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+:where(.page .block-instance) .date-parts-picker:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+:where(.page .block-instance) .date-parts-picker .separator:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  color: var(--text-muted);
+}
+
+:where(.page .block-instance) input:is([type=radio], [type=checkbox]):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  accent-color: var(--brand);
+}
+
+:where(.page .block-instance) .radio-inline:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  margin-right: var(--space-md);
+}
+
+:where(.page .block-instance) .help-block:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+:where(.page .block-instance) .btn:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(.btn-square, .table *) {
+  border-radius: var(--radius-pill);
+}
+
+:where(.page .block-instance) .btn.btn-primary:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  background: var(--brand);
+  border-color: transparent;
+  color: var(--text-on-brand);
+  font-weight: 800;
+}
+
+:where(.page .block-instance) .btn.btn-primary:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):is(:hover, :focus) {
+  background: var(--brand-bright);
+  border-color: transparent;
+  color: var(--text-on-brand);
+  box-shadow: var(--shadow-glow);
+}
+
+:where(.page .block-instance) .btn-default:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(.btn-square, .table *) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-weight: 700;
+}
+
+:where(.page .block-instance) .btn-default:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(.btn-square, .table *):is(:hover, :focus) {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+  color: var(--text);
+}
+
+:where(.page .block-instance) .actions:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+:where(.page .block-instance) .actions .btn:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.75rem;
+  border-width: 1.5px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background var(--duration) var(--ease-out), color var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
+}
+
+:where(.page .block-instance) .actions .btn-link:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text);
+}
+
+:where(.page .block-instance) .actions .btn-link:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):is(:hover, :focus) {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+  color: var(--text);
+}
+
+:where(.page .block-instance) .actions .pull-right:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(:has(*)) {
+  display: none;
+}
+
+@media (max-width: 559px) {
+  :where(.page .block-instance) .actions .btn:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+    flex: 1 1 0;
+  }
+}
+:where(.page .block-instance):is(.change-password, .block-narrow) {
+  max-width: 440px;
+  margin-inline: auto;
+}
+
+:where(.page .block-instance).workflow-entry .panel-block > .panel-heading:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  display: none;
+}
+
 .sermons-livebar {
   display: flex;
   flex-wrap: wrap;
@@ -4410,6 +4607,27 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   color: var(--text);
 }
 
+.account-tile__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  align-self: stretch;
+  margin-top: auto;
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.account-tile__actions > * {
+  min-height: 2.5rem;
+  justify-content: center;
+}
+
+@media (max-width: 559px) {
+  .account-tile__actions > * {
+    flex: 1 1 0;
+  }
+}
 .account-tile__head {
   display: flex;
   flex-wrap: wrap;
@@ -4508,10 +4726,20 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
 
 .account-profile__actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--space-xs);
 }
 
+.account-profile__actions > * {
+  justify-content: center;
+  min-height: 2.5rem;
+}
+
+@media (max-width: 559px) {
+  .account-profile__actions {
+    flex: 1 1 100%;
+  }
+}
 .account-profile__contact {
   display: flex;
   flex-wrap: wrap;
@@ -4538,27 +4766,6 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   color: var(--text-secondary);
 }
 
-.account-giving-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-xs);
-  align-self: stretch;
-  margin-top: var(--space-xs);
-  padding-top: var(--space-md);
-  border-top: 1px solid var(--border-subtle);
-}
-
-.account-giving-actions > * {
-  min-height: 2.5rem;
-  justify-content: center;
-}
-
-@media (max-width: 559px) {
-  .account-giving-actions > * {
-    flex: 1 1 0;
-  }
-}
 .account-family {
   display: grid;
   gap: var(--space-xs);
@@ -4603,11 +4810,6 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
 .account-person__meta {
   font-size: 0.8125rem;
   color: var(--text-secondary);
-}
-
-.account-person__edit {
-  flex: none;
-  font-size: 0.8125rem;
 }
 
 .account-address {
@@ -4901,6 +5103,7 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
 
 .manage-giving {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(1rem, 2vw, 1.5rem);
 }
 
@@ -4910,6 +5113,7 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm) var(--space-md);
+  min-width: 0;
 }
 
 .merlin-give {
@@ -5033,8 +5237,28 @@ body:is(.zone-highlight, .block-highlight) .giving-panel[hidden] {
   box-shadow: var(--shadow-sm);
 }
 
+.block-instance.giving-panel .panel-block {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.block-instance.giving-panel .panel-block > :is(.panel-heading, .panel-body) {
+  padding-inline: 0;
+}
+
+.block-instance.giving-panel .panel-block > .panel-heading {
+  padding-top: 0;
+}
+
+.block-instance.giving-panel .panel-block > .panel-body:last-child {
+  padding-bottom: 0;
+}
+
 .giving-summary {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(1rem, 2vw, 1.5rem);
 }
 
@@ -5043,7 +5267,7 @@ body:is(.zone-highlight, .block-highlight) .giving-panel[hidden] {
     grid-column: 1;
     align-self: start;
     position: sticky;
-    top: var(--space-lg);
+    top: calc(var(--header-h) + var(--space-lg));
   }
   .zone-content:has(> .giving-panel):has(> .giving-report:not([hidden])) {
     grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
@@ -5063,6 +5287,27 @@ body:is(.zone-highlight, .block-highlight) .giving-panel[hidden] {
   grid-template-columns: minmax(0, 1fr);
 }
 
+@media (max-width: 559px) {
+  .giving-stats {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 72%;
+    gap: var(--space-sm);
+    margin-inline: calc(var(--gutter) * -1);
+    padding: 0.25rem var(--gutter) var(--space-xs);
+    scroll-padding-inline: var(--gutter);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .giving-stats::-webkit-scrollbar {
+    display: none;
+  }
+  .giving-stat {
+    scroll-snap-align: start;
+  }
+}
 @media (min-width: 560px) {
   .giving-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -5165,22 +5410,365 @@ a.giving-stat__note {
   color: var(--brand-text);
 }
 
-.giving-statements__device {
-  align-self: stretch;
+.giving-empty {
+  align-items: flex-start;
+}
+
+.profile-edit .panel-block {
   margin: 0;
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--border-subtle);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.profile-edit .panel-block > .panel-heading {
+  display: none;
+}
+
+.profile-edit .panel-block > .panel-body {
+  padding: 0;
+}
+
+.profile-edit .panel-body:not(:has(.panel-view)) {
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-edit .panel-view .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  min-height: 2.5rem;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  box-shadow: none;
+}
+
+.profile-edit .panel-view .btn:is(:hover, :focus) {
+  border-color: var(--brand);
+  background: var(--brand-wash);
+  color: var(--text);
+}
+
+.profile-edit .panel-view > * {
+  margin-inline: 0;
+}
+
+.profile-edit .panel-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1rem, 2vw, 1.5rem);
+}
+
+.profile-edit .panel-view .row {
+  margin: 0;
+}
+
+.profile-edit .panel-view .row::before,
+.profile-edit .panel-view .row::after {
+  display: none;
+}
+
+.profile-edit .panel-view [class*=col-] {
+  float: none;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+}
+
+.profile-edit .panel-view :is(.mb-3, .mb-4, .mb-5) {
+  margin-bottom: 0 !important;
+}
+
+.profile-edit .panel-view .row:not(:has(*)),
+.profile-edit .panel-view [class*=col-]:not(:has(*)) {
+  display: none;
+}
+
+.profile-edit .person-demographics {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-edit .photo {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.profile-edit .photo:has(.fluidbox--opened) {
+  z-index: 1000;
+}
+
+.profile-edit .photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-circle);
+}
+
+.profile-edit .person-profile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border-radius: var(--radius-2xl);
+  background: radial-gradient(120% 140% at 100% 0%, var(--brand-glow-soft), transparent 60%), var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.profile-edit .person-profile > .row:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md) var(--space-lg);
+}
+
+.profile-edit .person-profile > .row:first-child .photo {
+  width: clamp(4rem, 9vw, 6rem);
+  border-radius: var(--radius-circle);
+  box-shadow: 0 0 0 4px var(--bg-elevated), 0 0 0 5px var(--border-subtle);
+}
+
+.profile-edit .person-profile .name {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-family-title);
+  font-size: clamp(1.5rem, 3vw, 2.125rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.profile-edit .person-profile .person-demographics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem var(--space-md);
+  color: var(--text-secondary);
+}
+
+.profile-edit .person-profile .person-demographics br {
+  display: none;
+}
+
+.profile-edit .person-demographics small {
+  color: var(--text-muted);
+  font-size: 0.8125em;
+}
+
+.profile-edit .person-profile > .row:has(dl) {
+  display: grid;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.profile-edit .person-profile > .row:has(dl) h3,
+.profile-edit .family-member-profiles > h3 {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.profile-edit .person-profile .col-md-6:has(dl) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-sm) var(--space-lg);
+}
+
+.profile-edit .person-profile dl {
+  margin: 0;
+}
+
+.profile-edit .person-profile dt {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.profile-edit .person-profile dd {
+  margin: 0.15rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-edit .person-profile > .btn {
+  align-self: flex-start;
+}
+
+.profile-edit .family-member-profiles {
+  display: grid;
+  gap: var(--space-xs);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  padding: clamp(1.25rem, 2.5vw, 1.75rem) clamp(1.25rem, 2.5vw, 1.75rem) var(--space-md);
+  border: 1px solid var(--border-subtle);
+  border-bottom: 0;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  background: var(--bg-elevated);
+}
+
+.profile-edit .family-member-profiles > h3 {
+  grid-column: 1/-1;
+  margin-bottom: var(--space-sm);
+}
+
+.profile-edit .family-member-profiles > hr {
+  display: none;
+}
+
+.profile-edit .family-member-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: calc(-1 * clamp(1rem, 2vw, 1.5rem));
+  padding: var(--space-md) clamp(1.25rem, 2.5vw, 1.75rem) clamp(1.25rem, 2.5vw, 1.75rem);
+  border: 1px solid var(--border-subtle);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  background: linear-gradient(var(--border-subtle), var(--border-subtle)) clamp(1.25rem, 2.5vw, 1.75rem) 0/calc(100% - 2 * clamp(1.25rem, 2.5vw, 1.75rem)) 1px no-repeat, var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+}
+
+@media (max-width: 559px) {
+  .profile-edit .family-member-actions .btn {
+    flex: 1 1 0;
+  }
+}
+.profile-edit .family-member {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: left;
+}
+
+.profile-edit .panel-view .family-member > .col-xs-9 {
+  padding-right: 2.75rem;
+}
+
+.profile-edit .family-member h4 {
+  margin: 0 0 0.15rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.profile-edit .family-member .person-demographics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.6rem;
   font-size: 0.8125rem;
   color: var(--text-secondary);
 }
 
+.profile-edit .family-member .person-demographics .person-demographics {
+  display: contents;
+}
+
+.profile-edit .family-member .d-block {
+  display: none !important;
+}
+
+.profile-edit .family-member .col-md-4:not(:has(ul)) {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.profile-edit .family-member .text-right {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+}
+
+.profile-edit .family-member .btn-square {
+  width: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0;
+  letter-spacing: 0;
+}
+
 @media (min-width: 900px) {
-  .giving-statements__device {
+  .profile-edit [id$=_pnlEdit] > .row {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: var(--space-xl);
+    margin: 0;
+  }
+  .profile-edit [id$=_pnlEdit] > .row::before, .profile-edit [id$=_pnlEdit] > .row::after {
     display: none;
   }
+  .profile-edit [id$=_pnlEdit] > .row > [class*=col-] {
+    float: none;
+    width: auto;
+    padding: 0;
+  }
+  .profile-edit [id$=_pnlEdit] > .row > .col-md-3 {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-lg));
+    align-self: start;
+  }
 }
-.giving-empty {
-  align-items: flex-start;
+.profile-edit [id$=_pnlEdit] .image-editor-photo,
+.profile-edit [id$=_pnlEdit] .image-container {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.profile-edit [id$=_pnlEdit] h3 {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: 0.8125rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+.profile-edit [id$=_pnlEdit] .col-md-9 > h3:first-child {
+  margin-top: 0;
+}
+
+.profile-edit [id$=_pnlEdit] hr {
+  margin: 0 0 var(--space-md);
+  border: 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.profile-edit [id$=_pnlEdit] [id$=_pnlAddress] > .clearfix {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.profile-edit [id$=_pnlEdit] [id$=_pnlAddress] > .clearfix > * {
+  float: none;
+}
+
+.profile-edit [id$=_pnlEdit] [id$=_pnlAddress] > .clearfix::before,
+.profile-edit [id$=_pnlEdit] [id$=_pnlAddress] > .clearfix::after {
+  display: none;
 }
 
 /* ============================================================
@@ -6781,41 +7369,5 @@ html.stage-static .deck .nextstep-card {
     padding-block: var(--space-sm) var(--space-2xl);
   }
 }
-
 /* CSS Overrides Bottom Start */
-:root {
-    --base-primary: #9bc93c;
-    --base-secondary: #0b0e0a;
-    --base-link: #617e00;
-    --logo-image: url('/Themes/2027 VRL External/Assets/Images/vrl_logo.png');
-    --site-header-background: #ffffff;
-    --page-title-background: #f0f2ef;
-    --page-title-foreground: #0b0e0a;
-    --site-footer-background: #030402;
-    --base-interface-strongest: #030402;
-    --base-interface-stronger: #0b0e0a;
-    --base-interface-strong: #3f443c;
-    --base-interface-medium: #8d918b;
-    --base-interface-soft: #dfe2de;
-    --base-interface-softer: #f0f2ef;
-    --base-interface-softest: #f7f9f6;
-    --base-danger: #d70015;
-    --base-success: #01a11e;
-    --base-warning: #e58600;
-    --base-info: #005dd7;
-    --base-critical: #ee7725;
-    --font-family-title: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-family-body: 'Montserrat', system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-size-regular: 16px;
-    --font-size-h1: 48px;
-    --font-size-h2: 40px;
-    --font-size-h3: 28px;
-    --font-size-h4: 22px;
-    --font-size-h5: 18px;
-    --font-size-h6: 16px;
-}
-
-/* Insert overrides from Rock theme admin */
-
-h1 { font-size: 20rem;}
 /* CSS Overrides Bottom End */

@@ -502,8 +502,8 @@
   var loginRoot = loginHost && loginHost.querySelector('.block-content > [id^="obsidian-"]');
   if (loginRoot) {
     var LOGIN_TABS = [
-      { key: 'passwordless', label: 'Phone or email' },
-      { key: 'credential', label: 'Username & password' }
+      { key: 'credential', label: 'Username & password' },   // the block's default method
+      { key: 'passwordless', label: 'Phone or email' }
     ];
     var loginTabs = document.createElement('div');
     loginTabs.className = 'login-tabs';
@@ -689,6 +689,10 @@
         document.querySelectorAll('.' + t.getAttribute('data-panel')).forEach(function (panel) { panel.hidden = !on; });
       });
       place(tab);
+      // On a phone the strip scrolls sideways: bring the selected tab into view
+      if (bar.scrollWidth > bar.clientWidth) {
+        bar.scrollTo({ left: tab.offsetLeft - (bar.clientWidth - tab.offsetWidth) / 2, behavior: remember ? 'smooth' : 'auto' });
+      }
       // An iframe that resizes itself (Simple Donation) re-measures on resize
       window.dispatchEvent(new Event('resize'));
       if (remember) {

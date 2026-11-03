@@ -7,10 +7,9 @@
 
     Rock provides StatementYears (each with .Year) and DetailPage (the
     statement page; it takes ?StatementYear=). A sidebar list of year links,
-    newest first; the current year is marked "Year to date". On desktop it
-    sits left of the Transaction Report block (CSS Class giving-panel
-    giving-history giving-report). The report is a Rock table, so phones
-    don't get it; the note at the bottom says where to find it instead.
+    newest first; the current year is marked "Year to date". If a Transaction
+    Report block (CSS Class giving-panel giving-history giving-report) is shown
+    too, this sits left of it on desktop.
 {% endcomment %}
 {%- assign currentYear = 'Now' | Date:'yyyy' -%}
 <nav class="account-tile giving-statements" aria-label="Giving statements">
@@ -28,5 +27,4 @@
   {%- else %}
   <p class="account-tile__sub">No statements yet. They appear here after your first gift.</p>
   {%- endif %}
-  <p class="giving-statements__device">To look up individual gifts by date, open this page on a computer or tablet.</p>
 </nav>

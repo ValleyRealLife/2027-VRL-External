@@ -1,6 +1,7 @@
 {% comment %}
     MANAGE GIVING — the first block on the manage-giving page (InnerDefault,
-    Main zone): the tab bar, the Give button, and the Summary panel.
+    Main zone): the tab bar and the Summary panel. (The Give button is off
+    this page for now; Partials/MerlinGive.lava goes back in .manage-giving__bar.)
 
     Block content:            {% include '~~/Assets/Lava/ManageGiving.lava' %}
     Enabled Lava Commands:    Sql
@@ -19,7 +20,7 @@
                         List Lava (template: GivingStatements.lava) +
                         Transaction Report block
 
-    The selected tab is in the URL hash (/manage-giving#history) and is kept
+    The selected tab is in the URL hash (/my-account/manage-giving#history) and is kept
     across Rock postbacks (sessionStorage), so a block's filter or paging
     doesn't jump back to Summary. In Rock's zone/block edit mode every panel
     shows, so blocks stay editable.
@@ -33,7 +34,7 @@
 <section class="manage-giving">
   <div class="account-tile account-tile--signin">
     <h2 class="account-tile__title">Sign in to manage your giving</h2>
-    <a class="btn btn--primary" href="/login?returnurl=%2fmanage-giving">Sign in</a>
+    <a class="btn btn--primary" href="/login?returnurl=%2fmy-account%2fmanage-giving">Sign in</a>
   </div>
 </section>
 {%- else -%}
@@ -95,7 +96,6 @@ ORDER BY ft.TransactionDateTime DESC
       <button class="pill-tabs__tab" type="button" role="tab" data-panel="giving-recurring" data-hash="recurring" aria-selected="false" tabindex="-1">Recurring</button>
       <button class="pill-tabs__tab" type="button" role="tab" data-panel="giving-history" data-hash="history" aria-selected="false" tabindex="-1">History</button>
     </div>
-    {%- include '~~/Assets/Lava/Partials/MerlinGive.lava' %}
   </div>
 
   <div class="giving-panel giving-summary" role="tabpanel" aria-label="Summary">

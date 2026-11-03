@@ -22,9 +22,8 @@
                       lists the person subscribes to (person attributes
                       CommGroups_1 email, _2 text, _3 app, _4 special text:
                       group guids, set by the "PersonProfile - Communication
-                      Preferences" workflow); Update opens that workflow
-                      (commPrefsUrl) in the care dialog's iframe and reloads
-                      this page when the dialog closes
+                      Preferences" workflow); Update links to that workflow
+                      (commPrefsUrl)
       Groups          active groups of types 23 and 25, and children of group
                       46 (organizational units); leaders first, with a Manage
                       link and the member count
@@ -36,17 +35,18 @@
                       15-90 days ago). Each card links to the request on the
                       staff site (Global attribute InternalApplicationRoot)
 
-    Edit links all open profileEditUrl: Rock's Public Profile Edit block
-    can't be told which person to edit from a URL, so that page shows the
-    family with an edit button per person (the block's own buttons).
+    The family tile has one "Manage family" button, not an edit link per
+    person: Rock's Public Profile Edit block (on profileEditUrl) can't be
+    told which person to edit from a URL, so that page shows the family
+    with the block's own edit button per person.
 
     Styled by Styles/_account.scss.
 {% endcomment %}
 {%- comment -%} Settings {%- endcomment -%}
-{%- assign profileEditUrl = '/myaccount/profile' -%}
+{%- assign profileEditUrl = '/my-account/profile' -%}
 {%- assign commPrefsUrl = '/page/42023?WorkflowTypeId=227' -%}
-{%- assign changePasswordUrl = '/ChangePassword' -%}
-{%- assign manageGivingUrl = '/manage-giving' -%}
+{%- assign changePasswordUrl = '/my-account/change-password' -%}
+{%- assign manageGivingUrl = '/my-account/manage-giving' -%}
 {%- assign groupManageUrl = '/page/1128?GroupId=' -%}
 
 {%- if CurrentPerson == null -%}
@@ -54,7 +54,7 @@
   <div class="account-tile account-tile--signin">
     <h2 class="account-tile__title">Sign in to see your account</h2>
     <p class="account-tile__lede">Your family, groups and giving, in one place.</p>
-    <a class="btn btn--primary" href="/login?returnurl=%2fmyaccount">Sign in</a>
+    <a class="btn btn--primary" href="/login?returnurl=%2fmy-account">Sign in</a>
   </div>
 </section>
 {%- else -%}
@@ -223,10 +223,7 @@ ORDER BY a.[Key], g.[Order], g.Name
   {%- comment -%} Family {%- endcomment %}
   {%- if familyMembers != empty %}
   <div class="account-tile account-tile--family">
-    <div class="account-tile__head">
-      <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-home"/></svg> My family</h2>
-      <a class="account-link" href="{{ profileEditUrl }}">Add a family member</a>
-    </div>
+    <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-home"/></svg> My family</h2>
     <ul class="account-family">
       {%- for member in familyMembers %}
         {%- assign person = member.Person -%}
@@ -243,10 +240,12 @@ ORDER BY a.[Key], g.[Order], g.Name
             {%- endif -%}
           </span>
         </div>
-        <a class="account-link account-person__edit" href="{{ profileEditUrl }}">Edit<span class="u-visually-hidden"> {{ person.NickName }}</span></a>
       </li>
       {%- endfor %}
     </ul>
+    <div class="account-tile__actions">
+      <a class="pill-btn" href="{{ profileEditUrl }}">Manage family</a>
+    </div>
   </div>
   {%- endif %}
 
@@ -259,7 +258,7 @@ ORDER BY a.[Key], g.[Order], g.Name
       <span class="account-stat__label">given in {{ 'Now' | Date:'yyyy' }}{% if giving.LastGift %} · last gift {{ giving.LastGift | Date:'MMM d' }}{% endif %}</span>
     </p>
     {%- endif %}
-    <div class="account-giving-actions">
+    <div class="account-tile__actions">
       {%- assign merlinClass = 'btn--sm' -%}
       {%- include '~~/Assets/Lava/Partials/MerlinGive.lava' %}
       <a class="pill-btn" href="{{ manageGivingUrl }}">Manage giving</a>
@@ -288,7 +287,9 @@ ORDER BY a.[Key], g.[Order], g.Name
     {%- else %}
     <p class="account-tile__lede">You're not subscribed to any lists yet.</p>
     {%- endif %}
-    <a class="account-link" href="{{ commPrefsUrl }}" data-care-frame="{{ commPrefsUrl }}" data-care-title="Communication preferences" data-care-reload>Update preferences</a>
+    <div class="account-tile__actions">
+      <a class="pill-btn" href="{{ commPrefsUrl }}">Update preferences</a>
+    </div>
   </div>
 
   {%- comment -%} Groups {%- endcomment %}

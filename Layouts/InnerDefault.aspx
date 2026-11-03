@@ -84,6 +84,18 @@
                 </header>
             <% } %>
             <% if(showPageBreadcrumbs) { %>
+                <%
+                    // A block that retitles the page (Workflow Entry with
+                    // ?WorkflowTypeId=, …) leaves the last crumb on the page's
+                    // own name ("Workflow Entry"). When that crumb is the
+                    // page's own, show the page title the visitor sees instead.
+                    var lastCrumb = BreadCrumbs != null && BreadCrumbs.Count > 0 ? BreadCrumbs[BreadCrumbs.Count - 1] : null;
+                    if ( lastCrumb != null && lastCrumb.Name == page.BreadCrumbText
+                        && !string.IsNullOrWhiteSpace( PageTitle ) && PageTitle != lastCrumb.Name )
+                    {
+                        lastCrumb.Name = PageTitle;
+                    }
+                %>
                 <div class="container breadcrumb-container">
                     <Rock:PageBreadCrumbs ID="PageBreadCrumbs" runat="server" />
                 </div>

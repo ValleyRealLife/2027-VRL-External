@@ -1,0 +1,184 @@
+// PROFILE  (Rock's Public Profile Edit block on /my-account/profile)
+//
+// Block Properties → Advanced → CSS Class: profile-edit. Everything here is
+// scoped to that class, so Rock's admin UI and other Bootstrap markup keep
+// core.css. View mode is restyled to match My Account's tiles
+// (Styles/_account.scss): you in a profile tile, the family as a grid of
+// person cards with Rock's own edit buttons, and Rock's buttons as pills.
+// The edit forms (after a click) only get the card and button shape for now.
+
+@use "config" as *;
+
+$tile-pad: clamp(1.25rem, 2.5vw, 1.75rem);
+
+// Rock's panel chrome off: the page title already says Profile
+.profile-edit .panel-block { margin: 0; border: 0; border-radius: 0; background: none; box-shadow: none; }
+.profile-edit .panel-block > .panel-heading { display: none; }
+.profile-edit .panel-block > .panel-body { padding: 0; }
+
+// Edit forms: one card around the whole form
+.profile-edit .panel-body:not(:has(.panel-view)) {
+  padding: $tile-pad;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+// Buttons: pill shape and green primary come from _rock-blocks.scss. View
+// mode actions are outline pills, like My Account's tile footers.
+.profile-edit .panel-view .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.45em;
+  min-height: 2.5rem;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 0.75rem; font-weight: 800; line-height: 1.2;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  box-shadow: none;
+}
+.profile-edit .panel-view .btn:is(:hover, :focus) { border-color: var(--brand); background: var(--brand-wash); color: var(--text); }
+
+// ---------------------------------------------------------------------------
+// View mode: Bootstrap's rows and columns flattened, so the layout is ours
+// ---------------------------------------------------------------------------
+.profile-edit .panel-view > * { margin-inline: 0; }   // both tiles full width (something gives person-profile side margins)
+.profile-edit .panel-view { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1rem, 2vw, 1.5rem); }
+.profile-edit .panel-view .row { margin: 0; }
+.profile-edit .panel-view .row::before,
+.profile-edit .panel-view .row::after { display: none; }
+.profile-edit .panel-view [class*="col-"] { float: none; width: auto; min-width: 0; min-height: 0; padding: 0; }
+.profile-edit .panel-view :is(.mb-3, .mb-4, .mb-5) { margin-bottom: 0 !important; }   // Rock's utilities are !important
+.profile-edit .panel-view .row:not(:has(*)),
+.profile-edit .panel-view [class*="col-"]:not(:has(*)) { display: none; }   // Rock's empty rows and columns
+.profile-edit .person-demographics { margin: 0; padding: 0; list-style: none; }
+// Rock's photo zoom (fluidbox) puts its wrapper at z-index ~990, above the
+// sticky header. Each photo is its own stacking context below the header,
+// lifted over everything only while a photo is zoomed open.
+.profile-edit .photo { position: relative; z-index: 0; isolation: isolate; }
+.profile-edit .photo:has(.fluidbox--opened) { z-index: 1000; }
+.profile-edit .photo img { display: block; width: 100%; height: auto; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-circle); }
+
+// You: the profile tile
+.profile-edit .person-profile {
+  display: flex; flex-direction: column; gap: var(--space-md);
+  padding: $tile-pad;
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(120% 140% at 100% 0%, var(--brand-glow-soft), transparent 60%),
+    var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+.profile-edit .person-profile > .row:first-child { display: flex; align-items: center; gap: var(--space-md) var(--space-lg); }
+.profile-edit .person-profile > .row:first-child .photo {
+  width: clamp(4rem, 9vw, 6rem);
+  border-radius: var(--radius-circle);
+  box-shadow: 0 0 0 4px var(--bg-elevated), 0 0 0 5px var(--border-subtle);
+}
+.profile-edit .person-profile .name {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-family-title);
+  font-size: clamp(1.5rem, 3vw, 2.125rem); font-weight: 800; line-height: 1.1;
+}
+.profile-edit .person-profile .person-demographics { display: flex; flex-wrap: wrap; gap: 0.15rem var(--space-md); color: var(--text-secondary); }
+.profile-edit .person-profile .person-demographics br { display: none; }
+.profile-edit .person-demographics small { color: var(--text-muted); font-size: 0.8125em; }
+
+// Contact details: label over value, side by side where they fit
+.profile-edit .person-profile > .row:has(dl) {
+  display: grid; gap: var(--space-sm);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.profile-edit .person-profile > .row:has(dl) h3,
+.profile-edit .family-member-profiles > h3 {
+  margin: 0;
+  font-size: 0.8125rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+}
+.profile-edit .person-profile .col-md-6:has(dl) { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr)); gap: var(--space-sm) var(--space-lg); }
+.profile-edit .person-profile dl { margin: 0; }
+.profile-edit .person-profile dt {
+  font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.profile-edit .person-profile dd { margin: 0.15rem 0 0; overflow-wrap: anywhere; }
+.profile-edit .person-profile > .btn { align-self: flex-start; }
+
+// Family: one tile of person cards; the Add button below is its footer,
+// drawn as the tile's bottom edge (it's a sibling in Rock's markup)
+.profile-edit .family-member-profiles {
+  display: grid; gap: var(--space-xs);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  padding: $tile-pad $tile-pad var(--space-md);
+  border: 1px solid var(--border-subtle); border-bottom: 0;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  background: var(--bg-elevated);
+}
+.profile-edit .family-member-profiles > h3 { grid-column: 1 / -1; margin-bottom: var(--space-sm); }
+.profile-edit .family-member-profiles > hr { display: none; }
+.profile-edit .family-member-actions {
+  display: flex; flex-wrap: wrap; gap: var(--space-xs);
+  margin-top: calc(-1 * clamp(1rem, 2vw, 1.5rem));   // join the tile above
+  padding: var(--space-md) $tile-pad $tile-pad;
+  border: 1px solid var(--border-subtle); border-top: 0;
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  background:
+    linear-gradient(var(--border-subtle), var(--border-subtle)) $tile-pad 0 / calc(100% - 2 * #{$tile-pad}) 1px no-repeat,
+    var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+}
+@media (max-width: #{$bp-sm - 1px}) { .profile-edit .family-member-actions .btn { flex: 1 1 0; } }
+
+// A person card: photo, name, details; Rock's edit button top-right
+.profile-edit .family-member {
+  position: relative;
+  display: grid; grid-template-columns: 3rem minmax(0, 1fr); align-items: start; gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  text-align: left;
+}
+.profile-edit .panel-view .family-member > .col-xs-9 { padding-right: 2.75rem; }
+.profile-edit .family-member h4 { margin: 0 0 0.15rem; font-size: 0.9375rem; font-weight: 700; line-height: 1.3; }
+.profile-edit .family-member .person-demographics { display: flex; flex-wrap: wrap; gap: 0 0.6rem; font-size: 0.8125rem; color: var(--text-secondary); }
+.profile-edit .family-member .person-demographics .person-demographics { display: contents; }
+.profile-edit .family-member .d-block { display: none !important; }                      // "Contact Info" label
+.profile-edit .family-member .col-md-4:not(:has(ul)) { font-size: 0.8125rem; color: var(--text-secondary); overflow-wrap: anywhere; }
+.profile-edit .family-member .text-right { position: absolute; top: var(--space-sm); right: var(--space-sm); }
+.profile-edit .family-member .btn-square { width: 2.25rem; min-height: 2.25rem; padding: 0; letter-spacing: 0; }
+
+// ---------------------------------------------------------------------------
+// Edit forms (you or a family member, after a click): photo beside the
+// fields on desktop, above them on a phone. Section titles match the tiles'
+// titles; fields and the Save / Cancel footer are _rock-blocks.scss's.
+// ---------------------------------------------------------------------------
+$edit: '.profile-edit [id$="_pnlEdit"]';
+
+@media (min-width: #{$bp-md}) {
+  #{$edit} > .row { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: var(--space-xl); margin: 0; }
+  #{$edit} > .row::before, #{$edit} > .row::after { display: none; }
+  #{$edit} > .row > [class*="col-"] { float: none; width: auto; padding: 0; }
+  #{$edit} > .row > .col-md-3 { position: sticky; top: calc(var(--header-h) + var(--space-lg)); align-self: start; }   // below the fixed header
+}
+#{$edit} .image-editor-photo,
+#{$edit} .image-container { border-radius: var(--radius-xl); overflow: hidden; }
+
+#{$edit} h3 {
+  margin: var(--space-lg) 0 var(--space-sm);
+  font-size: 0.8125rem; font-weight: 800;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+}
+#{$edit} .col-md-9 > h3:first-child { margin-top: 0; }
+#{$edit} hr { margin: 0 0 var(--space-md); border: 0; border-top: 1px solid var(--border-subtle); }
+
+// Home Address row: label left, "Moved" as a small outline pill right
+#{$edit} [id$="_pnlAddress"] > .clearfix { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+#{$edit} [id$="_pnlAddress"] > .clearfix > * { float: none; }
+#{$edit} [id$="_pnlAddress"] > .clearfix::before,
+#{$edit} [id$="_pnlAddress"] > .clearfix::after { display: none; }   // clearfix spacers would be flex items
+// Fields, buttons and the Save / Cancel footer: _rock-blocks.scss
