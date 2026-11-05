@@ -7,24 +7,39 @@
     Set Page Title:     Yes (the page header shows the event's name)
     Registration Page:  the registration page
 
-    Rock provides Event (the event item), EventItemOccurrence and
-    RegistrationPage. This sets the page header's photo from the event photo
-    (the layout reads the vrl:page-image meta tag; Layouts/InnerDefault.aspx)
-    and the social preview image (og:image), then shows the description
-    (Description only; the Summary is the cards' teaser) beside a card with
-    when / the church's contact info / note and the actions:
+    Rock provides Event (the event item), EventItemOccurrence,
+    RegistrationPage and RegistrationStatusLabels. This sets the page
+    header's photo from the event photo (the layout reads the vrl:page-image
+    meta tag; Layouts/InnerDefault.aspx) and the social preview image
+    (og:image), then shows the content beside a card with When (or Next, for
+    a recurring schedule) / Where / the occurrence's contact person (name and
+    email) / the actions:
 
-      Primary action    the event's Details URL when it has one ("Visit event
-                        page"; it overrides registration, as on the cards),
-                        otherwise one Register button per registration
-                        linkage that is open (active and inside its dates),
-                        or "Registration closed"
+      Content           the event's Description and the occurrence's Note,
+                        one after the other in one container (both are HTML;
+                        staff put buttons in either). The Summary isn't shown
+                        here: it's the cards' teaser and the link preview.
+      Register          one button per registration linkage that's open:
+                        active, inside its start/end dates and not full,
+                        labelled with the public name or the event name
+                        (40 chars), or "Register" if both are blank.
+                        Closed, full or inactive ones are left out.
+      Registration      the occurrence's RegistrationLinks matrix attribute
+        links           (LinkTitle, RegistrationLink, LinkType): custom
+                        registration links (a workflow, an outside form) with
+                        the Register buttons. LinkType primary = green button
+                        (after Register), secondary = outline button,
+                        tertiary = text link, under the buttons
       Add to calendar   an .ics download built from the schedule
       Share             the design system's share menu (theme.js)
 
+    The event's Details URL isn't used here: it replaces the link to this
+    page on every card instead (Events.lava, HomeEvents.lava,
+    EventRelated.lava).
+
     PromotionStart (occurrence attribute): before it, the page says the event
-    isn't available yet instead of showing it. Location is commented out for
-    now (not entered consistently). Styled by Styles/_events.scss.
+    isn't available yet instead of showing it. Where shows only when the
+    occurrence has a location. Styled by Styles/_events.scss.
 {% endcomment %}
 {%- assign occurrence = EventItemOccurrence -%}
 {%- capture siteRoot %}{{ 'Global' | Page:'Scheme' }}://{{ 'Global' | Page:'Host' }}{% endcapture -%}
@@ -59,135 +74,121 @@
 {%- comment -%} When: the next date only {%- endcomment -%}
 {%- assign nextStart = occurrence.NextStartDateTime -%}
 {%- if nextStart == null or nextStart == '' %}{% assign nextStart = occurrence.Schedule.iCalendarContent | DatesFromICal:1 | First %}{% endif -%}
+{%- comment -%} A recurring schedule (a repeat rule or extra dates) labels it "Next", a one-time event "When" {%- endcomment -%}
+{%- assign isRecurring = false -%}
+{%- assign iCal = occurrence.Schedule.iCalendarContent | Default:'' -%}
+{%- if iCal contains 'RRULE' or iCal contains 'RDATE' %}{% assign isRecurring = true %}{% endif -%}
 
-{%- comment -%} Registration: open = active and inside its start/end dates {%- endcomment -%}
+{%- comment -%} Registration buttons: open linkages (active, inside their dates, not full), then the RegistrationLinks matrix {%- endcomment -%}
 {%- assign registrationPage = RegistrationPage | Default:'/registration' -%}
-{%- assign linkageCount = 0 -%}
-{%- for linkage in occurrence.Linkages %}{% if linkage.RegistrationInstance != null %}{% assign linkageCount = linkageCount | Plus:1 %}{% endif %}{% endfor -%}
+{%- comment -%}
+  RegistrationLinks matrix rows, sorted by LinkType: primary (green button,
+  after the Register buttons), secondary (outline button), tertiary (text
+  link with an arrow). A blank or unknown LinkType counts as primary.
+{%- endcomment -%}
+{%- assign matrixPrimary = '' -%}
+{%- assign matrixSecondary = '' -%}
+{%- assign matrixTertiary = '' -%}
+{%- assign registrationLinks = occurrence | Attribute:'RegistrationLinks','Object' -%}
+{%- for item in registrationLinks.AttributeMatrixItems -%}
+  {%- assign linkTitle = item | Attribute:'LinkTitle' | Trim -%}
+  {%- assign linkUrl = item | Attribute:'RegistrationLink' | Trim -%}
+  {%- assign linkType = item | Attribute:'LinkType','RawValue' | Trim | Downcase -%}
+  {%- if linkUrl == '' %}{% continue %}{% endif -%}
+  {%- assign linkTitle = linkTitle | Default:'Register' -%}
+  {%- if linkType == 'tertiary' -%}
+    {%- capture linkHtml %}<a class="event-detail__text-link" href="{{ linkUrl }}">{{ linkTitle }}</a>{% endcapture -%}
+    {%- assign matrixTertiary = matrixTertiary | Append:linkHtml -%}
+  {%- elseif linkType == 'secondary' -%}
+    {%- capture linkHtml %}<a class="btn btn--outline" href="{{ linkUrl }}">{{ linkTitle }}</a>{% endcapture -%}
+    {%- assign matrixSecondary = matrixSecondary | Append:linkHtml -%}
+  {%- else -%}
+    {%- capture linkHtml %}<a class="btn btn--primary" href="{{ linkUrl }}">{{ linkTitle }}</a>{% endcapture -%}
+    {%- assign matrixPrimary = matrixPrimary | Append:linkHtml -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- capture registerButtons -%}
+  {%- for linkage in occurrence.Linkages -%}
+    {%- assign instance = linkage.RegistrationInstance -%}
+    {%- if instance == null %}{% continue %}{% endif -%}
+    {%- assign isOpen = false -%}
+    {%- if instance.IsActive == true -%}
+      {%- assign isOpen = true -%}
+      {%- if instance.StartDateTime %}{% assign untilStart = 'Now' | DateDiff:instance.StartDateTime,'m' %}{% if untilStart > 0 %}{% assign isOpen = false %}{% endif %}{% endif -%}
+      {%- if instance.EndDateTime %}{% assign untilEnd = 'Now' | DateDiff:instance.EndDateTime,'m' %}{% if untilEnd < 0 %}{% assign isOpen = false %}{% endif %}{% endif -%}
+      {%- assign statusLabel = RegistrationStatusLabels[linkage.RegistrationInstanceId] -%}
+      {%- if statusLabel == 'Full' %}{% assign isOpen = false %}{% endif -%}
+    {%- endif -%}
+    {%- if isOpen -%}
+      {%- comment -%} The linkage's public name, else the event's, cut to 40 characters; "Register" if both are blank {%- endcomment -%}
+      {%- assign registerLabel = linkage.PublicName | Trim -%}
+      {%- if registerLabel == '' %}{% assign registerLabel = Event.Name | Trim %}{% endif -%}
+      {%- assign registerLabel = registerLabel | Default:'Register' | Truncate:40 -%}
+      {%- if linkage.UrlSlug != '' %}
+      <a class="btn btn--primary" href="{{ registrationPage }}?RegistrationInstanceId={{ linkage.RegistrationInstanceId }}&amp;Slug={{ linkage.UrlSlug }}">{{ registerLabel }}</a>
+      {%- else %}
+      <a class="btn btn--primary" href="{{ registrationPage }}?RegistrationInstanceId={{ linkage.RegistrationInstanceId }}&amp;EventOccurrenceID={{ linkage.EventItemOccurrenceId }}">{{ registerLabel }}</a>
+      {%- endif %}
+    {%- endif -%}
+  {%- endfor -%}
+  {{ matrixPrimary }}
+  {{ matrixSecondary }}
+{%- endcapture -%}
+{%- assign registerButtons = registerButtons | Trim -%}
 
 <div class="event-detail">
   <div class="event-detail__main">
-    {%- comment -%}
-      REVIEW PANELS (temporary): every content field staff put text or buttons
-      in, each in its own labelled panel with where it's edited in Rock, empty
-      ones included, so we can decide which fields the page should use. Remove
-      the panels for the fields we drop and restyle the rest when decided.
-    {%- endcomment -%}
-    <section class="event-field">
-      <h2 class="event-field__label">Summary <span>Event → Summary · also the card teaser and link preview</span></h2>
-      {%- if Event.Summary != '' %}<div class="event-field__body">{{ Event.Summary }}</div>{% else %}<p class="event-field__empty">Empty</p>{% endif %}
-    </section>
-    <section class="event-field">
-      <h2 class="event-field__label">Description <span>Event → Description</span></h2>
-      {%- if Event.Description != '' %}<div class="event-field__body">{{ Event.Description }}</div>{% else %}<p class="event-field__empty">Empty</p>{% endif %}
-    </section>
-    <section class="event-field">
-      <h2 class="event-field__label">Occurrence note <span>Event occurrence → Note</span></h2>
-      {%- if occurrence.Note != '' %}<div class="event-field__body">{{ occurrence.Note }}</div>{% else %}<p class="event-field__empty">Empty</p>{% endif %}
-    </section>
-    <section class="event-field">
-      <h2 class="event-field__label">Details URL <span>Event → Details URL · overrides registration</span></h2>
-      {%- if Event.DetailsUrl != '' %}<div class="event-field__body"><a href="{{ Event.DetailsUrl }}">{{ Event.DetailsUrl }}</a></div>{% else %}<p class="event-field__empty">Empty</p>{% endif %}
-    </section>
-    <section class="event-field">
-      <h2 class="event-field__label">Registration <span>Event occurrence → Registration linkages</span></h2>
-      {%- if linkageCount > 0 %}
-      <ul class="event-field__list">
-        {%- for linkage in occurrence.Linkages %}{% if linkage.RegistrationInstance != null %}
-        <li>{{ linkage.PublicName | Default:linkage.RegistrationInstance.Name }} · instance {{ linkage.RegistrationInstance.Name }}{% if linkage.UrlSlug != '' %} · slug {{ linkage.UrlSlug }}{% endif %} · {% if linkage.RegistrationInstance.IsActive %}active{% else %}inactive{% endif %}</li>
-        {%- endif %}{% endfor %}
-      </ul>
-      {%- else %}<p class="event-field__empty">None</p>{% endif %}
-    </section>
-    {%- comment -%} Attributes: the event item's, the occurrence's, and each calendar's (calendar item attributes) {%- endcomment -%}
-    <section class="event-field">
-      <h2 class="event-field__label">Event attributes <span>Event → Attributes</span></h2>
-      {%- assign shown = 0 %}
-      <dl class="event-field__attrs">
-        {%- for attributeValue in Event.AttributeValues %}{% if attributeValue.Value != '' %}{% assign shown = 1 %}
-        <dt>{{ attributeValue.AttributeName }} <code>{{ attributeValue.AttributeKey }}</code></dt><dd>{{ attributeValue.ValueFormatted }}</dd>
-        {%- endif %}{% endfor %}
-      </dl>
-      {%- if shown == 0 %}<p class="event-field__empty">None set</p>{% endif %}
-    </section>
-    <section class="event-field">
-      <h2 class="event-field__label">Occurrence attributes <span>Event occurrence → Attributes</span></h2>
-      {%- assign shown = 0 %}
-      <dl class="event-field__attrs">
-        {%- for attributeValue in occurrence.AttributeValues %}{% if attributeValue.Value != '' %}{% assign shown = 1 %}
-        <dt>{{ attributeValue.AttributeName }} <code>{{ attributeValue.AttributeKey }}</code></dt><dd>{{ attributeValue.ValueFormatted }}</dd>
-        {%- endif %}{% endfor %}
-      </dl>
-      {%- if shown == 0 %}<p class="event-field__empty">None set</p>{% endif %}
-    </section>
-    {%- for calendarItem in Event.EventCalendarItems %}
-    <section class="event-field">
-      <h2 class="event-field__label">{{ calendarItem.EventCalendar.Name }} calendar attributes <span>Event → calendar tab</span></h2>
-      {%- assign shown = 0 %}
-      <dl class="event-field__attrs">
-        {%- for attributeValue in calendarItem.AttributeValues %}{% if attributeValue.Value != '' %}{% assign shown = 1 %}
-        <dt>{{ attributeValue.AttributeName }} <code>{{ attributeValue.AttributeKey }}</code></dt><dd>{{ attributeValue.ValueFormatted }}</dd>
-        {%- endif %}{% endfor %}
-      </dl>
-      {%- if shown == 0 %}<p class="event-field__empty">None set</p>{% endif %}
-    </section>
-    {%- endfor %}
+    {%- comment -%} The Description, then the occurrence Note: one container, both HTML {%- endcomment -%}
+    <div class="event-detail__desc">
+      {{ Event.Description }}
+      {{ occurrence.Note }}
+    </div>
   </div>
 
   <aside class="event-detail__card" aria-label="Event details">
     <div class="event-detail__row">
-      <h2 class="event-detail__label">When</h2>
+      <h2 class="event-detail__label">{% if isRecurring %}Next{% else %}When{% endif %}</h2>
       {%- if nextStart %}
       <p class="event-detail__when">{{ nextStart | Date:'dddd, MMMM d, yyyy' }}<br>{{ nextStart | Date:'h:mm tt' }}</p>
       {%- endif %}
     </div>
 
-    {%- comment -%} Location: off for now (not entered consistently)
-    {%- if occurrence.Location != '' %}
+    {%- assign location = occurrence.Location | Trim -%}
+    {%- if location != '' %}
     <div class="event-detail__row">
       <h2 class="event-detail__label">Where</h2>
-      <p>{{ occurrence.Location }}</p>
+      <p>{{ location }}</p>
     </div>
     {%- endif %}
-    {%- endcomment -%}
 
-    {%- comment -%} Questions: the church's contact info (Global Attributes OrganizationPhone / OrganizationEmail, falling back to the footer's), not the event's contact person {%- endcomment -%}
-    {%- assign churchPhone = 'Global' | Attribute:'OrganizationPhone' | Default:'(509) 232-0840' -%}
-    {%- assign churchEmail = 'Global' | Attribute:'OrganizationEmail' | Default:'hello@vrl.church' -%}
+    {%- comment -%} Contact: the occurrence's contact person, name and email only (no phone) {%- endcomment -%}
+    {%- assign contactPerson = occurrence.ContactPersonAlias.Person -%}
+    {%- assign contactName = contactPerson.FullName | Trim -%}
+    {%- assign contactEmail = occurrence.ContactEmail | Trim -%}
+    {%- if contactEmail == '' %}{% assign contactEmail = contactPerson.Email | Trim %}{% endif -%}
+    {%- if contactName != '' or contactEmail != '' %}
     <div class="event-detail__row">
       <h2 class="event-detail__label">Questions?</h2>
       <p>
-        <a href="tel:{{ churchPhone | Remove:' ' | Remove:'(' | Remove:')' | Remove:'-' }}">{{ churchPhone }}</a><br>
-        <a href="mailto:{{ churchEmail }}">{{ churchEmail }}</a>
+        {%- if contactName != '' %}{{ contactName }}{% endif -%}
+        {%- if contactName != '' and contactEmail != '' %}<br>{% endif -%}
+        {%- if contactEmail != '' %}<a href="mailto:{{ contactEmail }}">{{ contactEmail }}</a>{% endif -%}
       </p>
     </div>
+    {%- endif %}
 
 
     <div class="event-detail__actions">
-      {%- if Event.DetailsUrl and Event.DetailsUrl != '' %}
-      <a class="btn btn--primary" href="{{ Event.DetailsUrl }}">Visit event page</a>
-      {%- elsif linkageCount > 0 %}
-        {%- for linkage in occurrence.Linkages %}
-          {%- assign instance = linkage.RegistrationInstance -%}
-          {%- if instance == null %}{% continue %}{% endif -%}
-          {%- assign isOpen = false -%}
-          {%- if instance.IsActive == true -%}
-            {%- assign isOpen = true -%}
-            {%- if instance.StartDateTime %}{% assign untilStart = 'Now' | DateDiff:instance.StartDateTime,'m' %}{% if untilStart > 0 %}{% assign isOpen = false %}{% endif %}{% endif -%}
-            {%- if instance.EndDateTime %}{% assign untilEnd = 'Now' | DateDiff:instance.EndDateTime,'m' %}{% if untilEnd < 0 %}{% assign isOpen = false %}{% endif %}{% endif -%}
-          {%- endif -%}
-          {%- assign registerLabel = 'Register' -%}
-          {%- if linkageCount > 1 and linkage.PublicName != '' %}{% assign registerLabel = 'Register: ' | Append:linkage.PublicName %}{% endif -%}
-          {%- if isOpen %}
-            {%- if linkage.UrlSlug != '' %}
-      <a class="btn btn--primary" href="{{ registrationPage }}?RegistrationInstanceId={{ linkage.RegistrationInstanceId }}&amp;Slug={{ linkage.UrlSlug }}">{{ registerLabel }}</a>
-            {%- else %}
-      <a class="btn btn--primary" href="{{ registrationPage }}?RegistrationInstanceId={{ linkage.RegistrationInstanceId }}&amp;EventOccurrenceID={{ linkage.EventItemOccurrenceId }}">{{ registerLabel }}</a>
-            {%- endif %}
-          {%- else %}
-      <p class="event-detail__closed">Registration closed{% if linkageCount > 1 and linkage.PublicName != '' %}: {{ linkage.PublicName }}{% endif %}</p>
-          {%- endif %}
-        {%- endfor %}
+      {%- if registerButtons != '' %}
+      <div class="event-detail__register">
+        {{ registerButtons }}
+      </div>
+      {%- endif %}
+      {%- if matrixTertiary != '' %}
+      <div class="event-detail__text-links">
+        {{ matrixTertiary }}
+      </div>
       {%- endif %}
 
       <div class="event-detail__secondary">
