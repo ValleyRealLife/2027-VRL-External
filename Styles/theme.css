@@ -197,7 +197,7 @@ body.is-locked {
   color: var(--text-on-brand);
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) :is(h1, h2, h3, h4, h5, h6):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty, .events-page) :is(h1, h2, h3, h4, h5, h6):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   margin: 0;
   font-weight: 800;
   line-height: 1.04;
@@ -205,36 +205,36 @@ body.is-locked {
   color: inherit;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) p:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty, .events-page) p:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   margin: 0;
   color: inherit;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) :is(img, svg, video):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty, .events-page) :is(img, svg, video):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   display: block;
   max-width: 100%;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) img:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty, .events-page) img:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   height: auto;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) button:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty, .events-page) button:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   font: inherit;
   cursor: pointer;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) a:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty, .events-page) a:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   color: inherit;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) :is(ul, ol):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty, .events-page) :is(ul, ol):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty) :where(a, button, [tabindex], summary, input, select):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):focus-visible,
+:where(.utilbar, .site-header, .site-footer, .home, .care-modal, .live, .sermons, .my-account, .manage-giving, .giving-statements, .giving-empty, .events-page) :where(a, button, [tabindex], summary, input, select):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):focus-visible,
 .care-modal:focus-visible {
   outline: 3px solid var(--brand-text);
   outline-offset: 3px;
@@ -7024,6 +7024,17 @@ button.messages__art:hover .messages__art-play {
   display: none;
 }
 
+/* Homepage, desktop: fewer than four cards fit without scrolling, so centre
+   them and drop the arrows ("safe" keeps the first card reachable if they
+   ever overflow) */
+@media (min-width: 900px) {
+  .events .events__rail:not(:has(> .event-card:nth-child(4))) {
+    justify-content: safe center;
+  }
+  .events .events__rail-wrap:not(:has(.event-card:nth-child(4))) .events__nav {
+    display: none;
+  }
+}
 .events__nav {
   position: absolute;
   top: 38%;
@@ -7096,10 +7107,8 @@ button.messages__art:hover .messages__art-play {
 
 .event-card__thumb {
   position: relative;
-  aspect-ratio: 16/9;
-  overflow: hidden;
-}
-
+  aspect-ratio: 7/3;
+} /* the event photos' 1260×540 */ /* not clipped: the tag hangs over its bottom edge (the card's overflow rounds the corners) */
 .event-card__thumb img {
   width: 100%;
   height: 100%;
@@ -7109,12 +7118,16 @@ button.messages__art:hover .messages__art-play {
 .event-card__date {
   position: absolute;
   top: var(--space-sm);
-  right: var(--space-sm);
+  left: var(--space-sm);
   min-width: 52px;
   padding: 0.35rem 0.5rem;
   border-radius: var(--radius-sm);
-  background: var(--bg-elevated);
-  box-shadow: var(--shadow-md);
+  /* frosted glass over the photo */
+  background: oklch(100% 0 0deg / 0.8);
+  border: 1px solid oklch(100% 0 0deg / 0.7);
+  -webkit-backdrop-filter: blur(10px) saturate(1.5);
+  backdrop-filter: blur(10px) saturate(1.5);
+  box-shadow: var(--shadow-sm);
   text-align: center;
   line-height: 1.05;
 }
@@ -7225,16 +7238,71 @@ button.messages__art:hover .messages__art-play {
   outline: none;
 }
 
+/* The audience tag sits on the photo's bottom edge at the right, half over
+   the photo, half over the text; the white border notches it out of the
+   photo. Solid fill (the wash mixed onto white) so the photo doesn't show
+   through. */
 .event-card__tag {
-  justify-self: start;
-  padding: 0.2rem 0.6rem;
+  position: absolute;
+  right: var(--space-md);
+  bottom: 0;
+  z-index: 1;
+  transform: translateY(50%);
+  margin: 0;
+  padding: 0.25rem 0.7rem;
+  border: 3px solid var(--bg-elevated);
   border-radius: var(--radius-pill);
-  background: var(--brand-wash);
+  background: color-mix(in oklch, var(--brand) 16%, var(--bg-elevated));
   color: var(--brand-text);
   font-size: 0.625rem;
   font-weight: 800;
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
+}
+
+/* "New" (just promoted: PromotionStart, Events.lava): a page-corner peel
+   in the photo's top-right corner, pale green (v-green-100) with black text (inline SVG in EventCard.lava: the
+   coloured corner, a highlight, the curled-back page and its shadow, the word).
+   The date chip sits top left on every card to leave the corner free. */
+.event-card__new {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  width: clamp(4.5rem, 22%, 6rem);
+  aspect-ratio: 1;
+  pointer-events: none;
+  filter: drop-shadow(-2px 3px 3px oklch(0% 0 0deg / 0.3));
+}
+
+.event-card__new svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.peel__red {
+  fill: var(--v-green-100);
+}
+
+.peel__shine {
+  fill: oklch(100% 0 0deg / 0.35);
+}
+
+.peel__curl {
+  fill: oklch(97% 0 0deg);
+}
+
+.peel__curl-shade {
+  fill: oklch(82% 0 0deg);
+}
+
+.peel__text {
+  fill: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
 }
 
 .event-card:hover .event-card__actions .btn--primary {
@@ -7369,5 +7437,337 @@ html.stage-static .deck .nextstep-card {
     padding-block: var(--space-sm) var(--space-2xl);
   }
 }
+.events-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xl);
+  padding-bottom: var(--space-2xl);
+}
+
+.events-page .sermons-divider {
+  margin-block: var(--space-xl) var(--space-lg);
+}
+
+.events-page__section:first-child .sermons-divider {
+  margin-top: var(--space-md);
+}
+
+.events-page .events__rail-wrap {
+  margin-top: 0;
+}
+
+.events-page__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.events-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  min-width: 0;
+}
+
+.events-filter[hidden] {
+  display: none;
+}
+
+.events-filter .pill-btn {
+  cursor: pointer;
+}
+
+@media (max-width: 559px) {
+  .events-filter {
+    flex: 1 1 100%;
+    flex-wrap: nowrap;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .events-filter::-webkit-scrollbar {
+    display: none;
+  }
+  .events-filter .pill-btn {
+    flex: none;
+  }
+}
+@media (max-width: 899px) {
+  .events-page__head {
+    position: sticky;
+    top: var(--header-h);
+    z-index: 5;
+    margin-inline: calc(var(--gutter) * -1);
+    padding: var(--space-sm) var(--gutter) 0;
+    background: var(--bg);
+    box-shadow: 0 1px 0 var(--border-subtle);
+  }
+  .events-page .events-page__head .sermons-divider {
+    margin: 0 0 var(--space-sm);
+  }
+  .events-page__head .events-page__bar {
+    margin-bottom: 0;
+    padding-bottom: var(--space-sm);
+  }
+  .events-page__head + .events-grid {
+    margin-top: var(--space-lg);
+  }
+}
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(17rem, (100% - 2 * var(--space-lg)) / 3)), 1fr));
+  gap: var(--space-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.events-grid .event-card[hidden] {
+  display: none;
+}
+
+.events-page .events__empty[hidden] {
+  display: none;
+}
+
+.event-card--feature {
+  flex: 0 0 min(86%, 44rem);
+  box-shadow: var(--shadow-md);
+}
+
+.event-card--feature .event-card__thumb {
+  overflow: hidden;
+}
+
+.event-card--feature .event-card__cta {
+  position: absolute;
+  right: var(--space-md);
+  bottom: var(--space-md);
+  z-index: 1;
+  box-shadow: var(--shadow-md);
+}
+
+.event-card--feature:hover .event-card__cta {
+  background: var(--brand-bright);
+  box-shadow: var(--shadow-glow);
+}
+
+.event-card--feature .event-card__date {
+  left: var(--space-md);
+  top: var(--space-md);
+}
+
+.event-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xl);
+  padding-block: var(--space-lg) var(--space-2xl);
+}
+
+@media (min-width: 900px) {
+  .event-detail {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+    gap: var(--space-2xl);
+    align-items: start;
+  }
+  .event-detail__card {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-lg));
+  }
+}
+.event-detail__lead {
+  margin: 0 0 var(--space-md);
+  font-size: 1.1875rem;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.event-detail__desc {
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.event-detail__desc > :first-child {
+  margin-top: 0;
+}
+
+.event-detail__card {
+  display: grid;
+  gap: var(--space-md);
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+}
+
+.event-detail__row {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.event-detail__row + .event-detail__row {
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.event-detail__card p {
+  margin: 0;
+}
+
+.event-detail__label {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.event-detail__when {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.event-detail__card a:not([class]) {
+  color: var(--brand-text);
+}
+
+.event-detail__actions {
+  display: grid;
+  gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.event-detail__actions > .btn {
+  width: 100%;
+}
+
+.event-detail__closed {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.event-detail__secondary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.event-detail__secondary .pill-btn {
+  min-height: 2.5rem;
+}
+
+.event-detail--pending {
+  display: block;
+  padding-block: var(--space-2xl);
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.event-detail__main {
+  display: grid;
+  gap: var(--space-md);
+  align-content: start;
+}
+
+.event-field {
+  padding: var(--space-md) var(--space-lg);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+}
+
+.event-field__label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem var(--space-sm);
+  margin: 0 0 var(--space-sm);
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.event-field__label span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text-muted);
+}
+
+.event-field__body {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.event-field__body > :first-child {
+  margin-top: 0;
+}
+
+.event-field__body > :last-child {
+  margin-bottom: 0;
+}
+
+.event-field__empty {
+  margin: 0;
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+.event-field__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.event-field__attrs {
+  display: grid;
+  gap: var(--space-xs);
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.event-field__attrs:empty {
+  display: none;
+}
+
+.event-field__attrs dt {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.event-field__attrs dt code {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.event-field__attrs dd {
+  margin: 0 0 var(--space-xs);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
 /* CSS Overrides Bottom Start */
 /* CSS Overrides Bottom End */

@@ -47,6 +47,7 @@
 //   live          the watch-live page (Assets/Lava/LiveService.lava)
 //   rock-blocks   any Rock block's panel, fields and buttons on interior pages
 //   home          homepage sections        (Assets/Lava/Home.lava)
+//   events        the events page          (Assets/Lava/Events.lava; cards in _home.scss)
 
 /* CSS Overrides Top Start */
 /* CSS Overrides Top End */
@@ -70,6 +71,7 @@
 @use "giving";
 @use "profile";
 @use "home";
+@use "events";
 
 // Rock's HTML editor (Summernote): its toolbar icon font and the rules that
 // hide the raw <textarea> and lay out the editing area. Rock's admin UI needs

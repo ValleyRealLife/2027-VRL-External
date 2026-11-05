@@ -1,0 +1,37 @@
+{% comment %}
+    EVENT VISIBLE OCCURRENCES — SQL shared by the events page (Events.lava)
+    and the related-events rail (EventRelated.lava). It OUTPUTS the CTE text;
+    capture it in the calling template (Rock's include doesn't hand variables
+    set in here back to the caller):
+      {%- capture visibleOccSql %}{% include '~~/Assets/Lava/Partials/EventVisibleOccurrences.lava' %}{% endcapture -%}
+    then start a {% sql %} with:  WITH {{ visibleOccSql }}  and select from
+    [nextOcc].
+
+    [nextOcc]: future occurrences whose PromotionStart (an Event Item
+    Occurrence attribute, date/time) is empty or has passed, numbered per
+    event (rn = 1 is the next one). IsNew = 1 from PromotionStart until the
+    end of the following day (live at 4 pm Monday = New until midnight Tuesday
+    night). Times are the SQL server's clock (GETDATE()), like
+    NextStartDateTime. HomeEvents.lava has the same rule inline.
+{% endcomment %}
+{%- assign promotionKey = promotionKey | Default:'PromotionStart' -%}
+    [promo] AS (
+        SELECT av.[EntityId] AS [OccurrenceId],
+               COALESCE(av.[ValueAsDateTime], TRY_CONVERT(datetime2, NULLIF(av.[Value], ''))) AS [PromotionStart]
+        FROM [AttributeValue] av
+        INNER JOIN [Attribute] a ON a.[Id] = av.[AttributeId]
+        INNER JOIN [EntityType] et ON et.[Id] = a.[EntityTypeId]
+        WHERE et.[Name] = 'Rock.Model.EventItemOccurrence' AND a.[Key] = '{{ promotionKey }}'
+    ),
+    [nextOcc] AS (
+        SELECT
+            eio.[Id], eio.[EventItemId], eio.[NextStartDateTime], eio.[Location],
+            CASE WHEN p.[PromotionStart] IS NOT NULL
+                  AND GETDATE() < DATEADD(day, 2, CAST(CAST(p.[PromotionStart] AS date) AS datetime2))
+                 THEN 1 ELSE 0 END AS [IsNew],
+            ROW_NUMBER() OVER (PARTITION BY eio.[EventItemId] ORDER BY eio.[NextStartDateTime] ASC) AS [rn]
+        FROM [EventItemOccurrence] eio
+        LEFT JOIN [promo] p ON p.[OccurrenceId] = eio.[Id]
+        WHERE eio.[NextStartDateTime] >= GETDATE()
+          AND (p.[PromotionStart] IS NULL OR p.[PromotionStart] <= GETDATE())
+    )

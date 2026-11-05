@@ -36,6 +36,11 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Assets/Lava/Home.lava` | HTML block include: the hero / Next Steps and Kids + Students sections, hardcoded from the concept for now |
 | `Assets/Lava/HomeMessages.lava` | HTML block include: Messages (live Resi player or the latest message + play in place, the 7 previous series, blurred series background), via entity commands |
 | `Assets/Lava/HomeEvents.lava` | HTML block include: the homepage's What's Happening cards (live events via a `{% sql %}` query adapted from the Connect theme) + the footer runway |
+| `Assets/Lava/Events.lava` | HTML block include for the events page: Featured rail (audience 150), audience filter chips, All events grid (`{% sql %}`, calendar 1) |
+| `Assets/Lava/EventDetail.lava` | Lava Template for the Calendar Event Item Occurrence Lava block on the event detail page (route `events/{EventOccurrenceId}`): header photo + og:image from the event, description, when / contact / note card, Details URL or Register, Add to calendar, Share; PromotionStart gate |
+| `Assets/Lava/EventRelated.lava` | HTML block include under the event detail block: "You might also like" rail (shared audiences, then page views from the Interaction table, then soonest) |
+| `Assets/Lava/Partials/EventVisibleOccurrences.lava` | Shared SQL CTEs: upcoming occurrences past their PromotionStart, with IsNew (Events.lava, EventRelated.lava) |
+| `Assets/Lava/Partials/EventCard.lava` | The event card, shared by HomeEvents.lava and Events.lava |
 | `Assets/Lava/Footer.lava` | HTML block include: the menu reflected (reads the page tree), visit info, bar |
 | `Assets/Lava/SubpageList.lava` | HTML block include for Landing pages: the current page's children as alternating image cards (`PageImage`, optional `CallToAction` page attributes) |
 | `Assets/Lava/PopularPages.lava` | HTML block include (first used on the 404 page): the most-viewed pages one level below the nav sections, ranked from the Interaction table over 90 days |
@@ -55,12 +60,13 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Assets/Lava/SiteSearchResults.lava` | The search results fragment, shared by the endpoint and `SiteSearch.lava`: pages on this site, messages, series, queried directly with SQL |
 | `Assets/Lava/Partials/IconSprite.lava` | The inline SVG icon sprite + logo ink filter, included once by `Site.Master` |
 | `Assets/Scripts/theme.js` | Site-wide behaviour: header, mega menu, drawer, care dialog, cover sections, footer reveal |
-| `Assets/Scripts/home.js` | Homepage only: events rail, Messages player, GSAP choreography |
+| `Assets/Scripts/home.js` | Homepage only: Messages player, GSAP choreography (the events rail arrows are in theme.js) |
 | `Styles/theme.scss` | Entry point: Rock's marker comments, partial order, `core.css` import |
 | `Styles/_tokens.scss` | Rock base tokens (must match `theme.json`) + the VRL tiers + light-mode lock |
 | `Styles/_base.scss` … `_page.scss` | One partial per region: base, utility bar, header, care modal, footer, interior page |
 | `Styles/_site-alert.scss` | The global alert banner, including how to add seasonal looks (e.g. `alert-christmas`) |
-| `Styles/_home.scss` | Homepage section styles |
+| `Styles/_home.scss` | Homepage section styles (also the event card and rail, used by the events page) |
+| `Styles/_events.scss` | The events page: filter chips, count, All events grid |
 | `Styles/_popular-pages.scss` | Popular pages cards (horizontal event-card style) |
 | `Styles/_search.scss` | Site search: the design system's search pill and the grouped live results |
 | `Styles/_login.scss` | Rock's stock Login block (unchanged in Rock) restyled as a centred card; `theme.js` adds the Phone or email / Username & password tabs |
@@ -85,6 +91,9 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 | Main (homepage only, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/Home.lava' %}` · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Home block) | HTML Content | content: `{% include '~~/Assets/Lava/HomeMessages.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 while iterating |
 | Main (homepage only, Page level, after the Messages block, last in the zone) | HTML Content | content: `{% include '~~/Assets/Lava/HomeEvents.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration: 0 while iterating |
+| Main (events page on InnerDefault) | HTML Content | content: `{% include '~~/Assets/Lava/Events.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration: 0 while iterating |
+| Main (event detail page on InnerDefault, route `events/{EventOccurrenceId}`) | Calendar Event Item Occurrence Lava | Lava Template: `{% include '~~/Assets/Lava/EventDetail.lava' %}` · Set Page Title: Yes · Registration Page: the registration page |
+| Main (event detail page, after the occurrence block) | HTML Content | content: `{% include '~~/Assets/Lava/EventRelated.lava' %}` · Enabled Lava Commands: **Sql** · Cache Duration: 0 while iterating |
 | Feature (watch-live page on InnerDefault, PageHeaderStyle Hidden, Page Cacheability No-Store) | HTML Content | content: `{% include '~~/Assets/Lava/LiveService.lava' %}` · Enabled Lava Commands: **RockEntity, Calendar Events** |
 | Main (messages page on InnerDefault), first block | HTML Content | content: `{% include '~~/Assets/Lava/MessagesLatest.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration 0 |
 | Main (messages page), second block | HTML Content | content: `{% include '~~/Assets/Lava/SeriesBrowse.lava' %}` · Enabled Lava Commands: **RockEntity, Sql** · Cache Duration 600 |

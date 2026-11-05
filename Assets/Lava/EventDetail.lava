@@ -1,0 +1,218 @@
+{% comment %}
+    EVENT DETAIL — the Lava Template of Rock's "Calendar Event Item
+    Occurrence Lava" block on the event detail page (route
+    events/{EventOccurrenceId}, InnerDefault, Main zone).
+
+    Lava Template:      {% include '~~/Assets/Lava/EventDetail.lava' %}
+    Set Page Title:     Yes (the page header shows the event's name)
+    Registration Page:  the registration page
+
+    Rock provides Event (the event item), EventItemOccurrence and
+    RegistrationPage. This sets the page header's photo from the event photo
+    (the layout reads the vrl:page-image meta tag; Layouts/InnerDefault.aspx)
+    and the social preview image (og:image), then shows the description
+    (Description only; the Summary is the cards' teaser) beside a card with
+    when / the church's contact info / note and the actions:
+
+      Primary action    the event's Details URL when it has one ("Visit event
+                        page"; it overrides registration, as on the cards),
+                        otherwise one Register button per registration
+                        linkage that is open (active and inside its dates),
+                        or "Registration closed"
+      Add to calendar   an .ics download built from the schedule
+      Share             the design system's share menu (theme.js)
+
+    PromotionStart (occurrence attribute): before it, the page says the event
+    isn't available yet instead of showing it. Location is commented out for
+    now (not entered consistently). Styled by Styles/_events.scss.
+{% endcomment %}
+{%- assign occurrence = EventItemOccurrence -%}
+{%- capture siteRoot %}{{ 'Global' | Page:'Scheme' }}://{{ 'Global' | Page:'Host' }}{% endcapture -%}
+{%- assign pageUrl = 'Global' | Page:'Url' -%}
+
+{%- comment -%} Not promoted yet? {%- endcomment -%}
+{%- assign promotionStart = occurrence | Attribute:'PromotionStart','RawValue' -%}
+{%- assign minutesToPromotion = 0 -%}
+{%- if promotionStart and promotionStart != '' %}{% assign minutesToPromotion = 'Now' | DateDiff:promotionStart,'m' %}{% endif -%}
+
+{%- if minutesToPromotion > 0 %}
+<div class="event-detail event-detail--pending">
+  <p>This event isn't available yet. Check back soon, or <a href="/events">see all events</a>.</p>
+</div>
+{%- else -%}
+
+{%- comment -%} Header photo, social preview, description meta {%- endcomment -%}
+{%- if Event.Photo.Guid -%}
+  {%- capture headerPhoto %}/GetImage.ashx?guid={{ Event.Photo.Guid }}&w=1400{% endcapture -%}
+  {{ headerPhoto | AddMetaTagToHead:'name','vrl:page-image' }}
+  {%- capture ogImage %}{{ siteRoot }}/GetImage.ashx?guid={{ Event.Photo.Guid }}&w=1200&h=630&mode=crop{% endcapture -%}
+  {{ ogImage | AddMetaTagToHead:'property','og:image' }}
+{%- endif -%}
+{%- assign metaDescription = Event.Summary | StripHtml | Trim -%}
+{%- if metaDescription == '' %}{% assign metaDescription = Event.Description | StripHtml | Trim | Truncate:200 %}{% endif -%}
+{%- if metaDescription != '' -%}
+  {{ metaDescription | AddMetaTagToHead:'name','description' }}
+  {{ metaDescription | AddMetaTagToHead:'property','og:description' }}
+{%- endif -%}
+{{ Event.Name | AddMetaTagToHead:'property','og:title' }}
+
+{%- comment -%} When: the next date only {%- endcomment -%}
+{%- assign nextStart = occurrence.NextStartDateTime -%}
+{%- if nextStart == null or nextStart == '' %}{% assign nextStart = occurrence.Schedule.iCalendarContent | DatesFromICal:1 | First %}{% endif -%}
+
+{%- comment -%} Registration: open = active and inside its start/end dates {%- endcomment -%}
+{%- assign registrationPage = RegistrationPage | Default:'/registration' -%}
+{%- assign linkageCount = 0 -%}
+{%- for linkage in occurrence.Linkages %}{% if linkage.RegistrationInstance != null %}{% assign linkageCount = linkageCount | Plus:1 %}{% endif %}{% endfor -%}
+
+<div class="event-detail">
+  <div class="event-detail__main">
+    {%- comment -%}
+      REVIEW PANELS (temporary): every content field staff put text or buttons
+      in, each in its own labelled panel with where it's edited in Rock, empty
+      ones included, so we can decide which fields the page should use. Remove
+      the panels for the fields we drop and restyle the rest when decided.
+    {%- endcomment -%}
+    <section class="event-field">
+      <h2 class="event-field__label">Summary <span>Event → Summary · also the card teaser and link preview</span></h2>
+      {%- if Event.Summary != '' %}<div class="event-field__body">{{ Event.Summary }}</div>{% else %}<p class="event-field__empty">Empty</p>{% endif %}
+    </section>
+    <section class="event-field">
+      <h2 class="event-field__label">Description <span>Event → Description</span></h2>
+      {%- if Event.Description != '' %}<div class="event-field__body">{{ Event.Description }}</div>{% else %}<p class="event-field__empty">Empty</p>{% endif %}
+    </section>
+    <section class="event-field">
+      <h2 class="event-field__label">Occurrence note <span>Event occurrence → Note</span></h2>
+      {%- if occurrence.Note != '' %}<div class="event-field__body">{{ occurrence.Note }}</div>{% else %}<p class="event-field__empty">Empty</p>{% endif %}
+    </section>
+    <section class="event-field">
+      <h2 class="event-field__label">Details URL <span>Event → Details URL · overrides registration</span></h2>
+      {%- if Event.DetailsUrl != '' %}<div class="event-field__body"><a href="{{ Event.DetailsUrl }}">{{ Event.DetailsUrl }}</a></div>{% else %}<p class="event-field__empty">Empty</p>{% endif %}
+    </section>
+    <section class="event-field">
+      <h2 class="event-field__label">Registration <span>Event occurrence → Registration linkages</span></h2>
+      {%- if linkageCount > 0 %}
+      <ul class="event-field__list">
+        {%- for linkage in occurrence.Linkages %}{% if linkage.RegistrationInstance != null %}
+        <li>{{ linkage.PublicName | Default:linkage.RegistrationInstance.Name }} · instance {{ linkage.RegistrationInstance.Name }}{% if linkage.UrlSlug != '' %} · slug {{ linkage.UrlSlug }}{% endif %} · {% if linkage.RegistrationInstance.IsActive %}active{% else %}inactive{% endif %}</li>
+        {%- endif %}{% endfor %}
+      </ul>
+      {%- else %}<p class="event-field__empty">None</p>{% endif %}
+    </section>
+    {%- comment -%} Attributes: the event item's, the occurrence's, and each calendar's (calendar item attributes) {%- endcomment -%}
+    <section class="event-field">
+      <h2 class="event-field__label">Event attributes <span>Event → Attributes</span></h2>
+      {%- assign shown = 0 %}
+      <dl class="event-field__attrs">
+        {%- for attributeValue in Event.AttributeValues %}{% if attributeValue.Value != '' %}{% assign shown = 1 %}
+        <dt>{{ attributeValue.AttributeName }} <code>{{ attributeValue.AttributeKey }}</code></dt><dd>{{ attributeValue.ValueFormatted }}</dd>
+        {%- endif %}{% endfor %}
+      </dl>
+      {%- if shown == 0 %}<p class="event-field__empty">None set</p>{% endif %}
+    </section>
+    <section class="event-field">
+      <h2 class="event-field__label">Occurrence attributes <span>Event occurrence → Attributes</span></h2>
+      {%- assign shown = 0 %}
+      <dl class="event-field__attrs">
+        {%- for attributeValue in occurrence.AttributeValues %}{% if attributeValue.Value != '' %}{% assign shown = 1 %}
+        <dt>{{ attributeValue.AttributeName }} <code>{{ attributeValue.AttributeKey }}</code></dt><dd>{{ attributeValue.ValueFormatted }}</dd>
+        {%- endif %}{% endfor %}
+      </dl>
+      {%- if shown == 0 %}<p class="event-field__empty">None set</p>{% endif %}
+    </section>
+    {%- for calendarItem in Event.EventCalendarItems %}
+    <section class="event-field">
+      <h2 class="event-field__label">{{ calendarItem.EventCalendar.Name }} calendar attributes <span>Event → calendar tab</span></h2>
+      {%- assign shown = 0 %}
+      <dl class="event-field__attrs">
+        {%- for attributeValue in calendarItem.AttributeValues %}{% if attributeValue.Value != '' %}{% assign shown = 1 %}
+        <dt>{{ attributeValue.AttributeName }} <code>{{ attributeValue.AttributeKey }}</code></dt><dd>{{ attributeValue.ValueFormatted }}</dd>
+        {%- endif %}{% endfor %}
+      </dl>
+      {%- if shown == 0 %}<p class="event-field__empty">None set</p>{% endif %}
+    </section>
+    {%- endfor %}
+  </div>
+
+  <aside class="event-detail__card" aria-label="Event details">
+    <div class="event-detail__row">
+      <h2 class="event-detail__label">When</h2>
+      {%- if nextStart %}
+      <p class="event-detail__when">{{ nextStart | Date:'dddd, MMMM d, yyyy' }}<br>{{ nextStart | Date:'h:mm tt' }}</p>
+      {%- endif %}
+    </div>
+
+    {%- comment -%} Location: off for now (not entered consistently)
+    {%- if occurrence.Location != '' %}
+    <div class="event-detail__row">
+      <h2 class="event-detail__label">Where</h2>
+      <p>{{ occurrence.Location }}</p>
+    </div>
+    {%- endif %}
+    {%- endcomment -%}
+
+    {%- comment -%} Questions: the church's contact info (Global Attributes OrganizationPhone / OrganizationEmail, falling back to the footer's), not the event's contact person {%- endcomment -%}
+    {%- assign churchPhone = 'Global' | Attribute:'OrganizationPhone' | Default:'(509) 232-0840' -%}
+    {%- assign churchEmail = 'Global' | Attribute:'OrganizationEmail' | Default:'hello@vrl.church' -%}
+    <div class="event-detail__row">
+      <h2 class="event-detail__label">Questions?</h2>
+      <p>
+        <a href="tel:{{ churchPhone | Remove:' ' | Remove:'(' | Remove:')' | Remove:'-' }}">{{ churchPhone }}</a><br>
+        <a href="mailto:{{ churchEmail }}">{{ churchEmail }}</a>
+      </p>
+    </div>
+
+
+    <div class="event-detail__actions">
+      {%- if Event.DetailsUrl and Event.DetailsUrl != '' %}
+      <a class="btn btn--primary" href="{{ Event.DetailsUrl }}">Visit event page</a>
+      {%- elsif linkageCount > 0 %}
+        {%- for linkage in occurrence.Linkages %}
+          {%- assign instance = linkage.RegistrationInstance -%}
+          {%- if instance == null %}{% continue %}{% endif -%}
+          {%- assign isOpen = false -%}
+          {%- if instance.IsActive == true -%}
+            {%- assign isOpen = true -%}
+            {%- if instance.StartDateTime %}{% assign untilStart = 'Now' | DateDiff:instance.StartDateTime,'m' %}{% if untilStart > 0 %}{% assign isOpen = false %}{% endif %}{% endif -%}
+            {%- if instance.EndDateTime %}{% assign untilEnd = 'Now' | DateDiff:instance.EndDateTime,'m' %}{% if untilEnd < 0 %}{% assign isOpen = false %}{% endif %}{% endif -%}
+          {%- endif -%}
+          {%- assign registerLabel = 'Register' -%}
+          {%- if linkageCount > 1 and linkage.PublicName != '' %}{% assign registerLabel = 'Register: ' | Append:linkage.PublicName %}{% endif -%}
+          {%- if isOpen %}
+            {%- if linkage.UrlSlug != '' %}
+      <a class="btn btn--primary" href="{{ registrationPage }}?RegistrationInstanceId={{ linkage.RegistrationInstanceId }}&amp;Slug={{ linkage.UrlSlug }}">{{ registerLabel }}</a>
+            {%- else %}
+      <a class="btn btn--primary" href="{{ registrationPage }}?RegistrationInstanceId={{ linkage.RegistrationInstanceId }}&amp;EventOccurrenceID={{ linkage.EventItemOccurrenceId }}">{{ registerLabel }}</a>
+            {%- endif %}
+          {%- else %}
+      <p class="event-detail__closed">Registration closed{% if linkageCount > 1 and linkage.PublicName != '' %}: {{ linkage.PublicName }}{% endif %}</p>
+          {%- endif %}
+        {%- endfor %}
+      {%- endif %}
+
+      <div class="event-detail__secondary">
+        {%- if occurrence.Schedule.iCalendarContent != '' -%}
+          {%- capture icsExtra %}SUMMARY:{{ Event.Name }}
+URL:{{ pageUrl }}
+END:VEVENT{% endcapture -%}
+          {%- assign ics = occurrence.Schedule.iCalendarContent | Replace:'END:VEVENT',icsExtra %}
+        <a class="pill-btn" href="data:text/calendar;charset=utf-8,{{ ics | EscapeDataString }}" download="{{ Event.Name | Replace:'/','-' }}.ics"><svg width="14" height="14" aria-hidden="true"><use href="#i-clock"/></svg> Add to calendar</a>
+        {%- endif %}
+        {%- assign shareText = Event.Name %}
+        <div class="share">
+          <button class="pill-btn" type="button" aria-expanded="false" aria-controls="event-share" data-share-toggle>
+            <svg width="14" height="14" aria-hidden="true"><use href="#i-share"/></svg> Share
+          </button>
+          <div class="share__menu share__menu--down" id="event-share" data-open="false">
+            <a class="share__item" href="https://www.facebook.com/sharer/sharer.php?u={{ pageUrl | EscapeDataString }}" target="_blank" rel="noopener"><svg width="16" height="16" aria-hidden="true"><use href="#i-facebook"/></svg> Facebook</a>
+            <a class="share__item" href="mailto:?subject={{ shareText | EscapeDataString }}&amp;body={{ pageUrl | EscapeDataString }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-mail"/></svg> Email</a>
+            <a class="share__item" href="sms:?&amp;body={{ shareText | Append:' ' | Append:pageUrl | EscapeDataString }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-message"/></svg> Text message</a>
+            <div class="share__divider"></div>
+            <button class="share__item" type="button" data-copy="{{ pageUrl }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-copy"/></svg> <span>Copy link</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+{%- endif %}
