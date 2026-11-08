@@ -1,0 +1,83 @@
+{% comment %}
+    VIDEO HERO — a page's opening band with its featured video, the video
+    hanging out of the band into the page (Styles/_video-hero.scss). For
+    ministry pages; first used on Give.
+
+    Page setup: InnerDefault, PageHeaderStyle = Hidden (this carries the h1),
+    DarkHeader checked (the header bar matches the band). Breadcrumbs above a
+    hero are hidden by the theme.
+
+    Block: an HTML block in the Feature zone. Set what you need, then include:
+
+        {% assign heroMediaId = 733 %}
+        {% capture heroActions %} …buttons / links… {% endcapture %}
+        {% include '~~/Assets/Lava/Partials/VideoHero.lava' %}
+
+      heroTitle      the h1 (default: the page's title)
+      heroKicker     small green line above the title (optional)
+      heroLead       a sentence under the title (default: the page's
+                     Description, from Page Properties)
+      heroMediaId    a Rock media element id: plays in Rock's media player
+                     (tracks views like the messages do)
+      heroEmbedUrl   OR an embed URL for an iframe (YouTube, …)
+      heroEmbedHtml  OR ready-made embed markup (a player that needs its own
+                     iframe attributes or script, such as the Resi live
+                     player); wins over the other two
+      heroLive       true: a pulsing "Live now" line above the title (pair
+                     with a live embed; see RenewHero.lava for a scheduled swap)
+      heroActions    the button(s): one primary .btn btn--primary (the
+                     theme's standard size; keep the hero to one action)
+      heroLayout     'split' (default: text left, video right) or 'stacked'
+                     (text centred, the video wide under it)
+
+    Review: add ?hero=split or ?hero=stacked to the page's address to see
+    the other layout without editing the block.
+{% endcomment %}
+{%- assign heroTitle = heroTitle | Default:'' | Trim -%}
+{%- if heroTitle == '' %}{% assign heroTitle = 'Global' | Page:'Title' %}{% endif -%}
+{%- assign heroLead = heroLead | Default:'' | Trim -%}
+{%- if heroLead == '' %}{% assign heroLead = 'Global' | Page:'Description' | Default:'' | Trim %}{% endif -%}
+{%- assign heroKicker = heroKicker | Default:'' | Trim -%}
+{%- assign heroEmbedUrl = heroEmbedUrl | Default:'' | Trim -%}
+{%- assign heroMediaId = heroMediaId | Default:0 | AsInteger -%}
+{%- assign heroEmbedHtml = heroEmbedHtml | Default:'' | Trim -%}
+{%- assign heroLive = heroLive | Default:false -%}
+
+{%- assign heroLayout = heroLayout | Default:'split' | Downcase -%}
+{%- assign heroLayoutParam = 'Global' | PageParameter:'hero' | Default:'' | Downcase -%}
+{%- if heroLayoutParam == 'split' or heroLayoutParam == 'stacked' %}{% assign heroLayout = heroLayoutParam %}{% endif -%}
+{%- if heroLayout != 'stacked' %}{% assign heroLayout = 'split' %}{% endif -%}
+
+<section class="video-hero video-hero--{{ heroLayout }} on-ink" aria-labelledby="page-hero-title">
+  <div class="video-hero__glow" aria-hidden="true"></div>
+  <div class="container video-hero__inner">
+    <div class="video-hero__text">
+      {%- if heroLive == true %}
+      <p class="video-hero__kicker video-hero__kicker--live"><span class="video-hero__dot" aria-hidden="true"></span>Live now</p>
+      {%- elsif heroKicker != '' %}
+      <p class="video-hero__kicker">{{ heroKicker }}</p>
+      {%- endif %}
+      <h1 id="page-hero-title">{{ heroTitle }}</h1>
+      {%- if heroLead != '' %}
+      <p class="video-hero__lead">{{ heroLead }}</p>
+      {%- endif %}
+      {%- assign heroActionsText = heroActions | Default:'' | Trim -%}
+      {%- if heroActionsText != '' %}
+      <div class="video-hero__actions">
+        {{ heroActions }}
+      </div>
+      {%- endif %}
+    </div>
+    {%- if heroEmbedHtml != '' or heroMediaId > 0 or heroEmbedUrl != '' %}
+    <div class="video-hero__media">
+      {%- if heroEmbedHtml != '' %}
+      {{ heroEmbedHtml }}
+      {%- elsif heroMediaId > 0 %}
+      {[ mediaplayer media:'{{ heroMediaId }}' autoresumeindays:'14' combineplaystatisticsindays:'14' ]}{[ endmediaplayer ]}
+      {%- else %}
+      <iframe src="{{ heroEmbedUrl }}" title="{{ heroTitle | Escape }} video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      {%- endif %}
+    </div>
+    {%- endif %}
+  </div>
+</section>

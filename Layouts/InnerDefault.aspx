@@ -61,6 +61,24 @@
                 // Page Properties → Show Description (PageDisplayDescription) gates the lead
                 var pageDescription = page.PageDisplayDescription ? ( page.Description ?? "" ).Trim() : "";
                 var pageImageGuid = ( page.GetAttributeValue( "PageImage" ) ?? "" ).Trim();
+                // A block can set this request's header photo (an event's photo,
+                // Assets/Lava/EventDetail.lava) with Rock's Lava filter:
+                //   {{ url | AddMetaTagToHead:'name','vrl:page-image' }}
+                // It wins over the PageImage attribute.
+                var pageImageUrl = "";
+                foreach ( System.Web.UI.Control headControl in Page.Header.Controls )
+                {
+                    var headMeta = headControl as System.Web.UI.HtmlControls.HtmlMeta;
+                    if ( headMeta != null && string.Equals( headMeta.Name, "vrl:page-image", System.StringComparison.OrdinalIgnoreCase ) )
+                    {
+                        pageImageUrl = ( headMeta.Content ?? "" ).Trim();
+                        break;
+                    }
+                }
+                if ( pageImageUrl == "" && pageImageGuid != "" )
+                {
+                    pageImageUrl = "/GetImage.ashx?guid=" + System.Web.HttpUtility.UrlEncode( pageImageGuid ) + "&w=1400&h=900&mode=crop";
+                }
             %>
             <% if ( showPageTitle && headerStyle != "none" ) { %>
                 <header class="page-head <%= headerClass %>">
@@ -73,9 +91,9 @@
                                 <% } %>
                             </div>
                             <% if ( isSideImage ) { %>
-                                <div class="page-head__media<%= pageImageGuid == "" ? " page-head__media--empty" : "" %>">
-                                    <% if ( pageImageGuid != "" ) { %>
-                                        <img src="/GetImage.ashx?guid=<%= System.Web.HttpUtility.UrlEncode( pageImageGuid ) %>&amp;w=1400&amp;h=900&amp;mode=crop" alt="" />
+                                <div class="page-head__media<%= pageImageUrl == "" ? " page-head__media--empty" : "" %>">
+                                    <% if ( pageImageUrl != "" ) { %>
+                                        <img src="<%= System.Web.HttpUtility.HtmlAttributeEncode( pageImageUrl ) %>" alt="" />
                                     <% } %>
                                 </div>
                             <% } %>
@@ -89,11 +107,17 @@
                     // ?WorkflowTypeId=, …) leaves the last crumb on the page's
                     // own name ("Workflow Entry"). When that crumb is the
                     // page's own, show the page title the visitor sees instead.
+                    // ((RockPage)this).PageTitle: the page's title text. A bare
+                    // PageTitle is the <Rock:PageTitle ID="PageTitle"> control
+                    // above, which doesn't compile here, and when a layout
+                    // fails to compile Rock silently falls back to the Rock
+                    // theme's layout.
+                    var titleText = ( ( RockPage ) this ).PageTitle;
                     var lastCrumb = BreadCrumbs != null && BreadCrumbs.Count > 0 ? BreadCrumbs[BreadCrumbs.Count - 1] : null;
                     if ( lastCrumb != null && lastCrumb.Name == page.BreadCrumbText
-                        && !string.IsNullOrWhiteSpace( PageTitle ) && PageTitle != lastCrumb.Name )
+                        && !string.IsNullOrWhiteSpace( titleText ) && titleText != lastCrumb.Name )
                     {
-                        lastCrumb.Name = PageTitle;
+                        lastCrumb.Name = titleText;
                     }
                 %>
                 <div class="container breadcrumb-container">

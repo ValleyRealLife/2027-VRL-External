@@ -1,0 +1,57 @@
+{%- comment -%}
+  RENEW HERO — the Renew page's video hero (Assets/Lava/Partials/VideoHero.lava,
+  Styles/_video-hero.scss).
+
+  Block:                    an HTML block in the Renew page's Feature zone
+  Block content:            {% include '~~/Assets/Lava/RenewHero.lava' %}
+  Cache Duration:           0
+  Page:                     InnerDefault, PageHeaderStyle Hidden, DarkHeader
+                            checked, Page Cacheability No-Store (the hero
+                            changes with the clock, like the live page)
+
+  The lead line under "Renew" is the page's Description (Page Properties).
+
+  Live swap: on Monday nights, inside the live window below, the hero plays
+  the Resi live stream (the same embed as the live page, LiveService.lava)
+  with a "Live now" line; the rest of the week, Renew's video (media 1147).
+  ROCK: replace the window with a schedule check later, as the live page.
+
+  The page content under it: Resources/PageContent/Renew.html (Main zone).
+{%- endcomment -%}
+
+{%- comment -%} ── Settings ─────────────────────────────────────────────── {%- endcomment -%}
+{%- assign heroMediaId = 1147 -%}
+{%- assign resiEmbedId = '692bc6a6-70a1-4fa1-af72-e1a7e7290763' -%}
+
+{%- comment -%}
+  Live window (server time), 24-hour HHmm: 1815 = 6:15pm, 1930 = 7:30pm.
+  Large Group is 6:30–7:15 PM; the window opens a little before and closes a
+  little after so the player is there when the stream starts.
+{%- endcomment -%}
+{%- assign liveDay       = 'Monday' -%}
+{%- assign liveStartTime = 1815 -%}
+{%- assign liveEndTime   = 1930 -%}
+
+{%- comment -%} ── Live now? ────────────────────────────────────────────── {%- endcomment -%}
+{%- assign nowDay  = 'Now' | Date:'dddd' -%}
+{%- assign nowTime = 'Now' | Date:'HHmm' | AsInteger -%}
+{%- assign heroLive = false -%}
+{%- if nowDay == liveDay and nowTime >= liveStartTime and nowTime <= liveEndTime %}{% assign heroLive = true %}{% endif -%}
+
+{%- if heroLive -%}
+  {%- comment -%}
+    Resi: autoplay needs mute=1 (browsers only autoplay muted video);
+    showUnmuteButton is how viewers turn sound on (as LatestMessage.lava).
+  {%- endcomment -%}
+  {%- capture heroEmbedHtml -%}
+    <iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="true" class="resi-video-frame"
+            title="Renew live stream"
+            src="https://control.resi.io/webplayer/video.html?id={{ resiEmbedId }}&iframe=1&autoplay=1&mute=1&controls=1&showUnmuteButton=1"></iframe>
+    <script defer src="https://control.resi.io/webplayer/page.min.js"></script>
+  {%- endcapture -%}
+{%- endif -%}
+
+{%- capture heroActions -%}
+  <a class="btn btn--primary" href="#next-steps">Find your next step</a>
+{%- endcapture -%}
+{% include '~~/Assets/Lava/Partials/VideoHero.lava' %}

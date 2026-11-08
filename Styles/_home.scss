@@ -821,6 +821,13 @@ button.messages__art:hover .messages__art-play { transform: scale(1.08); backgro
   scrollbar-width: none;
 }
 .events__rail::-webkit-scrollbar { display: none; }
+/* Homepage, desktop: fewer than four cards fit without scrolling, so centre
+   them and drop the arrows ("safe" keeps the first card reachable if they
+   ever overflow) */
+@media (min-width: 900px) {
+  .events .events__rail:not(:has(> .event-card:nth-child(4))) { justify-content: safe center; }
+  .events .events__rail-wrap:not(:has(.event-card:nth-child(4))) .events__nav { display: none; }
+}
 .events__nav {
   position: absolute; top: 38%; transform: translateY(-50%); z-index: 2;
   width: 48px; height: 48px; border-radius: var(--radius-circle);
@@ -856,15 +863,19 @@ button.messages__art:hover .messages__art-play { transform: scale(1.08); backgro
               transform var(--duration) var(--ease-out);
 }
 .event-card:hover { border-color: var(--border); box-shadow: var(--shadow-lg); transform: translateY(-3px); }
-.event-card__thumb { position: relative; aspect-ratio: 16 / 9; overflow: hidden; }
+.event-card__thumb { position: relative; aspect-ratio: 7 / 3; }   /* the event photos' 1260×540 */   /* not clipped: the tag hangs over its bottom edge (the card's overflow rounds the corners) */
 .event-card__thumb img { width: 100%; height: 100%; object-fit: cover; }
 .event-card__date {
-  position: absolute; top: var(--space-sm); right: var(--space-sm);
+  position: absolute; top: var(--space-sm); left: var(--space-sm);
   min-width: 52px;
   padding: 0.35rem 0.5rem;
   border-radius: var(--radius-sm);
-  background: var(--bg-elevated);
-  box-shadow: var(--shadow-md);
+  /* frosted glass over the photo */
+  background: oklch(1 0 0 / 0.8);
+  border: 1px solid oklch(1 0 0 / 0.7);
+  -webkit-backdrop-filter: blur(10px) saturate(1.5);
+  backdrop-filter: blur(10px) saturate(1.5);
+  box-shadow: var(--shadow-sm);
   text-align: center; line-height: 1.05;
 }
 .event-card__date .m { display: block; font-size: 0.5625rem; font-weight: 800; letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--text-secondary); }
@@ -900,14 +911,41 @@ button.messages__art:hover .messages__art-play { transform: scale(1.08); backgro
 .event-card:hover .event-card__link { color: var(--brand-text); }
 .event-card:focus-within { outline: 3px solid var(--brand-text); outline-offset: 3px; }
 .event-card__link:focus-visible { outline: none; }
+/* The audience tag sits on the photo's bottom edge at the right, half over
+   the photo, half over the text; the white border notches it out of the
+   photo. Solid fill (the wash mixed onto white) so the photo doesn't show
+   through. */
 .event-card__tag {
-  justify-self: start;
-  padding: 0.2rem 0.6rem;
+  position: absolute; right: var(--space-md); bottom: 0; z-index: 1;
+  transform: translateY(50%);
+  margin: 0;
+  padding: 0.25rem 0.7rem;
+  border: 3px solid var(--bg-elevated);
   border-radius: var(--radius-pill);
-  background: var(--brand-wash);
+  background: color-mix(in oklch, var(--brand) 16%, var(--bg-elevated));
   color: var(--brand-text);
   font-size: 0.625rem; font-weight: 800;
   letter-spacing: var(--tracking-wider); text-transform: uppercase;
+}
+/* "New" (just promoted: PromotionStart, Events.lava): a page-corner peel
+   in the photo's top-right corner, pale green (v-green-100) with black text (inline SVG in EventCard.lava: the
+   coloured corner, a highlight, the curled-back page and its shadow, the word).
+   The date chip sits top left on every card to leave the corner free. */
+.event-card__new {
+  position: absolute; top: 0; right: 0; z-index: 1;
+  width: clamp(4.5rem, 22%, 6rem); aspect-ratio: 1;
+  pointer-events: none;
+  filter: drop-shadow(-2px 3px 3px oklch(0 0 0 / 0.3));
+}
+.event-card__new svg { display: block; width: 100%; height: 100%; }
+.peel__red { fill: var(--v-green-100); }
+.peel__shine { fill: oklch(1 0 0 / 0.35); }
+.peel__curl { fill: oklch(0.97 0 0); }
+.peel__curl-shade { fill: oklch(0.82 0 0); }
+.peel__text {
+  fill: var(--text);
+  font-family: var(--font-sans); font-size: 15px; font-weight: 900;
+  letter-spacing: 0.06em;
 }
 .event-card:hover .event-card__actions .btn--primary { background: var(--brand-bright); box-shadow: var(--shadow-glow); }
 .events__empty { margin-top: var(--space-xl); text-align: center; color: var(--text-secondary); }

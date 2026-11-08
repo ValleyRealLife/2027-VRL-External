@@ -1,0 +1,152 @@
+// EVENTS PAGE  (Assets/Lava/Events.lava; filter in theme.js "Events filter")
+//
+// Featured: the homepage's events rail and cards (_home.scss). All events:
+// the same cards in a grid, under a row of audience chips (.pill-btn, the
+// pressed one green) and a count. Section titles reuse the messages page's
+// divider (.sermons-divider, _sermons.scss).
+
+@use "config" as *;
+
+// minmax(0, 1fr): an auto column would grow to the rail's full scroll width
+.events-page { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); padding-bottom: var(--space-2xl); }
+.events-page .sermons-divider { margin-block: var(--space-xl) var(--space-lg); }
+.events-page__section:first-child .sermons-divider { margin-top: var(--space-md); }
+.events-page .events__rail-wrap { margin-top: 0; }
+
+// Filter chips. On phones the chips are one row that swipes, out to
+// the screen edges.
+.events-page__bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+.events-filter {
+  display: flex; flex-wrap: wrap; gap: var(--space-xs);
+  min-width: 0;
+}
+.events-filter[hidden] { display: none; }
+.events-filter .pill-btn { cursor: pointer; }
+@media (max-width: #{$bp-sm - 1px}) {
+  .events-filter {
+    flex: 1 1 100%;
+    flex-wrap: nowrap;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .events-filter::-webkit-scrollbar { display: none; }
+  .events-filter .pill-btn { flex: none; }
+}
+
+// Phones and tablets: the All events title and chips stay pinned under
+// the fixed header while the list scrolls, on the page background out to the
+// screen edges, with a hairline under them.
+@media (max-width: #{$bp-md - 1px}) {
+  .events-page__head {
+    position: sticky; top: var(--header-h); z-index: 5;
+    margin-inline: calc(var(--gutter) * -1);
+    padding: var(--space-sm) var(--gutter) 0;
+    background: var(--bg);
+    box-shadow: 0 1px 0 var(--border-subtle);
+  }
+  .events-page .events-page__head .sermons-divider { margin: 0 0 var(--space-sm); }
+  .events-page__head .events-page__bar { margin-bottom: 0; padding-bottom: var(--space-sm); }
+  .events-page__head + .events-grid { margin-top: var(--space-lg); }
+}
+
+// The grid: as many across as fit, three at most (each column at least a
+// third of the row)
+.events-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(17rem, (100% - 2 * var(--space-lg)) / 3)), 1fr));
+  gap: var(--space-lg);
+  margin: 0; padding: 0; list-style: none;
+}
+.events-grid .event-card[hidden] { display: none; }
+.events-page .events__empty[hidden] { display: none; }
+
+// ---------------------------------------------------------------------------
+// Featured: just the photo (event-card--feature, Partials/EventCard.lava) —
+// 7:3, the date chip top right, "View details" bottom right. The title is
+// there for screen readers only. A rail shows one and a peek of the next.
+// ---------------------------------------------------------------------------
+.event-card--feature {
+  flex: 0 0 min(86%, 44rem);
+  box-shadow: var(--shadow-md);
+}
+.event-card--feature .event-card__thumb { overflow: hidden; }
+.event-card--feature .event-card__cta {
+  position: absolute; right: var(--space-md); bottom: var(--space-md); z-index: 1;
+  box-shadow: var(--shadow-md);
+}
+.event-card--feature:hover .event-card__cta { background: var(--brand-bright); box-shadow: var(--shadow-glow); }
+.event-card--feature .event-card__date { left: var(--space-md); top: var(--space-md); }
+
+// ---------------------------------------------------------------------------
+// Event detail (Assets/Lava/EventDetail.lava; the photo is in the page
+// header). The description beside a card of when / questions / note and the
+// actions; the card stacks under the description on phones and sticks under
+// the header on desktop. The description is rich text from Rock, so it keeps
+// core.css typography (no theme reset here).
+// ---------------------------------------------------------------------------
+.event-detail {
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xl);
+  padding-block: var(--space-lg) var(--space-2xl);
+}
+@media (min-width: #{$bp-md}) {
+  .event-detail { grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem); gap: var(--space-2xl); align-items: start; }
+  .event-detail__card { position: sticky; top: calc(var(--header-h) + var(--space-lg)); }
+}
+.event-detail__lead { margin: 0 0 var(--space-md); font-size: 1.1875rem; line-height: 1.5; color: var(--text); }
+.event-detail__desc { color: var(--text-secondary); line-height: 1.7; }
+.event-detail__desc > :first-child { margin-top: 0; }
+.event-detail__desc > :last-child { margin-bottom: 0; }
+
+.event-detail__card {
+  display: grid; gap: var(--space-md);
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+}
+.event-detail__row { display: grid; gap: 0.35rem; }
+.event-detail__row + .event-detail__row { padding-top: var(--space-md); border-top: 1px solid var(--border-subtle); }
+.event-detail__card p { margin: 0; }
+.event-detail__label {
+  margin: 0;
+  font-size: 0.75rem; font-weight: 800; line-height: 1.3;
+  letter-spacing: var(--tracking-wider); text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.event-detail__when { font-size: 1.0625rem; font-weight: 700; line-height: 1.4; }
+.event-detail__card a:not([class]) { color: var(--brand-text); }
+
+.event-detail__actions {
+  display: grid; gap: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+// Register buttons (open linkages, then the RegistrationLinks matrix): full width, stacked
+.event-detail__register { display: grid; gap: var(--space-xs); }
+.event-detail__register .btn { width: 100%; white-space: normal; text-align: center; }
+// Secondary matrix links: the outline button, brand wash on hover (not the black fill)
+.event-detail__register .btn--outline { border-color: var(--border-strong); color: var(--text); }
+.event-detail__register .btn--outline:is(:hover, :focus-visible) { border-color: var(--brand); background: var(--brand-wash); color: var(--text); }
+// Tertiary matrix links: the design system's text-link CTA, without the arrow (draw-in underline)
+.event-detail__text-links { display: grid; justify-items: center; gap: var(--space-xs); }
+.event-detail__text-link {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  padding-block: 0.2rem;
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase; text-align: center;
+}
+.event-detail__text-link:is(:link, :visited, :hover, :focus) { color: var(--brand-text); }
+.event-detail__text-link { @include link-draw(1.5px); }
+.event-detail__secondary { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+.event-detail__secondary .pill-btn { min-height: 2.5rem; }
+
+.event-detail--pending { display: block; padding-block: var(--space-2xl); text-align: center; color: var(--text-secondary); }

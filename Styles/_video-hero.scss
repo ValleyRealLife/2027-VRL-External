@@ -1,0 +1,130 @@
+// ===========================================================================
+// VIDEO HERO — a page's opening band with its featured video
+// (Assets/Lava/Partials/VideoHero.lava; first used on Give). For ministry
+// pages: an HTML block in InnerDefault's Feature zone, with PageHeaderStyle
+// Hidden (the hero carries the page's h1) and DarkHeader checked.
+//
+// An ink band (the design system's edge glows + 5px brand stripe) holds the
+// title, a lead line and the actions; the video sits in the band but hangs
+// out of its bottom edge into the page by --hero-overlap, across the green
+// stripe, so the page pulls you down into it. Two layouts:
+//
+//   .video-hero--split    (default) text left, video right (7fr), the video
+//                         lower than the text so it reads as stepping down
+//                         into the page
+//   .video-hero--stacked  text centred, the video wide and centred under it
+//
+// Phones: both stack (text, then the video full width, still overlapping).
+//
+// How the overlap works: the video's negative bottom margin lets it overflow
+// the band by --hero-overlap; the band's own bottom margin reserves that space
+// so the page content starts below the video. The glows are clipped in their
+// own layer (.video-hero__glow), never on the band, so the video isn't cut.
+// ===========================================================================
+
+@use "config" as *;
+
+.video-hero {
+  --hero-overlap: clamp(4.5rem, 12vw, 7rem);   // how far the video hangs into the page
+  --hero-after: clamp(1.5rem, 4vw, 3rem);       // breathing room under the video
+  --hero-pad-top: clamp(2.5rem, 6vw, 5rem);
+  --hero-pad-bottom: clamp(2rem, 4vw, 3.5rem);
+  position: relative;
+  isolation: isolate;
+  margin-bottom: calc(var(--hero-overlap) + var(--hero-after));
+  padding-block: var(--hero-pad-top) var(--hero-pad-bottom);
+  background: var(--ink);
+  color: var(--on-ink);
+  border-bottom: 5px solid var(--brand);
+}
+
+// Edge glows (the homepage hero's recipe, as the ink band), clipped here
+.video-hero__glow { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.video-hero__glow::before,
+.video-hero__glow::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 26vw; height: max(100%, 100vh);
+  transform: translateY(-50%);
+}
+.video-hero__glow::before { left: 0;  background: radial-gradient(70% 50% at 0% 40%, var(--brand-glow) 0%, oklch(from var(--brand) l c h / 0.10) 45%, transparent 72%); }
+.video-hero__glow::after  { right: 0; background: radial-gradient(70% 50% at 100% 55%, var(--brand-glow) 0%, oklch(from var(--brand) l c h / 0.10) 45%, transparent 72%); }
+
+.video-hero__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xl);
+}
+
+// Text
+.video-hero__text { display: grid; justify-items: start; align-content: center; }
+.video-hero__kicker {
+  margin-bottom: var(--space-sm);
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-widest); text-transform: uppercase;
+  color: var(--brand);
+}
+// Live now: a pulsing red dot, as the live page's status bar
+.video-hero__kicker--live { display: inline-flex; align-items: center; gap: 0.55em; color: var(--on-ink); }
+.video-hero__dot {
+  width: 0.6rem; height: 0.6rem;
+  border-radius: var(--radius-circle);
+  background: #e5484d;
+  box-shadow: 0 0 0 4px oklch(0.63 0.2 25 / 0.28);
+  animation: hero-live-pulse 1.6s var(--ease-in-out) infinite;
+}
+@keyframes hero-live-pulse { 50% { box-shadow: 0 0 0 7px oklch(0.63 0.2 25 / 0.12); } }
+@media (prefers-reduced-motion: reduce) { .video-hero__dot { animation: none; } }
+.video-hero h1 {
+  font-size: clamp(3rem, 9vw, 6rem);
+  text-transform: uppercase;
+  color: var(--on-ink);
+}
+.video-hero__lead {
+  max-width: 34rem;
+  margin-top: var(--space-md);
+  font-size: clamp(1.0625rem, 1.6vw, 1.25rem);
+  font-weight: 500; line-height: 1.55;
+  color: var(--on-ink-muted);
+}
+.video-hero__actions {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--space-md) var(--space-lg);
+  margin-top: var(--space-xl);
+}
+// Secondary links travel together (they wrap as a pair under the button)
+.video-hero__links { display: flex; flex-wrap: wrap; gap: var(--space-sm) var(--space-lg); }
+
+// The video: hangs out of the band by --hero-overlap
+.video-hero__media {
+  position: relative; z-index: 1;
+  margin-bottom: calc(-1 * (var(--hero-overlap) + var(--hero-pad-bottom) + 5px));
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-xl);
+  background: var(--ink-deep);
+  box-shadow: var(--shadow-card), 0 0 0 1px oklch(1 0 0 / 0.06);
+}
+.video-hero__media > * { height: 100%; }
+.video-hero__media iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+@media (min-width: #{$bp-md}) {
+  .video-hero--split .video-hero__inner {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: end;
+  }
+  .video-hero--split .video-hero__text { align-self: center; padding-bottom: var(--space-md); }
+
+  // Stacked: the video is the band's lower half, so it hangs further
+  .video-hero--stacked { --hero-overlap: clamp(7rem, 20vw, 16rem); }
+  .video-hero--stacked .video-hero__text { justify-items: center; text-align: center; }
+  .video-hero--stacked .video-hero__lead { max-width: 40rem; }
+  .video-hero--stacked .video-hero__actions { justify-content: center; }
+  .video-hero--stacked .video-hero__media { justify-self: center; width: min(100%, 60rem); margin-top: var(--space-md); }
+}
+
+// A hero page has no crumbs strip between the header and the band
+.breadcrumb-container:has(+ .page-feature .video-hero) { display: none; }
+

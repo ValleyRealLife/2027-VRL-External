@@ -1,0 +1,106 @@
+{% comment %}
+    EVENT CARD — one card, shared by the homepage rail (HomeEvents.lava) and
+    the events page (Events.lava). Include it inside a loop after setting:
+
+      cardItemName       title
+      cardItemUrl        details link
+      cardItemImage      thumbnail URL
+      cardItemStart      next start date/time (date chip; optional)
+      cardItemTag        the one audience tag (optional, '' for none); sits
+                         on the photo's bottom edge, at the right
+      cardItemTeaser     summary text (optional)
+      cardItemMeta       true to show the time row
+      cardItemLocation   place text (row commented out below for now: event
+                         locations aren't entered consistently yet)
+      cardItemFeature    true for the featured card (event-card--feature):
+                         the photo only, date top right, "View details"
+                         bottom right; the title stays for screen readers
+      cardItemIsNew      true for the "New" corner peel (just promoted)
+      cardItemShareId    an id for the share menu: shows the design system's
+                         share button (theme.js "Share dropdowns") beside
+                         View details; '' for none
+      cardItemAudiences  space-separated audience ids for the events page
+                         filter (optional)
+
+    The card is one click target (data-card, theme.js "Clickable cards"):
+    the title is the link; "View details" is a visual cue, not a second link.
+{% endcomment %}
+{%- if cardItemFeature -%}
+<li class="event-card event-card--feature" data-card>
+  <div class="event-card__thumb">
+    <img src="{{ cardItemImage }}" alt="" loading="lazy" />
+    {%- if cardItemStart %}
+    <p class="event-card__date"><span class="m">{{ cardItemStart | Date:'MMM' }}</span><span class="d">{{ cardItemStart | Date:'d' }}</span></p>
+    {%- endif %}
+    {%- if cardItemIsNew %}
+    <span class="event-card__new"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <path class="peel__red" d="M10 0H100V90C80 66 34 22 10 0Z"/>
+      <path class="peel__shine" d="M30 0H100V22C76 18 50 10 30 0Z"/>
+      <path class="peel__curl" d="M10 0C34 22 80 66 100 90C64 82 22 46 10 0Z"/>
+      <path class="peel__curl-shade" d="M10 0C34 22 80 66 100 90C78 72 36 34 10 0Z"/>
+      <text class="peel__text" x="66" y="34" transform="rotate(45 66 34)" text-anchor="middle" dominant-baseline="middle">NEW</text>
+    </svg><span class="u-visually-hidden">New</span></span>
+    {%- endif %}
+    <h3 class="u-visually-hidden"><a class="event-card__link" href="{{ cardItemUrl }}" data-card-link>{{ cardItemName }}</a></h3>
+    <span class="btn btn--primary btn--sm event-card__cta" aria-hidden="true">View details</span>
+  </div>
+</li>
+{%- else -%}
+<li class="event-card" data-card{% if cardItemAudiences and cardItemAudiences != '' %} data-audiences="{{ cardItemAudiences }}"{% endif %}>
+  <div class="event-card__thumb">
+    <img src="{{ cardItemImage }}" alt="" loading="lazy" />
+    {%- if cardItemStart %}
+    <p class="event-card__date"><span class="m">{{ cardItemStart | Date:'MMM' }}</span><span class="d">{{ cardItemStart | Date:'d' }}</span></p>
+    {%- endif %}
+    {%- if cardItemIsNew %}
+    <span class="event-card__new"><svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+      <path class="peel__red" d="M10 0H100V90C80 66 34 22 10 0Z"/>
+      <path class="peel__shine" d="M30 0H100V22C76 18 50 10 30 0Z"/>
+      <path class="peel__curl" d="M10 0C34 22 80 66 100 90C64 82 22 46 10 0Z"/>
+      <path class="peel__curl-shade" d="M10 0C34 22 80 66 100 90C78 72 36 34 10 0Z"/>
+      <text class="peel__text" x="66" y="34" transform="rotate(45 66 34)" text-anchor="middle" dominant-baseline="middle">NEW</text>
+    </svg><span class="u-visually-hidden">New</span></span>
+    {%- endif %}
+    {%- if cardItemTag and cardItemTag != '' %}
+    <p class="event-card__tag">{{ cardItemTag }}</p>
+    {%- endif %}
+  </div>
+  <div class="event-card__body">
+    <h3><a class="event-card__link" href="{{ cardItemUrl }}" data-card-link>{{ cardItemName }}</a></h3>
+    {%- if cardItemTeaser and cardItemTeaser != '' %}
+    <p class="event-card__desc">{{ cardItemTeaser | Truncate:140 }}</p>
+    {%- endif %}
+    {%- if cardItemMeta %}
+    <ul class="event-card__meta" role="list">
+      {%- if cardItemStart %}
+      <li><svg width="14" height="14" aria-hidden="true"><use href="#i-clock"/></svg> {{ cardItemStart | Date:'ddd, MMM d · h:mm tt' }}</li>
+      {%- endif %}
+      {%- comment -%}
+      {%- if cardItemLocation and cardItemLocation != '' %}
+      <li><svg width="14" height="14" aria-hidden="true"><use href="#i-map-pin"/></svg> {{ cardItemLocation }}</li>
+      {%- endif %}
+      {%- endcomment -%}
+    </ul>
+    {%- endif %}
+  </div>
+  <div class="event-card__actions">
+    <span class="btn btn--primary btn--sm" aria-hidden="true">View details</span>
+    {%- if cardItemShareId and cardItemShareId != '' %}
+    {%- assign cardShareUrl = cardItemUrl -%}
+    {%- if cardShareUrl contains '://' %}{% else %}{% capture cardShareUrl %}{{ 'Global' | Page:'Scheme' }}://{{ 'Global' | Page:'Host' }}{{ cardItemUrl }}{% endcapture %}{% endif %}
+    <div class="share">
+      <button class="share__btn" type="button" aria-expanded="false" aria-controls="{{ cardItemShareId }}" aria-label="Share {{ cardItemName | Escape }}" data-share-toggle>
+        <svg width="18" height="18" aria-hidden="true"><use href="#i-share"/></svg>
+      </button>
+      <div class="share__menu" id="{{ cardItemShareId }}" data-open="false">
+        <a class="share__item" href="https://www.facebook.com/sharer/sharer.php?u={{ cardShareUrl | EscapeDataString }}" target="_blank" rel="noopener"><svg width="16" height="16" aria-hidden="true"><use href="#i-facebook"/></svg> Facebook</a>
+        <a class="share__item" href="mailto:?subject={{ cardItemName | EscapeDataString }}&amp;body={{ cardShareUrl | EscapeDataString }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-mail"/></svg> Email</a>
+        <a class="share__item" href="sms:?&amp;body={{ cardItemName | Append:' ' | Append:cardShareUrl | EscapeDataString }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-message"/></svg> Text message</a>
+        <div class="share__divider"></div>
+        <button class="share__item" type="button" data-copy="{{ cardShareUrl }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-copy"/></svg> <span>Copy link</span></button>
+      </div>
+    </div>
+    {%- endif %}
+  </div>
+</li>
+{%- endif -%}

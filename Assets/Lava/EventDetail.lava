@@ -1,0 +1,219 @@
+{% comment %}
+    EVENT DETAIL — the Lava Template of Rock's "Calendar Event Item
+    Occurrence Lava" block on the event detail page (route
+    events/{EventOccurrenceId}, InnerDefault, Main zone).
+
+    Lava Template:      {% include '~~/Assets/Lava/EventDetail.lava' %}
+    Set Page Title:     Yes (the page header shows the event's name)
+    Registration Page:  the registration page
+
+    Rock provides Event (the event item), EventItemOccurrence,
+    RegistrationPage and RegistrationStatusLabels. This sets the page
+    header's photo from the event photo (the layout reads the vrl:page-image
+    meta tag; Layouts/InnerDefault.aspx) and the social preview image
+    (og:image), then shows the content beside a card with When (or Next, for
+    a recurring schedule) / Where / the occurrence's contact person (name and
+    email) / the actions:
+
+      Content           the event's Description and the occurrence's Note,
+                        one after the other in one container (both are HTML;
+                        staff put buttons in either). The Summary isn't shown
+                        here: it's the cards' teaser and the link preview.
+      Register          one button per registration linkage that's open:
+                        active, inside its start/end dates and not full,
+                        labelled with the public name or the event name
+                        (40 chars), or "Register" if both are blank.
+                        Closed, full or inactive ones are left out.
+      Registration      the occurrence's RegistrationLinks matrix attribute
+        links           (LinkTitle, RegistrationLink, LinkType): custom
+                        registration links (a workflow, an outside form) with
+                        the Register buttons. LinkType primary = green button
+                        (after Register), secondary = outline button,
+                        tertiary = text link, under the buttons
+      Add to calendar   an .ics download built from the schedule
+      Share             the design system's share menu (theme.js)
+
+    The event's Details URL isn't used here: it replaces the link to this
+    page on every card instead (Events.lava, HomeEvents.lava,
+    EventRelated.lava).
+
+    PromotionStart (occurrence attribute): before it, the page says the event
+    isn't available yet instead of showing it. Where shows only when the
+    occurrence has a location. Styled by Styles/_events.scss.
+{% endcomment %}
+{%- assign occurrence = EventItemOccurrence -%}
+{%- capture siteRoot %}{{ 'Global' | Page:'Scheme' }}://{{ 'Global' | Page:'Host' }}{% endcapture -%}
+{%- assign pageUrl = 'Global' | Page:'Url' -%}
+
+{%- comment -%} Not promoted yet? {%- endcomment -%}
+{%- assign promotionStart = occurrence | Attribute:'PromotionStart','RawValue' -%}
+{%- assign minutesToPromotion = 0 -%}
+{%- if promotionStart and promotionStart != '' %}{% assign minutesToPromotion = 'Now' | DateDiff:promotionStart,'m' %}{% endif -%}
+
+{%- if minutesToPromotion > 0 %}
+<div class="event-detail event-detail--pending">
+  <p>This event isn't available yet. Check back soon, or <a href="/events">see all events</a>.</p>
+</div>
+{%- else -%}
+
+{%- comment -%} Header photo, social preview, description meta {%- endcomment -%}
+{%- if Event.Photo.Guid -%}
+  {%- capture headerPhoto %}/GetImage.ashx?guid={{ Event.Photo.Guid }}&w=1400{% endcapture -%}
+  {{ headerPhoto | AddMetaTagToHead:'name','vrl:page-image' }}
+  {%- capture ogImage %}{{ siteRoot }}/GetImage.ashx?guid={{ Event.Photo.Guid }}&w=1200&h=630&mode=crop{% endcapture -%}
+  {{ ogImage | AddMetaTagToHead:'property','og:image' }}
+{%- endif -%}
+{%- assign metaDescription = Event.Summary | StripHtml | Trim -%}
+{%- if metaDescription == '' %}{% assign metaDescription = Event.Description | StripHtml | Trim | Truncate:200 %}{% endif -%}
+{%- if metaDescription != '' -%}
+  {{ metaDescription | AddMetaTagToHead:'name','description' }}
+  {{ metaDescription | AddMetaTagToHead:'property','og:description' }}
+{%- endif -%}
+{{ Event.Name | AddMetaTagToHead:'property','og:title' }}
+
+{%- comment -%} When: the next date only {%- endcomment -%}
+{%- assign nextStart = occurrence.NextStartDateTime -%}
+{%- if nextStart == null or nextStart == '' %}{% assign nextStart = occurrence.Schedule.iCalendarContent | DatesFromICal:1 | First %}{% endif -%}
+{%- comment -%} A recurring schedule (a repeat rule or extra dates) labels it "Next", a one-time event "When" {%- endcomment -%}
+{%- assign isRecurring = false -%}
+{%- assign iCal = occurrence.Schedule.iCalendarContent | Default:'' -%}
+{%- if iCal contains 'RRULE' or iCal contains 'RDATE' %}{% assign isRecurring = true %}{% endif -%}
+
+{%- comment -%} Registration buttons: open linkages (active, inside their dates, not full), then the RegistrationLinks matrix {%- endcomment -%}
+{%- assign registrationPage = RegistrationPage | Default:'/registration' -%}
+{%- comment -%}
+  RegistrationLinks matrix rows, sorted by LinkType: primary (green button,
+  after the Register buttons), secondary (outline button), tertiary (text
+  link with an arrow). A blank or unknown LinkType counts as primary.
+{%- endcomment -%}
+{%- assign matrixPrimary = '' -%}
+{%- assign matrixSecondary = '' -%}
+{%- assign matrixTertiary = '' -%}
+{%- assign registrationLinks = occurrence | Attribute:'RegistrationLinks','Object' -%}
+{%- for item in registrationLinks.AttributeMatrixItems -%}
+  {%- assign linkTitle = item | Attribute:'LinkTitle' | Trim -%}
+  {%- assign linkUrl = item | Attribute:'RegistrationLink' | Trim -%}
+  {%- assign linkType = item | Attribute:'LinkType','RawValue' | Trim | Downcase -%}
+  {%- if linkUrl == '' %}{% continue %}{% endif -%}
+  {%- assign linkTitle = linkTitle | Default:'Register' -%}
+  {%- if linkType == 'tertiary' -%}
+    {%- capture linkHtml %}<a class="event-detail__text-link" href="{{ linkUrl }}">{{ linkTitle }}</a>{% endcapture -%}
+    {%- assign matrixTertiary = matrixTertiary | Append:linkHtml -%}
+  {%- elseif linkType == 'secondary' -%}
+    {%- capture linkHtml %}<a class="btn btn--outline" href="{{ linkUrl }}">{{ linkTitle }}</a>{% endcapture -%}
+    {%- assign matrixSecondary = matrixSecondary | Append:linkHtml -%}
+  {%- else -%}
+    {%- capture linkHtml %}<a class="btn btn--primary" href="{{ linkUrl }}">{{ linkTitle }}</a>{% endcapture -%}
+    {%- assign matrixPrimary = matrixPrimary | Append:linkHtml -%}
+  {%- endif -%}
+{%- endfor -%}
+
+{%- capture registerButtons -%}
+  {%- for linkage in occurrence.Linkages -%}
+    {%- assign instance = linkage.RegistrationInstance -%}
+    {%- if instance == null %}{% continue %}{% endif -%}
+    {%- assign isOpen = false -%}
+    {%- if instance.IsActive == true -%}
+      {%- assign isOpen = true -%}
+      {%- if instance.StartDateTime %}{% assign untilStart = 'Now' | DateDiff:instance.StartDateTime,'m' %}{% if untilStart > 0 %}{% assign isOpen = false %}{% endif %}{% endif -%}
+      {%- if instance.EndDateTime %}{% assign untilEnd = 'Now' | DateDiff:instance.EndDateTime,'m' %}{% if untilEnd < 0 %}{% assign isOpen = false %}{% endif %}{% endif -%}
+      {%- assign statusLabel = RegistrationStatusLabels[linkage.RegistrationInstanceId] -%}
+      {%- if statusLabel == 'Full' %}{% assign isOpen = false %}{% endif -%}
+    {%- endif -%}
+    {%- if isOpen -%}
+      {%- comment -%} The linkage's public name, else the event's, cut to 40 characters; "Register" if both are blank {%- endcomment -%}
+      {%- assign registerLabel = linkage.PublicName | Trim -%}
+      {%- if registerLabel == '' %}{% assign registerLabel = Event.Name | Trim %}{% endif -%}
+      {%- assign registerLabel = registerLabel | Default:'Register' | Truncate:40 -%}
+      {%- if linkage.UrlSlug != '' %}
+      <a class="btn btn--primary" href="{{ registrationPage }}?RegistrationInstanceId={{ linkage.RegistrationInstanceId }}&amp;Slug={{ linkage.UrlSlug }}">{{ registerLabel }}</a>
+      {%- else %}
+      <a class="btn btn--primary" href="{{ registrationPage }}?RegistrationInstanceId={{ linkage.RegistrationInstanceId }}&amp;EventOccurrenceID={{ linkage.EventItemOccurrenceId }}">{{ registerLabel }}</a>
+      {%- endif %}
+    {%- endif -%}
+  {%- endfor -%}
+  {{ matrixPrimary }}
+  {{ matrixSecondary }}
+{%- endcapture -%}
+{%- assign registerButtons = registerButtons | Trim -%}
+
+<div class="event-detail">
+  <div class="event-detail__main">
+    {%- comment -%} The Description, then the occurrence Note: one container, both HTML {%- endcomment -%}
+    <div class="event-detail__desc">
+      {{ Event.Description }}
+      {{ occurrence.Note }}
+    </div>
+  </div>
+
+  <aside class="event-detail__card" aria-label="Event details">
+    <div class="event-detail__row">
+      <h2 class="event-detail__label">{% if isRecurring %}Next{% else %}When{% endif %}</h2>
+      {%- if nextStart %}
+      <p class="event-detail__when">{{ nextStart | Date:'dddd, MMMM d, yyyy' }}<br>{{ nextStart | Date:'h:mm tt' }}</p>
+      {%- endif %}
+    </div>
+
+    {%- assign location = occurrence.Location | Trim -%}
+    {%- if location != '' %}
+    <div class="event-detail__row">
+      <h2 class="event-detail__label">Where</h2>
+      <p>{{ location }}</p>
+    </div>
+    {%- endif %}
+
+    {%- comment -%} Contact: the occurrence's contact person, name and email only (no phone) {%- endcomment -%}
+    {%- assign contactPerson = occurrence.ContactPersonAlias.Person -%}
+    {%- assign contactName = contactPerson.FullName | Trim -%}
+    {%- assign contactEmail = occurrence.ContactEmail | Trim -%}
+    {%- if contactEmail == '' %}{% assign contactEmail = contactPerson.Email | Trim %}{% endif -%}
+    {%- if contactName != '' or contactEmail != '' %}
+    <div class="event-detail__row">
+      <h2 class="event-detail__label">Questions?</h2>
+      <p>
+        {%- if contactName != '' %}{{ contactName }}{% endif -%}
+        {%- if contactName != '' and contactEmail != '' %}<br>{% endif -%}
+        {%- if contactEmail != '' %}<a href="mailto:{{ contactEmail }}">{{ contactEmail }}</a>{% endif -%}
+      </p>
+    </div>
+    {%- endif %}
+
+
+    <div class="event-detail__actions">
+      {%- if registerButtons != '' %}
+      <div class="event-detail__register">
+        {{ registerButtons }}
+      </div>
+      {%- endif %}
+      {%- if matrixTertiary != '' %}
+      <div class="event-detail__text-links">
+        {{ matrixTertiary }}
+      </div>
+      {%- endif %}
+
+      <div class="event-detail__secondary">
+        {%- if occurrence.Schedule.iCalendarContent != '' -%}
+          {%- capture icsExtra %}SUMMARY:{{ Event.Name }}
+URL:{{ pageUrl }}
+END:VEVENT{% endcapture -%}
+          {%- assign ics = occurrence.Schedule.iCalendarContent | Replace:'END:VEVENT',icsExtra %}
+        <a class="pill-btn" href="data:text/calendar;charset=utf-8,{{ ics | EscapeDataString }}" download="{{ Event.Name | Replace:'/','-' }}.ics"><svg width="14" height="14" aria-hidden="true"><use href="#i-clock"/></svg> Add to calendar</a>
+        {%- endif %}
+        {%- assign shareText = Event.Name %}
+        <div class="share">
+          <button class="pill-btn" type="button" aria-expanded="false" aria-controls="event-share" data-share-toggle>
+            <svg width="14" height="14" aria-hidden="true"><use href="#i-share"/></svg> Share
+          </button>
+          <div class="share__menu share__menu--down" id="event-share" data-open="false">
+            <a class="share__item" href="https://www.facebook.com/sharer/sharer.php?u={{ pageUrl | EscapeDataString }}" target="_blank" rel="noopener"><svg width="16" height="16" aria-hidden="true"><use href="#i-facebook"/></svg> Facebook</a>
+            <a class="share__item" href="mailto:?subject={{ shareText | EscapeDataString }}&amp;body={{ pageUrl | EscapeDataString }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-mail"/></svg> Email</a>
+            <a class="share__item" href="sms:?&amp;body={{ shareText | Append:' ' | Append:pageUrl | EscapeDataString }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-message"/></svg> Text message</a>
+            <div class="share__divider"></div>
+            <button class="share__item" type="button" data-copy="{{ pageUrl }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-copy"/></svg> <span>Copy link</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</div>
+{%- endif %}

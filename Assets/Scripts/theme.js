@@ -415,13 +415,72 @@
   // opens a new tab, like a real link.
   document.addEventListener('click', function (e) {
     var card = e.target.closest('[data-card]');
-    if (!card || e.target.closest('a, button, input, select, textarea, label, summary')) return;
+    if (!card || e.target.closest('a, button, input, select, textarea, label, summary, .share')) return;
     var selection = window.getSelection ? String(window.getSelection()) : '';
     if (selection) return;
     var link = card.querySelector('[data-card-link]');
     if (!link) return;
     if (e.metaKey || e.ctrlKey) { window.open(link.href, '_blank', 'noopener'); return; }
     link.click();
+  });
+
+  // --- Events rail arrows (.events__rail-wrap: HomeEvents.lava, Events.lava) -----
+  // The prev/next buttons scroll the rail one card; each disables at its end.
+  document.querySelectorAll('.events__rail-wrap').forEach(function (wrap) {
+    var rail = wrap.querySelector('.events__rail');
+    var prev = wrap.querySelector('[data-rail-prev]');
+    var next = wrap.querySelector('[data-rail-next]');
+    if (!rail || !prev || !next) return;
+    var motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var step = function () {
+      var card = rail.querySelector('.event-card');
+      return card ? card.offsetWidth + 24 : 300;
+    };
+    var sync = function () {
+      prev.disabled = rail.scrollLeft < 8;
+      next.disabled = rail.scrollLeft > rail.scrollWidth - rail.clientWidth - 8;
+    };
+    prev.addEventListener('click', function () { rail.scrollBy({ left: -step(), behavior: motion.matches ? 'auto' : 'smooth' }); });
+    next.addEventListener('click', function () { rail.scrollBy({ left: step(), behavior: motion.matches ? 'auto' : 'smooth' }); });
+    rail.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync);
+    sync();
+  });
+
+  // --- Events filter ([data-event-filter]: Events.lava) ----------------------------
+  // Audience chips over the All events grid. A chip shows the cards whose
+  // data-audiences include its id (All: every card), shows the empty note
+  // when none match, and puts ?audience=<id> in the address so the view can be shared. The chips
+  // are hidden in the markup, so without JavaScript every event just shows.
+  document.querySelectorAll('[data-event-filter]').forEach(function (section) {
+    var chipRow = section.querySelector('[data-event-filter-chips]');
+    var list = section.querySelector('[data-event-list]');
+    if (!chipRow || !list) return;
+    var chips = Array.prototype.slice.call(chipRow.querySelectorAll('[data-audience]'));
+    var cards = Array.prototype.slice.call(list.querySelectorAll('.event-card'));
+    var empty = section.querySelector('[data-event-empty]');
+    var apply = function (id, remember) {
+      var shown = 0;
+      cards.forEach(function (card) {
+        var on = !id || (' ' + (card.getAttribute('data-audiences') || '') + ' ').indexOf(' ' + id + ' ') !== -1;
+        card.hidden = !on;
+        if (on) shown++;
+      });
+      chips.forEach(function (chip) { chip.setAttribute('aria-pressed', String(chip.getAttribute('data-audience') === id)); });
+      if (empty) empty.hidden = shown > 0;
+      if (remember && history.replaceState) {
+        var url = new URL(location.href);
+        if (id) url.searchParams.set('audience', id); else url.searchParams.delete('audience');
+        history.replaceState(null, '', url);
+      }
+    };
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () { apply(chip.getAttribute('data-audience'), true); });
+    });
+    chipRow.hidden = false;
+    var wanted = new URLSearchParams(location.search).get('audience') || '';
+    var known = chips.some(function (chip) { return chip.getAttribute('data-audience') === wanted; });
+    apply(known ? wanted : '', false);
   });
 
   // --- Site search: live results (Assets/Lava/SiteSearch.lava) ----------------------
@@ -798,6 +857,49 @@
         busy = false;
       };
     });
+  });
+
+  // --- Content page: on this page ([data-toc]: Styles/_content.scss) -----------------
+  // Marks the link of the section being read (aria-current) as you scroll: the
+  // last section whose top has passed a line a third of the way down the
+  // screen. On phones the list is a chip row; the current chip scrolls into view.
+  // Also sets data-tone="ink" while the glass panel sits over an .on-ink band.
+
+  document.querySelectorAll('[data-toc]').forEach(function (toc) {
+    var links = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'));
+    var targets = links.map(function (a) { return document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1))); });
+    if (!links.length) return;
+    var current = null;
+    var ticking = false;
+    var panel = toc.querySelector('.content-toc__panel') || toc;
+    var inks = Array.prototype.slice.call(toc.parentNode.querySelectorAll('.on-ink'));
+    function update() {
+      ticking = false;
+      // Glass tone: dark while the panel sits over an ink band
+      var p = panel.getBoundingClientRect(), mid = p.top + p.height / 2, onInk = false;
+      inks.forEach(function (b) { var r = b.getBoundingClientRect(); if (r.top <= mid && r.bottom >= mid) onInk = true; });
+      if (onInk) toc.setAttribute('data-tone', 'ink'); else toc.removeAttribute('data-tone');
+      var line = window.innerHeight / 3;
+      var pick = -1;
+      targets.forEach(function (t, i) { if (t && t.getBoundingClientRect().top <= line) pick = i; });
+      var last = targets[targets.length - 1];
+      if (last && last.getBoundingClientRect().bottom < 0) pick = -1;   // read past the list
+      var next = pick >= 0 ? links[pick] : null;
+      if (next === current) return;
+      if (current) current.removeAttribute('aria-current');
+      current = next;
+      if (current) {
+        current.setAttribute('aria-current', 'true');
+        var row = current.closest('ol');
+        if (row && row.scrollWidth > row.clientWidth) {
+          var r = row.getBoundingClientRect(), c = current.getBoundingClientRect();
+          if (c.left < r.left || c.right > r.right) row.scrollTo({ left: row.scrollLeft + c.left - r.left - 16, behavior: reduced.matches ? 'auto' : 'smooth' });
+        }
+      }
+    }
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
   });
 
   // --- Esc closes whatever is open ------------------------------------------------

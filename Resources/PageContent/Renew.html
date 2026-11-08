@@ -1,0 +1,101 @@
+<!--
+  RENEW · MAIN ZONE: the content of the HTML block in the Renew page's Main
+  zone (the hero is Assets/Lava/RenewHero.lava in the Feature zone). Paste it
+  in the block's code editor. Text from www.vrl.church/renew. Styles:
+  Styles/_content.scss.
+
+  Photos: the green boxes are placeholders, each labelled with the shot it
+  wants. To swap one in, replace its <span> with
+    <img src="…" alt="what's in the photo" loading="lazy">
+  and remove "content-photo--placeholder" from the figure.
+
+  Links: the group cards point at the current site's group pages
+  (www.vrl.church/lgdetail) until the new site has a group detail page.
+  Reader view: one schema.org Article; .content-toc-scope is its articleBody.
+-->
+<article class="content-page renew" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Renew">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  <!-- Verse + welcome: a centred feature -->
+  <section class="content-feature" aria-label="Welcome to Renew">
+    <blockquote class="content-verse content-verse--feature">
+      <p>Be transformed by the renewing of your mind.</p>
+      <cite>Romans 12:2</cite>
+    </blockquote>
+    <p>Renew is a place that meets you where you are and helps you take your next step toward hope, healing, and freedom.</p>
+    <p>Through biblical truth, practical tools, and real connection, there are different places to start based on what you're walking through.</p>
+    <p class="content-feature__tagline">Come as you are. There's a place for you here.</p>
+  </section>
+
+  <!-- Monday nights: split, photo left -->
+  <section class="content-split content-split--reverse" aria-labelledby="renew-monday">
+    <div class="content-split__text">
+      <h2 id="renew-monday">Join us Monday nights</h2>
+      <p>Worship and teaching in Large Group, followed by Small Groups where you can connect and take your next step.</p>
+      <dl class="content-times">
+        <div><dt>Large Group</dt><dd>6:30–7:15 PM</dd></div>
+        <div><dt>Small Groups</dt><dd>7:30–9:00 PM</dd></div>
+      </dl>
+      <h3 class="content-split__subhead" id="stay-connected">Stay connected</h3>
+      <div class="content-social">
+        <a class="pill-btn" href="https://www.facebook.com/share/g/1HCvLTfARC/" target="_blank" rel="noopener"><svg width="16" height="16" aria-hidden="true"><use href="#i-facebook"/></svg> Renew on Facebook</a>
+        <a class="pill-btn" href="https://www.youtube.com/channel/UCKFCUPcSP-2XF2nUDBO-4IQ" target="_blank" rel="noopener"><svg width="16" height="16" aria-hidden="true"><use href="#i-youtube"/></svg> Renew on YouTube</a>
+      </div>
+    </div>
+    <div class="content-split__media">
+      <figure class="content-photo content-photo--placeholder"><span>Photo: worship at Large Group</span></figure>
+    </div>
+  </section>
+
+  <!-- Photo break -->
+  <div class="content-mosaic">
+    <figure class="content-photo content-photo--placeholder"><span>Photo: Monday night, wide</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: prayer</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: welcome</span></figure>
+  </div>
+
+  <!-- Next steps -->
+  <div class="sermons-divider" id="next-steps"><h2>Next steps</h2></div>
+
+  <ul class="content-gallery content-gallery--swipe" aria-label="Renew groups and classes">
+    <li class="content-gallery__item" data-card>
+      <img src="/Content/RenewThumbs/GenesisProcessMen-Thumb.jpg" alt="" loading="lazy">
+      <h3><a href="https://www.vrl.church/lgdetail?GroupId=162387" data-card-link>Genesis Process for Men</a></h3>
+    </li>
+    <li class="content-gallery__item" data-card>
+      <img src="/Content/RenewThumbs/GenesisProcessWomen-Thumb.jpg" alt="" loading="lazy">
+      <h3><a href="https://www.vrl.church/lgdetail?GroupId=162389" data-card-link>Genesis Process for Women</a></h3>
+    </li>
+    <li class="content-gallery__item" data-card>
+      <img src="/Content/RenewThumbs/BetrayalAndBeyond-Thumb.jpg" alt="" loading="lazy">
+      <h3><a href="https://www.vrl.church/lgdetail?GroupId=105147" data-card-link>Betrayal &amp; Beyond</a></h3>
+    </li>
+    <li class="content-gallery__item" data-card>
+      <img src="/Content/RenewThumbs/PureDesire-Thumb.jpg" alt="" loading="lazy">
+      <h3><a href="https://www.vrl.church/lgdetail?GroupId=44270" data-card-link>Pure Desire Men</a></h3>
+    </li>
+    <li class="content-gallery__item" data-card>
+      <img src="/Content/RenewThumbs/PureDesireStories-Thumb.jpg" alt="" loading="lazy">
+      <h3><a href="https://www.vrl.church/lgdetail?GroupId=162362" data-card-link>Pure Desire Women</a></h3>
+    </li>
+    <li class="content-gallery__item" data-card>
+      <img src="/Content/RenewThumbs/DivorceCare-Thumb.jpg" alt="" loading="lazy">
+      <h3><a href="/events/620" data-card-link>DivorceCare</a></h3>
+    </li>
+    <li class="content-gallery__item" data-card>
+      <img src="/Content/RenewThumbs/UntyingKnots-Thumb.jpg" alt="" loading="lazy">
+      <h3><a href="/events/614" data-card-link>Untying the Knots of the Heart</a></h3>
+    </li>
+    <li class="content-gallery__item" data-card>
+      <img src="/Content/RenewThumbs/Mens12Steps-Thumb.jpg" alt="" loading="lazy">
+      <h3><a href="https://www.vrl.church/lgdetail?GroupId=88501" data-card-link>Men's 12-Step</a></h3>
+    </li>
+    <li class="content-gallery__item" data-card>
+      <img src="/Content/RenewThumbs/Womens12Steps-Thumb.jpg" alt="" loading="lazy">
+      <h3><a href="https://www.vrl.church/lgdetail?GroupId=88491" data-card-link>Women's 12-Step</a></h3>
+    </li>
+  </ul>
+
+  </div>
+</article>

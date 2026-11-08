@@ -140,6 +140,22 @@
     linear-gradient(225deg, var(--v-green-100) 0%, var(--v-green-200) 60%, var(--v-green-300) 100%);
 }
 
+// Phones: no card. The slanted photo runs edge to edge under the site
+// header, the title and lead sit on the page below it, and the breadcrumbs
+// are hidden (the photo and title already say where you are).
+@media (max-width: #{$bp-md - 1px}) {
+  .page-head--side-image { padding-top: 0; background: none; }
+  .page-head--side-image > .container { padding-inline: 0; }
+  .page-head--side-image .page-head__card {
+    overflow: visible;
+    border: 0; border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .page-head--side-image .page-head__body { padding: var(--space-sm) var(--gutter) 0; }
+  .page-head--side-image + .breadcrumb-container { display: none; }
+}
+
 @media (min-width: #{$bp-md}) {
   .page-head--side-image .page-head__card {
     grid-template-columns: minmax(0, 60fr) minmax(0, 40fr);

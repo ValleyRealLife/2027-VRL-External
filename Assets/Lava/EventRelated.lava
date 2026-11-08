@@ -1,0 +1,154 @@
+{% comment %}
+    EVENT RELATED — "You might also like": a rail of other upcoming events
+    under the event detail block (event detail page, Main zone, after the
+    Calendar Event Item Occurrence Lava block).
+
+    Block content:            {% include '~~/Assets/Lava/EventRelated.lava' %}
+    Enabled Lava Commands:    Sql
+    Cache Duration:           0 while iterating (later: short)
+
+    No stock Rock block does this, so it's an HTML block with SQL. Up to
+    `maxRelated` (6). Ranking:
+      1. events sharing audiences with this one (audiences other than the
+         featured 150), the most shared first; related events always come
+         before unrelated ones
+      2. within the same number shared, the most viewed: page views of the detail page for that event
+         in the last `viewDays` days, from Rock's Interaction table (the
+         site's page-view interactions; the occurrence id is read from the
+         URL, /events/{id} or ?EventOccurrenceId={id})
+      3. then the soonest
+    The current event is left out; PromotionStart and approval apply as on
+    the events page (Partials/EventVisibleOccurrences.lava). Same cards as
+    the events page (Partials/EventCard.lava); the rail arrows are theme.js.
+    Nothing renders when there are no other events.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign calendarId = 1 -%}
+{%- assign featuredAudienceId = 150 -%}
+{%- assign maxRelated = 6 -%}
+{%- assign viewDays = 60 -%}
+{%- assign fallbackImageGuid = 'ea573748-2354-4f4a-875d-b8d2dfa30e5d' -%}
+{%- assign detailsPageUrl = '/events' -%}
+
+{%- assign currentOccurrenceId = PageParameter.EventOccurrenceId | AsInteger | Default:0 -%}
+{%- assign detailPageId = 'Global' | Page:'Id' -%}
+
+{%- capture visibleOccSql %}{% include '~~/Assets/Lava/Partials/EventVisibleOccurrences.lava' %}{% endcapture -%}
+{% sql return:'related' securityenabled:'false' %}
+    WITH {{ visibleOccSql }},
+    [current] AS (
+        SELECT eio.[EventItemId] FROM [EventItemOccurrence] eio WHERE eio.[Id] = {{ currentOccurrenceId }}
+    ),
+    [views] AS (
+        /* Page views of this detail page in the window, per occurrence id read from the URL */
+        SELECT u.[OccurrenceId], COUNT(*) AS [Views]
+        FROM [Interaction] i
+        INNER JOIN [InteractionComponent] ic ON ic.[Id] = i.[InteractionComponentId]
+        INNER JOIN [InteractionChannel] ich ON ich.[Id] = ic.[InteractionChannelId]
+        INNER JOIN [EntityType] pet ON pet.[Id] = ich.[ComponentEntityTypeId] AND pet.[Name] = 'Rock.Model.Page'
+        CROSS APPLY (
+            SELECT
+                CASE WHEN CHARINDEX('EventOccurrenceId=', i.[InteractionData]) > 0
+                     THEN SUBSTRING(i.[InteractionData], CHARINDEX('EventOccurrenceId=', i.[InteractionData]) + 18, 12)
+                     WHEN CHARINDEX('/events/', i.[InteractionData]) > 0
+                     THEN SUBSTRING(i.[InteractionData], CHARINDEX('/events/', i.[InteractionData]) + 8, 12)
+                END AS [Tail]
+        ) t
+        CROSS APPLY (
+            SELECT TRY_CAST(LEFT(t.[Tail], PATINDEX('%[^0-9]%', t.[Tail] + 'x') - 1) AS int) AS [OccurrenceId]
+        ) u
+        WHERE ic.[EntityId] = {{ detailPageId }}
+          AND i.[InteractionDateTime] >= DATEADD(day, -{{ viewDays }}, GETDATE())
+          AND u.[OccurrenceId] IS NOT NULL
+        GROUP BY u.[OccurrenceId]
+    ),
+    [candidates] AS (
+        SELECT
+            o.[Id] AS [OccurrenceId],
+            ei.[Name] AS [EventName],
+            o.[NextStartDateTime],
+            o.[IsNew],
+            ei.[DetailsUrl],
+            ei.[Summary],
+            ei.[Description],
+            bf.[Guid] AS [PhotoGuid],
+            (
+                SELECT TOP 1 dv.[Value]
+                FROM [EventItemAudience] a
+                INNER JOIN [DefinedValue] dv ON dv.[Id] = a.[DefinedValueId]
+                WHERE a.[EventItemId] = ei.[Id] AND a.[DefinedValueId] <> {{ featuredAudienceId }}
+                ORDER BY dv.[Order]
+            ) AS [Tag],
+            (
+                SELECT COUNT(*)
+                FROM [EventItemAudience] a
+                INNER JOIN [EventItemAudience] mine ON mine.[DefinedValueId] = a.[DefinedValueId]
+                WHERE a.[EventItemId] = ei.[Id]
+                  AND mine.[EventItemId] = (SELECT TOP 1 [EventItemId] FROM [current])
+                  AND a.[DefinedValueId] <> {{ featuredAudienceId }}
+            ) AS [SharedAudiences],
+            COALESCE(v.[Views], 0) AS [Views]
+        FROM [nextOcc] o
+        INNER JOIN [EventItem] ei ON ei.[Id] = o.[EventItemId]
+        LEFT JOIN [BinaryFile] bf ON bf.[Id] = ei.[PhotoId]
+        LEFT JOIN [views] v ON v.[OccurrenceId] = o.[Id]
+        WHERE o.[rn] = 1
+          AND ei.[IsActive] = 1
+          AND ei.[IsApproved] = 1
+          AND ei.[Id] <> COALESCE((SELECT TOP 1 [EventItemId] FROM [current]), 0)
+          AND EXISTS (
+              SELECT 1 FROM [EventCalendarItem] eci
+              WHERE eci.[EventItemId] = ei.[Id] AND eci.[EventCalendarId] = {{ calendarId }}
+          )
+    )
+    SELECT TOP ({{ maxRelated }}) *
+    FROM [candidates]
+    ORDER BY [SharedAudiences] DESC, [Views] DESC, [NextStartDateTime] ASC
+{% endsql %}
+
+{%- assign relatedCount = related | Size -%}
+{%- if relatedCount > 0 -%}
+{%- assign cardsHtml = '' -%}
+{%- for event in related -%}
+    {%- assign cardItemName = event.EventName -%}
+    {%- assign cardItemStart = event.NextStartDateTime -%}
+    {%- assign cardItemTag = event.Tag | Default:'' -%}
+    {%- assign cardItemIsNew = false -%}
+    {%- if event.IsNew == 1 %}{% assign cardItemIsNew = true %}{% endif -%}
+    {%- if event.DetailsUrl and event.DetailsUrl != '' -%}
+        {%- assign cardItemUrl = event.DetailsUrl -%}
+    {%- else -%}
+        {%- capture cardItemUrl %}{{ detailsPageUrl }}/{{ event.OccurrenceId }}{% endcapture -%}
+    {%- endif -%}
+    {%- assign imageGuid = event.PhotoGuid | Default:fallbackImageGuid -%}
+    {%- capture cardItemImage %}/GetImage.ashx?guid={{ imageGuid }}&w=840&h=360&mode=crop{% endcapture -%}
+    {%- assign cardItemTeaser = event.Summary | StripHtml | Trim -%}
+    {%- if cardItemTeaser == '' %}{% assign cardItemTeaser = event.Description | StripHtml | Trim %}{% endif %}
+    {%- assign cardItemMeta = true -%}
+    {%- assign cardItemFeature = false -%}
+    {%- assign cardItemAudiences = '' -%}
+    {%- assign cardItemShareId = '' -%}
+    {%- capture card %}{% include '~~/Assets/Lava/Partials/EventCard.lava' %}{% endcapture -%}
+    {%- assign cardsHtml = cardsHtml | Append:card -%}
+{%- endfor -%}
+
+<section class="events-page events-related" aria-labelledby="events-related-title">
+  <div class="sermons-divider">
+    <h2 id="events-related-title">You might also like</h2>
+  </div>
+  <div class="events__rail-wrap">
+    <button class="events__nav events__nav--prev" type="button" data-rail-prev>
+      <span class="u-visually-hidden">Scroll events left</span>
+      <svg width="22" height="22" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+    </button>
+    <ul class="events__rail" tabindex="0" aria-label="More events, scrollable">
+      {{ cardsHtml }}
+    </ul>
+    <button class="events__nav events__nav--next" type="button" data-rail-next>
+      <span class="u-visually-hidden">Scroll events right</span>
+      <svg width="22" height="22" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+    </button>
+  </div>
+</section>
+{%- endif -%}
