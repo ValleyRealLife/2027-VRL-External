@@ -67,6 +67,11 @@ Rock v18's NextGen theme system: `theme.json` registers the theme and its admin 
 | `Styles/_site-alert.scss` | The global alert banner, including how to add seasonal looks (e.g. `alert-christmas`) |
 | `Styles/_home.scss` | Homepage section styles (also the event card and rail, used by the events page) |
 | `Styles/_events.scss` | The events page: filter chips, count, All events grid |
+| `Styles/_content.scss` | Content pages (hand-built HTML in an HTML block): lead, ink band, pull quote, the **On this page** glass jump list (`.content-toc-scope`, highlight in theme.js), numbered items, scripture lines, green panel, photos, photo cards |
+| `Resources/PageContent/` | Content pages' source: the approved text (`.md`) and the HTML block content built from it (`OurBeliefs.html`) |
+| `Styles/_video-hero.scss` | The video hero: a page's opening ink band with its featured video hanging out of the band into the page (split or stacked layout) |
+| `Assets/Lava/GiveHero.lava` | HTML block include for the Give page's Feature zone: its video hero (media 733, the Merlin Give now button) |
+| `Assets/Lava/Partials/VideoHero.lava` | The video hero's markup, for ministry pages: title (page title), lead (page Description), actions, Rock media element or embed; `?hero=split` / `?hero=stacked` to compare |
 | `Styles/_popular-pages.scss` | Popular pages cards (horizontal event-card style) |
 | `Styles/_search.scss` | Site search: the design system's search pill and the grouped live results |
 | `Styles/_login.scss` | Rock's stock Login block (unchanged in Rock) restyled as a centred card; `theme.js` adds the Phone or email / Username & password tabs |
@@ -103,6 +108,9 @@ Blocks to add on the site (parent page **41952**). The first three go at the Sit
 | Main (login page, Page level, same zone as the Login block; other blocks there hide while the photo shows) | HTML Content | content: `{% include '~~/Assets/Lava/LoginMedia.lava' %}` · Enabled Lava Commands: **RockEntity** · Cache Duration: 0 |
 | Main (404 page, or any page that offers search, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/SiteSearch.lava' %}` · Enabled Lava Commands: **RockEntity, Sql** |
 | Section A (404 page, Page level) | HTML Content | content: `{% include '~~/Assets/Lava/PopularPages.lava' %}` · Enabled Lava Commands: **Cache, RockEntity, Sql** |
+| Main (content pages on InnerDefault, e.g. Our Beliefs) | HTML Content | content: paste `Resources/PageContent/<Page>.html` in the code editor (no Lava). Photos point at `Assets/Images/Theme_Images/` on the server |
+| Feature (ministry pages with a video hero, e.g. Give: InnerDefault, PageHeaderStyle **Hidden**, DarkHeader checked) | HTML Content | content: a few assigns + `{% include '~~/Assets/Lava/Partials/VideoHero.lava' %}` (Give: `{% include '~~/Assets/Lava/GiveHero.lava' %}`) · Cache Duration 0. Give also needs Page Cacheability **No-Store** (the Merlin widget) and the same Lava commands as the current give block; the hero's lead is the page Description |
+| Main (Give page, under the hero) | HTML Content | content: paste `Resources/PageContent/Give.html` in the code editor. Its Online tile's Give now button relies on the Merlin script the hero block loads |
 
 **Live search endpoint:** under Admin Tools → Lava Applications, add a GET endpoint (slug `site/search` in application 1, giving `/api/v2/lava-app/1/site/search`; change `searchEndpoint` in `SiteSearch.lava` if yours differs), open to all users (it only returns public content), Enabled Lava Commands **RockEntity, Sql**, with this code:
 

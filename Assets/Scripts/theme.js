@@ -859,6 +859,49 @@
     });
   });
 
+  // --- Content page: on this page ([data-toc]: Styles/_content.scss) -----------------
+  // Marks the link of the section being read (aria-current) as you scroll: the
+  // last section whose top has passed a line a third of the way down the
+  // screen. On phones the list is a chip row; the current chip scrolls into view.
+  // Also sets data-tone="ink" while the glass panel sits over an .on-ink band.
+
+  document.querySelectorAll('[data-toc]').forEach(function (toc) {
+    var links = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'));
+    var targets = links.map(function (a) { return document.getElementById(decodeURIComponent(a.getAttribute('href').slice(1))); });
+    if (!links.length) return;
+    var current = null;
+    var ticking = false;
+    var panel = toc.querySelector('.content-toc__panel') || toc;
+    var inks = Array.prototype.slice.call(toc.parentNode.querySelectorAll('.on-ink'));
+    function update() {
+      ticking = false;
+      // Glass tone: dark while the panel sits over an ink band
+      var p = panel.getBoundingClientRect(), mid = p.top + p.height / 2, onInk = false;
+      inks.forEach(function (b) { var r = b.getBoundingClientRect(); if (r.top <= mid && r.bottom >= mid) onInk = true; });
+      if (onInk) toc.setAttribute('data-tone', 'ink'); else toc.removeAttribute('data-tone');
+      var line = window.innerHeight / 3;
+      var pick = -1;
+      targets.forEach(function (t, i) { if (t && t.getBoundingClientRect().top <= line) pick = i; });
+      var last = targets[targets.length - 1];
+      if (last && last.getBoundingClientRect().bottom < 0) pick = -1;   // read past the list
+      var next = pick >= 0 ? links[pick] : null;
+      if (next === current) return;
+      if (current) current.removeAttribute('aria-current');
+      current = next;
+      if (current) {
+        current.setAttribute('aria-current', 'true');
+        var row = current.closest('ol');
+        if (row && row.scrollWidth > row.clientWidth) {
+          var r = row.getBoundingClientRect(), c = current.getBoundingClientRect();
+          if (c.left < r.left || c.right > r.right) row.scrollTo({ left: row.scrollLeft + c.left - r.left - 16, behavior: reduced.matches ? 'auto' : 'smooth' });
+        }
+      }
+    }
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  });
+
   // --- Esc closes whatever is open ------------------------------------------------
 
   document.addEventListener('keydown', function (e) {
