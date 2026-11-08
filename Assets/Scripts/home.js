@@ -3,11 +3,12 @@
  *
  * Loaded (deferred) from Layouts/Homepage.aspx after GSAP + ScrollTrigger.
  * Site-wide behaviour (header, menus, care dialog, cover sections, footer
- * reveal, share dropdowns, events rail arrows) lives in theme.js; this file only holds what the
+ * reveal, share dropdowns) lives in theme.js; this file only holds what the
  * homepage sections need:
  *
- *   1. Messages "Watch now" player hand-off
- *   2. Scroll choreography (GSAP): hero → Next Steps card shuffle, Kids wheels
+ *   1. Events rail arrows
+ *   2. Messages "Watch now" player hand-off
+ *   3. Scroll choreography (GSAP): hero → Next Steps card shuffle, Kids wheels
  *      and balloon drift, Students photo pile
  *
  * Ported from Concepts/Home2027-v1.5.html by tools/port-concept.py. Every
@@ -20,6 +21,26 @@ window.VRLHome = { version: '1.5' };
   'use strict';
 
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  if (document.getElementById('events-rail')) {
+    /* ---------- events rail ---------- */
+    var rail = document.getElementById('events-rail');
+    var prev = document.querySelector('[data-rail-prev]');
+    var next = document.querySelector('[data-rail-next]');
+    function railStep() {
+      var card = rail.querySelector('.event-card');
+      return card ? card.offsetWidth + 24 : 300;
+    }
+    function syncRail() {
+      prev.disabled = rail.scrollLeft < 8;
+      next.disabled = rail.scrollLeft > rail.scrollWidth - rail.clientWidth - 8;
+    }
+    prev.addEventListener('click', function () { rail.scrollBy({ left: -railStep(), behavior: reduced.matches ? 'auto' : 'smooth' }); });
+    next.addEventListener('click', function () { rail.scrollBy({ left: railStep(), behavior: reduced.matches ? 'auto' : 'smooth' }); });
+    rail.addEventListener('scroll', syncRail, { passive: true });
+    window.addEventListener('resize', syncRail);
+    syncRail();
+  }
 
   /* ---------- messages: play in place ----------
      Latest-message state only (markup: Assets/Lava/HomeMessages.lava). The

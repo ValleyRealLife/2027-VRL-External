@@ -1,1 +1,0 @@
-Sync check written 2026-11-03 over the SFTP mount. Safe to delete.

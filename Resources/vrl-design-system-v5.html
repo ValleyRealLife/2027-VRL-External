@@ -2048,25 +2048,6 @@
     .v5-dot { animation: none; }
     .v5-toggle::before, .v5-prose, .v5-draw, .v5-cta { transition: none; }
   }
-
-  /* On this page (jump list) */
-  .v5-toc-demo { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-lg); width: 100%; }
-  .v5-toc-stage { position: relative; min-height: 300px; padding: var(--space-lg); border-radius: var(--radius-lg); background: var(--bg); border: 1px solid var(--border-subtle); overflow: hidden; }
-  .v5-toc-stage--ink { background: var(--ink, #161a12); border-color: transparent; }
-  .v5-toc-stage--ink::before { content: ""; position: absolute; inset: 0; background: radial-gradient(70% 60% at 0% 40%, oklch(from var(--brand) l c h / 0.32) 0%, transparent 72%); }
-  .v5-toc { position: relative; width: 14rem; padding: 1rem 1rem 0.75rem; border-radius: var(--radius-xl); background: oklch(1 0 0 / 0.72); border: 1px solid oklch(1 0 0 / 0.6); box-shadow: var(--shadow-md); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); }
-  .v5-toc p { margin: 0 0 0.5rem; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); }
-  .v5-toc ol { margin: 0; padding: 0; list-style: none; border-left: 2px solid oklch(0 0 0 / 0.08); }
-  .v5-toc a { display: block; margin-left: -2px; padding: 0.35rem 0 0.35rem 0.75rem; border-left: 2px solid transparent; font-size: 0.875rem; font-weight: 600; line-height: 1.3; color: var(--text-secondary); text-decoration: none; }
-  .v5-toc a:hover { color: var(--text); }
-  .v5-toc a[aria-current="true"] { color: var(--text); border-left-color: var(--brand); }
-  .v5-toc--ink { background: oklch(0.22 0.01 135 / 0.55); border-color: oklch(1 0 0 / 0.14); box-shadow: var(--shadow-lg); }
-  .v5-toc--ink p, .v5-toc--ink a { color: var(--on-ink-muted, #c9ccc4); }
-  .v5-toc--ink ol { border-left-color: oklch(1 0 0 / 0.14); }
-  .v5-toc--ink a:hover, .v5-toc--ink a[aria-current="true"] { color: var(--on-ink, #f6f7f4); }
-  .v5-toc-chips { display: flex; gap: 0.5rem; overflow-x: auto; scrollbar-width: none; margin: 0; padding: 0; list-style: none; }
-  .v5-toc-chips a { display: block; padding: 0.5rem 0.875rem; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-elevated); font-size: 0.8125rem; font-weight: 600; white-space: nowrap; color: var(--text-secondary); text-decoration: none; }
-  .v5-toc-chips a[aria-current="true"] { border-color: var(--brand); background: oklch(from var(--brand) l c h / 0.14); color: var(--text); }
 </style>
 </head>
 <body>
@@ -3073,53 +3054,6 @@ html {
     </div>
 
     <div class="group">
-      <h4 class="group-title">On this page <span class="tab-new">New</span></h4>
-      <p class="group-note">A jump list for long reading pages (<code>.content-toc</code> inside <code>.content-toc-scope</code>, <code>Styles/_content.scss</code>; first used on Our Beliefs). Wrap the sections the list should cover in the scope: on desktop the list floats as a <strong>glass panel</strong> at the left: it starts level with the first section's heading, sticks under the header as you read, and lets go at the end of the last section (it never runs under the footer). The sections move right to make room. Section headings are numbered in page order (<code>.content-num</code> numbers a band's heading too). It reads on light pages as frosted white; while it sits over an ink band, theme.js sets <code>data-tone="ink"</code> and it turns to dark glass with light text. As you scroll, the link for the section being read gets <code>aria-current</code> and the green side rule (the underline tab turned on its side). On phones it becomes a row of chips you swipe, in a frosted bar that sticks under the header for the length of the scope (dark glass over an ink band, like the desktop panel); the current chip scrolls into view, and jump targets land just below the bar. Without JavaScript it's a plain list of anchor links.</p>
-      <div class="preview preview--stretch">
-        <div class="v5-toc-demo">
-          <div class="v5-toc-stage">
-            <nav class="v5-toc" aria-label="Sample: on a light page">
-              <p>On this page</p>
-              <ol>
-                <li><a href="#">Unity</a></li>
-                <li><a href="#">God</a></li>
-                <li><a href="#" aria-current="true">Jesus Christ</a></li>
-                <li><a href="#">The Holy Spirit</a></li>
-                <li><a href="#">Salvation</a></li>
-                <li><a href="#">How we live it out</a></li>
-              </ol>
-            </nav>
-          </div>
-          <div class="v5-toc-stage v5-toc-stage--ink">
-            <nav class="v5-toc v5-toc--ink" aria-label="Sample: over an ink band">
-              <p>On this page</p>
-              <ol>
-                <li><a href="#" aria-current="true">Unity</a></li>
-                <li><a href="#">VRL DNA</a></li>
-                <li><a href="#">God</a></li>
-                <li><a href="#">Jesus Christ</a></li>
-                <li><a href="#">Salvation</a></li>
-                <li><a href="#">How we live it out</a></li>
-              </ol>
-            </nav>
-          </div>
-        </div>
-      </div>
-      <div class="preview preview--stretch">
-        <ol class="v5-toc-chips" aria-label="Sample: phones">
-          <li><a href="#">Unity</a></li>
-          <li><a href="#" aria-current="true">God</a></li>
-          <li><a href="#">Jesus Christ</a></li>
-          <li><a href="#">The Holy Spirit</a></li>
-          <li><a href="#">Man</a></li>
-          <li><a href="#">Salvation</a></li>
-        </ol>
-      </div>
-      <p class="group-note"><strong>Markup:</strong> <code>&lt;nav class="content-toc" aria-label="On this page" data-toc&gt;&lt;div class="content-toc__panel"&gt;&lt;h2&gt;On this page&lt;/h2&gt;&lt;ol&gt;&lt;li&gt;&lt;a class="content-toc__link" href="#section-id"&gt;…</code> as the first child of <code>.content-toc-scope</code>; every link points at a section's <code>id</code>. Use it when a page has five or more sections someone might jump between; a short page doesn't need one (only show controls that do something).</p>
-      <p class="group-note"><strong>Reader view:</strong> mark the page as one schema.org Article and label its body: <code>&lt;article class="content-page" itemscope itemtype="https://schema.org/Article"&gt;&lt;meta itemprop="headline" content="Page title"&gt;</code>, then <code>&lt;div class="content-toc-scope" itemprop="articleBody"&gt;</code>. Without the label, Safari's Reader picked the first block (the lead) and dropped the rest; it follows <code>articleBody</code> to the whole page. Mark the jump list <code>role="navigation"</code> so Reader leaves it out, and never use several <code>&lt;article&gt;</code>s for the parts. (Tested in Safari, November 2026.)</p>
-    </div>
-
-    <div class="group">
       <h4 class="group-title">Segmented toggle</h4>
       <p class="group-note">For switching modes, not content: a white pill slides behind the selected option on a gray track (<code>.view-toggle</code> Grid / Detail on Previous Messages, <code>.login-tabs</code> on the login page). Remembered per browser where it's a view preference. Use underline tabs for content.</p>
       <div class="preview">
@@ -3275,14 +3209,6 @@ html {
   <!-- ============== PANEL: CHANGELOG ============== -->
   <section role="tabpanel" id="panel-changelog" aria-labelledby="tab-changelog">
     <div class="section-head"><h3>Changelog</h3></div>
-
-    <div class="group">
-      <h4 class="group-title">v5.1 · November 2026</h4>
-      <p class="group-note">Content pages (hand-built HTML pages such as Our Beliefs, <code>Styles/_content.scss</code>).</p>
-      <ul class="v5-list">
-        <li><strong>New pattern: On this page.</strong> A glass jump list that floats beside long reading pages, light or dark glass to match what's under it, with chips on phones.</li>
-      </ul>
-    </div>
 
     <div class="group">
       <h4 class="group-title">v5 · October 2026</h4>

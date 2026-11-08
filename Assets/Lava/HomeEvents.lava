@@ -14,10 +14,11 @@
     the data model moves off the events calendar — the cards below only read
     `cardItem*` values.
 
-    Card: Partials/EventCard.lava (shared with the events page): thumbnail,
-    date tag, affinity tag, title, description, "View details".
-    Affinity tag = the event's FIRST audience other than `audienceId` (by the
-    defined values' order); one tag only, omitted when there are none.
+    Card: thumbnail, date tag, affinity tag, title, description, "View details".
+    The title link is stretched over the whole card, so each card is ONE link;
+    the "View details" button is a visual cue inside it, not a second link.
+    Affinity tag = the event's audiences other than `audienceId`
+    (e.g. "Men & Women"); omitted when there are none.
 
     The footer runway must stay the LAST element of the Main zone's last block,
     so it lives here, at the end. (Sticky cover sections pin within one parent;
@@ -30,8 +31,8 @@
 {%- assign audienceId = 150 -%}
 {%- assign maxCards = 9 -%}
 {%- assign fallbackImageGuid = 'ea573748-2354-4f4a-875d-b8d2dfa30e5d' -%}
-{%- comment -%} The detail page (route events/{EventOccurrenceId}); an event's own Details URL wins {%- endcomment -%}
-{%- assign detailsPageUrl = '/events' -%}
+{%- comment -%} Used when an event has no Details URL of its own (from the Connect theme). {%- endcomment -%}
+{%- assign detailsPageUrl = 'https://www.vrl.church/get-involved/events/details' -%}
 
 {%- comment -%} ===== DATA SOURCE ===== {%- endcomment -%}
 {% sql return:'events' securityenabled:'false' %}
@@ -39,39 +40,27 @@
         eio.[Id] AS [OccurrenceId],
         ei.[Name] AS [EventName],
         eio.[NextStartDateTime],
-        eio.[IsNew],
         ei.[DetailsUrl],
         ei.[Summary],
         ei.[Description],
         bf.[Guid] AS [PhotoGuid],
-        (
-            SELECT TOP 1 dv.[Value]
+        STUFF((
+            SELECT ' & ' + dv.[Value]
             FROM [EventItemAudience] a2
             INNER JOIN [DefinedValue] dv ON dv.[Id] = a2.[DefinedValueId]
             WHERE a2.[EventItemId] = ei.[Id] AND a2.[DefinedValueId] <> {{ audienceId }}
             ORDER BY dv.[Order]
-        ) AS [Affinity]
+            FOR XML PATH(''), TYPE
+        ).value('.', 'nvarchar(max)'), 1, 3, '') AS [Affinity]
     FROM (
         /* All future occurrences, numbered per event: row 1 is the next one */
         SELECT
-            o.[Id],
-            o.[EventItemId],
-            o.[NextStartDateTime],
-            CASE WHEN p.[PromotionStart] IS NOT NULL
-                  AND GETDATE() < DATEADD(day, 2, CAST(CAST(p.[PromotionStart] AS date) AS datetime2))
-                 THEN 1 ELSE 0 END AS [IsNew],
-            ROW_NUMBER() OVER (PARTITION BY o.[EventItemId] ORDER BY o.[NextStartDateTime] ASC) AS [rn]
-        FROM [EventItemOccurrence] o
-        /* PromotionStart (occurrence attribute): hidden until it passes; New for a day after (see Events.lava) */
-        OUTER APPLY (
-            SELECT TOP 1 COALESCE(av.[ValueAsDateTime], TRY_CONVERT(datetime2, NULLIF(av.[Value], ''))) AS [PromotionStart]
-            FROM [AttributeValue] av
-            INNER JOIN [Attribute] a ON a.[Id] = av.[AttributeId]
-            INNER JOIN [EntityType] et ON et.[Id] = a.[EntityTypeId]
-            WHERE av.[EntityId] = o.[Id] AND et.[Name] = 'Rock.Model.EventItemOccurrence' AND a.[Key] = 'PromotionStart'
-        ) p
-        WHERE o.[NextStartDateTime] >= GETDATE()
-          AND (p.[PromotionStart] IS NULL OR p.[PromotionStart] <= GETDATE())
+            [Id],
+            [EventItemId],
+            [NextStartDateTime],
+            ROW_NUMBER() OVER (PARTITION BY [EventItemId] ORDER BY [NextStartDateTime] ASC) AS [rn]
+        FROM [EventItemOccurrence]
+        WHERE [NextStartDateTime] >= GETDATE()
     ) eio
     INNER JOIN [EventItem] ei ON eio.[EventItemId] = ei.[Id]
     INNER JOIN [EventItemAudience] eia ON ei.[Id] = eia.[EventItemId]
@@ -97,26 +86,38 @@
         {%- if event.DetailsUrl and event.DetailsUrl != '' -%}
             {%- assign cardItemUrl = event.DetailsUrl -%}
         {%- else -%}
-            {%- capture cardItemUrl %}{{ detailsPageUrl }}/{{ event.OccurrenceId }}{% endcapture -%}
+            {%- capture cardItemUrl %}{{ detailsPageUrl }}?EventOccurrenceId={{ event.OccurrenceId }}&date={{ event.NextStartDateTime | Date:'yyyy-MM-ddTHH:mm:ss' }}{% endcapture -%}
         {%- endif -%}
 
         {%- if event.PhotoGuid != null -%}
-            {%- capture cardItemImage %}/GetImage.ashx?guid={{ event.PhotoGuid }}&w=840&h=360&mode=crop{% endcapture -%}
+            {%- capture cardItemImage %}/GetImage.ashx?guid={{ event.PhotoGuid }}&w=640&h=360&mode=crop{% endcapture -%}
         {%- else -%}
-            {%- capture cardItemImage %}/GetImage.ashx?guid={{ fallbackImageGuid }}&w=840&h=360&mode=crop{% endcapture -%}
+            {%- capture cardItemImage %}/GetImage.ashx?guid={{ fallbackImageGuid }}&w=640&h=360&mode=crop{% endcapture -%}
         {%- endif -%}
 
         {%- assign cardItemTeaser = event.Summary | StripHtml | Trim -%}
         {%- if cardItemTeaser == '' %}{% assign cardItemTeaser = event.Description | StripHtml | Trim %}{% endif %}
 
-        {%- assign cardItemTag = cardItemAffinity -%}
-        {%- assign cardItemMeta = false -%}
-        {%- assign cardItemFeature = false -%}
-        {%- assign cardItemIsNew = false -%}
-        {%- if event.IsNew == 1 %}{% assign cardItemIsNew = true %}{% endif -%}
-        {%- assign cardItemAudiences = '' -%}
-        {%- assign cardItemShareId = '' -%}
-        {%- include '~~/Assets/Lava/Partials/EventCard.lava' -%}
+        <li class="event-card" data-card>
+          <div class="event-card__thumb">
+            <img src="{{ cardItemImage }}" alt="" />
+            {%- if cardItemStart %}
+            <p class="event-card__date"><span class="m">{{ cardItemStart | Date:'MMM' }}</span><span class="d">{{ cardItemStart | Date:'d' }}</span></p>
+            {%- endif %}
+          </div>
+          <div class="event-card__body">
+            {%- if cardItemAffinity != '' %}
+            <p class="event-card__tag">{{ cardItemAffinity }}</p>
+            {%- endif %}
+            <h3><a class="event-card__link" href="{{ cardItemUrl }}" data-card-link>{{ cardItemName }}</a></h3>
+            {%- if cardItemTeaser != '' %}
+            <p class="event-card__desc">{{ cardItemTeaser | Truncate:140 }}</p>
+            {%- endif %}
+          </div>
+          <div class="event-card__actions">
+            <span class="btn btn--primary btn--sm" aria-hidden="true">View details</span>
+          </div>
+        </li>
     {%- endfor -%}
 {%- endcapture -%}
 
