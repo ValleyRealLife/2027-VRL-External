@@ -105,7 +105,7 @@
                     <dl>
                         <div><dt>Playground · {{ todayName }}</dt><dd>{{ playgroundToday }}</dd></div>
                     </dl>
-                    <a href="/kids#playground">All playground hours</a>
+                    <a href="/ministries/kids#playground">All playground hours</a>
                 </div>
 
                 <div class="mega__contact">
@@ -184,7 +184,7 @@
                 <div class="mobilenav__extra">
                     <p class="today-line">
                         <svg width="16" height="16" aria-hidden="true"><use href="#i-clock"/></svg>
-                        <a href="/kids#playground">{% if playgroundToday == 'Closed' %}Playground closed today{% else %}Playground today · {{ playgroundToday }}{% endif %}</a>
+                        <a href="/ministries/kids#playground">{% if playgroundToday == 'Closed' %}Playground closed today{% else %}Playground today · {{ playgroundToday }}{% endif %}</a>
                     </p>
                     <p><strong>Church office</strong> Mon – Thu, 9:00am – 4:00pm</p>
                     <p><a href="tel:+15092320840">(509) 232-0840</a> &nbsp;·&nbsp; <a href="mailto:hello@vrl.church">hello@vrl.church</a></p>

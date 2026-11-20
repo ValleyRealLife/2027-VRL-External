@@ -35,6 +35,8 @@
                 //   SimpleGreenStripe  a solid brand-green band
                 //   SimpleGradStripe   the gray band with a soft green wash at the right
                 //   SideImage          a card with the PageImage overlapping a gray stripe
+                //   Banner             the PageImage as an ultrawide photo, the title and
+                //                      description over it at the bottom left
                 //   None               no page header
                 // Empty: SimpleGradStripe (a landing page's default); an unknown value: SideImage.
                 // The old value SimpleStripe reads as SimpleGradStripe. One markup for
@@ -50,10 +52,12 @@
                     case "simplegraystripe":  headerClass = "page-head--simple page-head--simple-gray"; break;
                     case "simplegreenstripe": headerClass = "page-head--simple page-head--simple-green"; break;
                     case "simplegradstripe":  headerClass = "page-head--simple page-head--simple-grad"; break;
+                    case "banner":            headerClass = "page-head--banner"; break;
                     case "none":              headerClass = ""; break;
                     default:                  headerStyle = "sideimage"; headerClass = "page-head--side-image"; break;
                 }
                 var isSideImage = headerStyle == "sideimage";
+                var hasMedia = isSideImage || headerStyle == "banner";
                 // Page Properties → Show Description (PageDisplayDescription) gates the lead
                 var pageDescription = page.PageDisplayDescription ? ( page.Description ?? "" ).Trim() : "";
                 var pageImageGuid = ( page.GetAttributeValue( "PageImage" ) ?? "" ).Trim();
@@ -68,10 +72,10 @@
                                     <p class="page-head__lead"><%= System.Web.HttpUtility.HtmlEncode( pageDescription ) %></p>
                                 <% } %>
                             </div>
-                            <% if ( isSideImage ) { %>
+                            <% if ( hasMedia ) { %>
                                 <div class="page-head__media<%= pageImageGuid == "" ? " page-head__media--empty" : "" %>">
                                     <% if ( pageImageGuid != "" ) { %>
-                                        <img src="/GetImage.ashx?guid=<%= System.Web.HttpUtility.UrlEncode( pageImageGuid ) %>&amp;w=1400&amp;h=900&amp;mode=crop" alt="" />
+                                        <img src="/GetImage.ashx?guid=<%= System.Web.HttpUtility.UrlEncode( pageImageGuid ) %><%= headerStyle == "banner" ? "&amp;w=2400" : "&amp;w=1400&amp;h=900&amp;mode=crop" %>" alt="" />
                                     <% } %>
                                 </div>
                             <% } %>

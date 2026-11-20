@@ -1,0 +1,259 @@
+{% comment %}
+    STUDENTS — the VRL Students page (route `ministries/students`,
+    InnerDefault, PageHeaderStyle Hidden: the hero is the page head).
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/Students.lava' %}
+    Enabled Lava Commands:    RockEntity, Sql  (the MSM/HSM cards, the
+                              student events)
+
+    Laid out like the other ministry pages: the hero is
+    Assets/Lava/StudentsHero.lava in the Feature zone (the homepage Students
+    colours). Content from the current site (www.vrl.church/ministries/
+    students); the staff photo block is left out for now. MIDWEEK is retired:
+    MSM meets Wednesdays and HSM Sundays, and those two nights are the big
+    events, each with its own section. New copy fills the pattern: see
+    Resources/PageContent/Students-notes.md for what's new and needs approval.
+
+    Sections:
+      Intro           a centred feature: 1 Timothy 4:12 (NIV), the welcome
+                      (What to Expect), a tagline
+      Subnav          a sticky in-page nav (.content-subnav) to the sections
+                      below; add a link for any new big section
+      Photos          a bento grid (the current page's worship photo, the
+                      rest PLACEHOLDER)
+      Middle school   MSM beside its night's card (from its event: logo, next
+                      date, link; Partials/EventPromo.lava), MSM Life Groups
+      High school     the same for HSM (photo left)
+      Events          upcoming events with the Students audience, featured
+                      ones first (as the events page's cards, in a rail),
+                      and a link to the events page filtered to Students.
+                      MSM and HSM are left out: they have their own sections
+      Next steps      the Students team's welcome, then student baptism and
+                      serving with VRL Students (tiles)
+
+    SETTINGS below: the two nights' occurrence ids, the Students audience
+    (defined type 16), how many events the rail shows.
+    Styles: Styles/_content.scss (content-feature, content-verse,
+    content-subnav, content-bento, content-standfirst, content-split,
+    content-split__subhead, content-promo, content-event-rail, content-tiles), the events rail
+    and cards (Styles/_home.scss, _events.scss).
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign msmOccurrenceId = 618 -%}
+{%- assign hsmOccurrenceId = 617 -%}
+{%- assign studentsAudienceId = 1555 -%}
+{%- assign featuredAudienceId = 150 -%}
+{%- assign calendarId = 1 -%}
+{%- assign maxEvents = 8 -%}
+{%- assign fallbackImageGuid = 'ea573748-2354-4f4a-875d-b8d2dfa30e5d' -%}
+{%- assign studentEventsUrl = '/next-steps/events?audience=' | Append:studentsAudienceId -%}
+{%- assign studentsContactUrl = '/about/contact' -%}
+{%- assign volunteerUrl = '/next-steps/volunteer' -%}
+
+{%- comment -%} The two nights, as cards (empty when an event isn't scheduled) {%- endcomment -%}
+{%- assign promoOccurrenceId = msmOccurrenceId -%}
+{%- assign promoButtonText = 'MSM details' -%}
+{%- capture msmCard %}{% include '~~/Assets/Lava/Partials/EventPromo.lava' %}{% endcapture -%}
+{%- assign msmCard = msmCard | Trim -%}
+{%- assign promoOccurrenceId = hsmOccurrenceId -%}
+{%- assign promoButtonText = 'HSM details' -%}
+{%- capture hsmCard %}{% include '~~/Assets/Lava/Partials/EventPromo.lava' %}{% endcapture -%}
+{%- assign hsmCard = hsmCard | Trim -%}
+
+{%- comment -%}
+  Student events: the next occurrence of each active, approved event on the
+  calendar with the Students audience, featured (audience 150) first, then
+  soonest. The weekly nights are left out (their own sections).
+{%- endcomment -%}
+{%- capture visibleOccSql %}{% include '~~/Assets/Lava/Partials/EventVisibleOccurrences.lava' %}{% endcapture -%}
+{% sql return:'studentEvents' securityenabled:'false' %}
+    WITH {{ visibleOccSql }}
+    SELECT TOP ({{ maxEvents }})
+        o.[Id] AS [OccurrenceId],
+        ei.[Name] AS [EventName],
+        o.[NextStartDateTime],
+        o.[IsNew],
+        ei.[DetailsUrl],
+        ei.[Summary],
+        ei.[Description],
+        bf.[Guid] AS [PhotoGuid],
+        CASE WHEN EXISTS (
+            SELECT 1 FROM [EventItemAudience] f
+            WHERE f.[EventItemId] = ei.[Id] AND f.[DefinedValueId] = {{ featuredAudienceId }}
+        ) THEN 1 ELSE 0 END AS [IsFeatured]
+    FROM [nextOcc] o
+    INNER JOIN [EventItem] ei ON ei.[Id] = o.[EventItemId]
+    LEFT JOIN [BinaryFile] bf ON bf.[Id] = ei.[PhotoId]
+    WHERE o.[rn] = 1
+      AND ei.[IsActive] = 1
+      AND ei.[IsApproved] = 1
+      AND EXISTS (
+          SELECT 1 FROM [EventItemAudience] a
+          WHERE a.[EventItemId] = ei.[Id] AND a.[DefinedValueId] = {{ studentsAudienceId }}
+      )
+      AND EXISTS (
+          SELECT 1 FROM [EventCalendarItem] eci
+          WHERE eci.[EventItemId] = ei.[Id] AND eci.[EventCalendarId] = {{ calendarId }}
+      )
+      AND ei.[Id] NOT IN (
+          SELECT eio.[EventItemId] FROM [EventItemOccurrence] eio
+          WHERE eio.[Id] IN ({{ msmOccurrenceId }}, {{ hsmOccurrenceId }})
+      )
+    ORDER BY [IsFeatured] DESC, o.[NextStartDateTime] ASC
+{% endsql %}
+
+{%- assign eventCardsHtml = '' -%}
+{%- for event in studentEvents -%}
+    {%- assign cardItemName = event.EventName -%}
+    {%- assign cardItemStart = event.NextStartDateTime -%}
+    {%- assign cardItemTag = '' -%}
+    {%- assign cardItemIsNew = false -%}
+    {%- if event.IsNew == 1 %}{% assign cardItemIsNew = true %}{% endif -%}
+    {%- if event.DetailsUrl and event.DetailsUrl != '' -%}
+        {%- assign cardItemUrl = event.DetailsUrl -%}
+    {%- else -%}
+        {%- capture cardItemUrl %}/events/{{ event.OccurrenceId }}{% endcapture -%}
+    {%- endif -%}
+    {%- assign imageGuid = event.PhotoGuid | Default:fallbackImageGuid -%}
+    {%- capture cardItemImage %}/GetImage.ashx?guid={{ imageGuid }}&w=840&h=360&mode=crop{% endcapture -%}
+    {%- assign cardItemTeaser = event.Summary | StripHtml | Trim -%}
+    {%- if cardItemTeaser == '' %}{% assign cardItemTeaser = event.Description | StripHtml | Trim %}{% endif %}
+    {%- assign cardItemMeta = true -%}
+    {%- assign cardItemFeature = false -%}
+    {%- assign cardItemAudiences = '' -%}
+    {%- assign cardItemShareId = '' -%}
+    {%- capture card %}{% include '~~/Assets/Lava/Partials/EventCard.lava' %}{% endcapture -%}
+    {%- assign eventCardsHtml = eventCardsHtml | Append:card -%}
+{%- endfor -%}
+{%- assign eventCount = studentEvents | Size -%}
+
+<article class="content-page students-page" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="VRL Students">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  <!-- Verse + welcome: a centred feature (as Renew) -->
+  <section class="content-feature" aria-label="Welcome to VRL Students">
+    <blockquote class="content-verse content-verse--feature">
+      <p>Don't let anyone look down on you because you are young, but set an example for the believers in speech, in conduct, in love, in faith and in purity.</p>
+      <cite>1 Timothy 4:12</cite>
+    </blockquote>
+    <p>Our goal is to create an environment where every student feels like they belong, where they can grow in their relationship with Jesus and with each other. And we're out to shatter the stereotype that church is boring!</p>
+    <p class="content-feature__tagline">You belong here.</p>
+  </section>
+
+  <!-- In-page nav: sticks under the header; underlines the section being read -->
+  <nav class="content-subnav" aria-label="On this page" data-toc="scope">
+    <ol class="content-subnav__list">
+      <li><a class="content-subnav__link" href="#msm">Middle school</a></li>
+      <li><a class="content-subnav__link" href="#hsm">High school</a></li>
+      <li><a class="content-subnav__link" href="#events">Events</a></li>
+      <li><a class="content-subnav__link" href="#next-steps">Next steps</a></li>
+    </ol>
+  </nav>
+
+  {%- comment -%} PLACEHOLDER: student photos (the first is the current page's). Swap each figure's <span> for <img src="…" alt="…" loading="lazy"> and drop content-photo--placeholder. {%- endcomment %}
+  <div class="content-bento">
+    <figure class="content-photo"><img src="/GetImage.ashx?guid=2c23c798-5a57-4a50-8430-f2ce88b6e689&amp;w=1200" alt="Students worshipping in front of the stage at a student night" loading="lazy"></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: games night</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a small group</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: camp</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: friends laughing</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a leader and a student</span></figure>
+  </div>
+
+  <!-- ===== MIDDLE SCHOOL ===== -->
+  <div class="sermons-divider" id="msm"><h2>Middle school</h2></div>
+
+  <p class="content-standfirst"><strong>Wednesday nights</strong> are for 6th to 8th graders: fun, a challenge to live like Jesus, and friends who've got your back.</p>
+
+  <section class="content-split" aria-labelledby="stu-msm">
+    <div class="content-split__text">
+      <p class="content-kicker">Grades 6–8 · Wednesdays, 6:30–8:00pm</p>
+      <h2 id="stu-msm">Middle School Ministries</h2>
+      <p>Middle school is a crazy, fun age with a ton of things constantly changing. At MSM, our goal is to create an environment where every student feels like they belong, and our heart's desire is to see students grow in their relationship with Jesus and with each other.</p>
+      <h3 class="content-split__subhead">MSM Life Groups</h3>
+      <p>Find a place to develop friendships, belong and grow closer to God. Life Groups meet on Sundays at VRL during the school year, and registration is required.</p>
+    </div>
+    {%- if msmCard != '' %}
+    <div class="content-split__media">
+      {{ msmCard }}
+    </div>
+    {%- endif %}
+  </section>
+
+  <!-- ===== HIGH SCHOOL ===== -->
+  <div class="sermons-divider" id="hsm"><h2>High school</h2></div>
+
+  <p class="content-standfirst"><strong>Sunday nights</strong> are for 9th to 12th graders: the perfect place to find where you belong.</p>
+
+  <section class="content-split content-split--reverse" aria-labelledby="stu-hsm">
+    <div class="content-split__text">
+      <p class="content-kicker">Grades 9–12 · Sundays, 6:00–8:00pm</p>
+      <h2 id="stu-hsm">High School Ministries</h2>
+      <p>HSM is the perfect place to find where you belong. We're striving to help every high school student in the Valley see and accept Jesus, through Sunday nights, Life Groups and regular events.</p>
+      <h3 class="content-split__subhead">HSM Life Groups</h3>
+      <p>Be known and loved in groups that study Scripture and grow in our relationships with God and our friends. HSM Life Groups run on Sunday evenings during the school year, and registration is required.</p>
+    </div>
+    {%- if hsmCard != '' %}
+    <div class="content-split__media">
+      {{ hsmCard }}
+    </div>
+    {%- endif %}
+  </section>
+
+  <!-- ===== EVENTS (Students audience, featured first) ===== -->
+  <div class="sermons-divider" id="events"><h2>Student events</h2></div>
+
+  <p class="content-standfirst">Camps, trips and big nights: <strong>what's coming up</strong> for students.</p>
+
+  <section class="content-event-rail" aria-label="Upcoming student events">
+    {%- if eventCount > 0 %}
+    <div class="events__rail-wrap">
+      <button class="events__nav events__nav--prev" type="button" data-rail-prev>
+        <span class="u-visually-hidden">Scroll events left</span>
+        <svg width="22" height="22" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+      </button>
+      <ul class="events__rail" tabindex="0" aria-label="Student events, scrollable">
+        {{ eventCardsHtml }}
+      </ul>
+      <button class="events__nav events__nav--next" type="button" data-rail-next>
+        <span class="u-visually-hidden">Scroll events right</span>
+        <svg width="22" height="22" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+      </button>
+    </div>
+    {%- else %}
+    <p class="content-event-rail__empty">Nothing else is on the calendar for students right now. Check back soon.</p>
+    {%- endif %}
+    <p class="content-event-rail__all"><a class="btn btn--outline" href="{{ studentEventsUrl }}">See all student events</a></p>
+  </section>
+
+  <!-- ===== NEXT STEPS ===== -->
+  <div class="sermons-divider" id="next-steps"><h2>Next steps</h2></div>
+
+  <p class="content-standfirst">Our Students team is committed to helping raise up <strong>a generation of Kingdom workers</strong>, and we're here to partner with your family in any way we can.</p>
+
+  <ul class="content-tiles" aria-label="Next steps with VRL Students">
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-message"/></svg></span>
+      <h3>Student baptism</h3>
+      <p class="content-kicker">Taking the step</p>
+      <p>Is your student thinking about baptism? Reach out to our team to set up a time to talk through the details and answer any questions you might have.</p>
+      <div class="content-tile__actions">
+        <a class="btn btn--outline" href="{{ studentsContactUrl }}">Ask about student baptism</a>
+      </div>
+    </li>
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-heart"/></svg></span>
+      <h3>Serve with VRL Students</h3>
+      <p class="content-kicker">Volunteer</p>
+      <p>We're building a team of people who are excited to reach the next generation for Jesus, one student at a time. Volunteer and make a difference.</p>
+      <div class="content-tile__actions">
+        <a class="btn btn--outline" href="{{ volunteerUrl }}">Volunteer with VRL Students</a>
+      </div>
+    </li>
+  </ul>
+
+  </div>
+</article>

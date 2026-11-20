@@ -153,10 +153,15 @@
 }
 .sermons-divider::after { background: linear-gradient(to right, var(--border), transparent); }
 .sermons-divider h2 {
-  font-size: 0.8125rem; font-weight: 800; line-height: 1;
-  letter-spacing: var(--tracking-widest); text-transform: uppercase;
+  // Section-size label: grows from phone to desktop; a long label wraps
+  // (centred) rather than squeezing the rules out
+  max-width: min(80%, 36rem);
+  font-size: clamp(0.9375rem, 0.82rem + 0.6vw, 1.3125rem); font-weight: 800; line-height: 1.25;
+  letter-spacing: var(--tracking-widest); text-transform: uppercase; text-align: center;
+  text-wrap: balance;
   color: var(--text);
 }
+@media (max-width: #{$bp-sm - 1px}) { .sermons-divider { gap: var(--space-md); } }
 
 // ---------------------------------------------------------------------------
 // Series: toolbar

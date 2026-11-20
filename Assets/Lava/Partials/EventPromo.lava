@@ -1,0 +1,47 @@
+{% comment %}
+    EVENT PROMO — one event as a card (.content-promo, Styles/_content.scss):
+    its photo (a logo or title graphic, never cropped) over a bar with its
+    next date and a button, the whole card linking to /events/{id}. Used for
+    Rooted on Life Groups and MSM/HSM on Students.
+
+    Needs RockEntity on the calling block. Set, then include:
+
+        {% assign promoOccurrenceId = 639 %}
+        {% assign promoButtonText = 'Sign up for Rooted' %}   (optional)
+        {% include '~~/Assets/Lava/Partials/EventPromo.lava' %}
+
+      promoOccurrenceId  the event occurrence id (as in /events/{id})
+      promoButtonText    the button (default: "Sign up for <event name>")
+
+    Renders NOTHING unless the event is scheduled: active, approved, and with
+    a next date no more than 30 minutes past (as the events list). To hide a
+    section with it, capture the include and test the result:
+
+        {%- capture promoHtml %}{% include '…/EventPromo.lava' %}{% endcapture -%}
+        {%- assign promoHtml = promoHtml | Trim -%}
+        {%- if promoHtml != '' %} … {{ promoHtml }} … {% endif -%}
+{% endcomment %}
+{%- assign promoOccurrenceId = promoOccurrenceId | AsInteger | Default:0 -%}
+{%- assign promoButtonText = promoButtonText | Default:'' | Trim -%}
+{%- if promoOccurrenceId > 0 -%}
+{%- eventitemoccurrence id:'{{ promoOccurrenceId }}' securityenabled:'false' -%}
+  {%- assign promoEvent = eventitemoccurrence.EventItem -%}
+  {%- if eventitemoccurrence and promoEvent.IsActive and promoEvent.IsApproved and eventitemoccurrence.NextStartDateTime -%}
+    {%- assign promoMinutesAway = 'Now' | DateDiff:eventitemoccurrence.NextStartDateTime,'m' -%}
+    {%- if promoMinutesAway >= -30 -%}
+    {%- if promoButtonText == '' %}{% assign promoButtonText = 'Sign up for ' | Append:promoEvent.Name %}{% endif -%}
+  <div class="content-promo" data-card>
+    {%- if promoEvent.Photo.Guid %}
+    <img class="content-promo__image" src="/GetImage.ashx?guid={{ promoEvent.Photo.Guid }}&amp;w=1400" alt="{{ promoEvent.Name | Escape }}" loading="lazy">
+    {%- else %}
+    <p class="content-promo__title">{{ promoEvent.Name }}</p>
+    {%- endif %}
+    <div class="content-promo__bar">
+      <dl class="content-promo__when"><dt>Next</dt><dd>{{ eventitemoccurrence.NextStartDateTime | Date:'dddd, MMMM d' }}</dd></dl>
+      <a class="btn btn--primary" href="/events/{{ promoOccurrenceId }}" data-card-link>{{ promoButtonText }}</a>
+    </div>
+  </div>
+    {%- endif -%}
+  {%- endif -%}
+{%- endeventitemoccurrence -%}
+{%- endif -%}

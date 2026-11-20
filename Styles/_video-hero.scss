@@ -109,6 +109,24 @@
 .video-hero__media > * { height: 100%; }
 .video-hero__media iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 
+// No video yet: the content pages' green gradient placeholder (.content-photo--placeholder), labelled
+.video-hero__placeholder {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  background:
+    radial-gradient(70% 80% at 75% 20%, var(--v-green-50) 0%, transparent 70%),
+    linear-gradient(225deg, var(--v-green-100) 0%, var(--v-green-200) 60%, var(--v-green-300) 100%);
+}
+.video-hero__placeholder span {
+  max-width: 80%;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-pill);
+  background: oklch(1 0 0 / 0.75);
+  font-size: 0.75rem; font-weight: 700; line-height: 1.3; text-align: center;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand-deep);
+}
+
 @media (min-width: #{$bp-md}) {
   .video-hero--split .video-hero__inner {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
@@ -128,3 +146,88 @@
 // A hero page has no crumbs strip between the header and the band
 .breadcrumb-container:has(+ .page-feature .video-hero) { display: none; }
 
+
+// ---------------------------------------------------------------------------
+// Kids (heroTheme 'kids', KidsHero.lava): the homepage VRL Kids section's look
+// (Styles/_home.scss, .kids; keep the two in step). A green gradient field,
+// darker behind the text and brightest behind the video, with film grain and
+// the scribble texture (strongest behind the video, eased back behind the
+// text so the copy stays easy to read). White text, a white button (brand
+// green would vanish on the field) and the wordmark as the title.
+// ---------------------------------------------------------------------------
+.video-hero--kids {
+  --kids-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0.55 0 0 0 0.22  0.55 0 0 0 0.22  0.55 0 0 0 0.22  0 0 0 0 1'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background:
+    var(--kids-grain),
+    radial-gradient(70% 65% at 82% 28%, var(--v-green-300) 0%, transparent 62%),
+    linear-gradient(104deg,
+      var(--v-green-800) 0%,
+      var(--v-green-700) 26%,
+      var(--v-green-600) 52%,
+      var(--v-green-500) 78%,
+      var(--v-green-400) 100%);
+  background-blend-mode: soft-light, normal, normal;
+  border-bottom-color: var(--v-green-900);
+}
+// The scribbles take the glow layer's place (?v= as the homepage's: the file is cached for a year)
+.video-hero--kids .video-hero__glow {
+  background: url("../Assets/Images/KidsTexture.webp?v=2") left center / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to right, oklch(0 0 0 / 0.35) 0%, oklch(0 0 0 / 0.5) 35%, #000 70%);
+  mask-image: linear-gradient(to right, oklch(0 0 0 / 0.35) 0%, oklch(0 0 0 / 0.5) 35%, #000 70%);
+  opacity: 0.5;
+}
+.video-hero--kids .video-hero__glow::before,
+.video-hero--kids .video-hero__glow::after { content: none; }
+.video-hero--kids .video-hero__kicker { color: oklch(1 0 0 / 0.85); }
+.video-hero--kids .video-hero__lead { color: oklch(1 0 0 / 0.92); }
+.video-hero--kids h1 img { display: block; width: auto; max-width: 100%; height: clamp(2.75rem, 7vw, 4.5rem); }
+.video-hero--kids .btn--primary { background: #fff; color: var(--v-green-900); border-color: #fff; box-shadow: var(--shadow-md); }
+.video-hero--kids .btn--primary:is(:hover, :focus-visible) { background: var(--v-green-950); color: #fff; border-color: var(--v-green-950); }
+.video-hero--kids .video-hero__media { box-shadow: var(--shadow-card), 0 0 0 1px oklch(1 0 0 / 0.25); }
+// No video yet: a deep green stand-in (the light one washes out on the field)
+.video-hero--kids .video-hero__placeholder {
+  background:
+    radial-gradient(70% 80% at 75% 20%, oklch(from var(--v-green-500) l c h / 0.35) 0%, transparent 70%),
+    linear-gradient(225deg, var(--v-green-800) 0%, var(--v-green-900) 60%, var(--v-green-950) 100%);
+}
+
+// Phones: text first, then the video, so the field runs dark at the top
+// (behind the copy) to bright behind the video, as the homepage's does in reverse
+@media (max-width: #{$bp-md - 1px}) {
+  .video-hero--kids {
+    background:
+      var(--kids-grain),
+      radial-gradient(90% 40% at 80% 95%, var(--v-green-300) 0%, transparent 70%),
+      linear-gradient(180deg, var(--v-green-700) 0%, var(--v-green-600) 45%, var(--v-green-500) 100%);
+    background-blend-mode: soft-light, normal, normal;
+  }
+  .video-hero--kids .video-hero__glow {
+    -webkit-mask-image: linear-gradient(to bottom, oklch(0 0 0 / 0.35) 0%, #000 70%);
+    mask-image: linear-gradient(to bottom, oklch(0 0 0 / 0.35) 0%, #000 70%);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Students (heroTheme 'students', StudentsHero.lava): the homepage VRL
+// Students section's look (Styles/_home.scss, .students; keep the two in
+// step). Kids' noisy-gradient treatment in black and charcoal: soft grey
+// pools over a near-black ramp, white film grain over it, in place of the
+// ink band's green edge glows. The brand stripe and button stay (the MSM and
+// HSM logos are the same green).
+// ---------------------------------------------------------------------------
+.video-hero--students {
+  background:
+    radial-gradient(60% 45% at 82% 14%, oklch(0.31 0.012 135) 0%, transparent 70%),
+    radial-gradient(55% 40% at 8% 88%, oklch(0.25 0.012 135) 0%, transparent 70%),
+    radial-gradient(45% 32% at 30% 40%, oklch(0.21 0.010 135) 0%, transparent 70%),
+    linear-gradient(170deg,
+      var(--v-neutral-900) 0%,
+      var(--v-neutral-950) 60%,
+      oklch(0.07 0.006 135) 100%);
+}
+.video-hero--students .video-hero__glow {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.2 0 0 0 -0.03'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+.video-hero--students .video-hero__glow::before,
+.video-hero--students .video-hero__glow::after { content: none; }
+.video-hero--students .video-hero__kicker { color: var(--on-ink-muted); }

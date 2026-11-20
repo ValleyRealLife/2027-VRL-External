@@ -294,7 +294,7 @@ ORDER BY a.[Key], g.[Order], g.Name
 
   {%- comment -%} Groups {%- endcomment %}
   {%- if groupRows != empty %}
-  <div class="account-tile account-tile--groups">
+  <div class="account-tile account-tile--groups" id="my-groups">
     <h2 class="account-tile__title"><svg width="18" height="18" aria-hidden="true"><use href="#i-users"/></svg> My groups</h2>
     <ul class="account-rows">
       {%- for group in groupRows %}

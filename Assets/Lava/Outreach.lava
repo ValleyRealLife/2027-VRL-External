@@ -1,0 +1,280 @@
+{% comment %}
+    OUTREACH — the Outreach page (route `ministries/outreach`, InnerDefault,
+    PageHeaderStyle Hidden: the hero is the page head).
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/Outreach.lava' %}
+    Enabled Lava Commands:    none
+
+    Laid out like Renew: the hero is Assets/Lava/OutreachHero.lava in the
+    Feature zone (carries the h1; a placeholder until there's a video).
+
+    Content: the Outreach team's requested changes, over the current site's
+    text (www.vrl.church/ministries/outreach). Anything they haven't supplied
+    yet, or that doesn't exist yet, is a clearly marked placeholder
+    (.content-placeholder, .content-photo--placeholder); search this file for
+    PLACEHOLDER and TODO.
+
+    Sections (each under a divider; no big in-page headings):
+      Intro           a centred feature: Acts 1:8 (NIV), the mission line,
+                      and the vision as the tagline
+    Each section opens with a short .content-standfirst under its divider.
+    Subnav: a sticky in-page nav (.content-subnav) after the intro links to
+    Global and Local; add a link there for any new big section.
+      Global outreach the opening paragraph, then Uganda, Philippines and
+                      Other locations (photo beside text: left, right, left).
+                      Uganda and Philippines each open a modal with the
+                      partner's photo and bio (PLACEHOLDER); Other locations
+                      has none (partners we can't name)
+      Short-term opportunities  a bento grid of trip photos, upcoming trips,
+                      past trips (all PLACEHOLDER; replaces Teams and Trips;
+                      past trips HIDDEN: showPastTrips)
+      Local outreach  a short intro (TODO: new copy coming), pray for and
+                      support those VRL has sent out (PLACEHOLDER, HIDDEN:
+                      showPrayForSent), then photos (PLACEHOLDER) and a Care
+                      cross-link beside an aside of the partners by focus
+    The partner modals (<dialog>) sit at the end of the article.
+
+    Styles: Styles/_content.scss (content-feature, content-verse,
+    content-standfirst, content-split, content-bento, content-events,
+    content-gallery, content-placeholder, content-subhead, content-modal,
+    content-columns, content-mosaic, content-tile, content-crosslink,
+    content-aside, row-links, row-link). The theme's styles
+    live in the theme's SCSS, so there's no {% stylesheet %} block here.
+{% endcomment %}
+{%- comment -%}
+  Hidden sections: kept in this file but not shown until there's content.
+  Set to true to show.
+{%- endcomment -%}
+{%- assign showPastTrips = false -%}
+{%- assign showPrayForSent = false -%}
+{%- assign extIcon = '<svg width="18" height="18" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>' -%}
+
+<article class="content-page outreach" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Outreach">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  <!-- Verse + vision: a centred feature (as Renew) -->
+  <section class="content-feature" aria-label="Welcome to Outreach">
+    <blockquote class="content-verse content-verse--feature">
+      <p>You will be my witnesses in Jerusalem, and in all Judea and Samaria, and to the ends of the earth.</p>
+      <cite>Acts 1:8</cite>
+    </blockquote>
+    <p>We're fulfilling our mission by following the commands of Jesus in Acts 1:8 to be His witnesses locally, regionally, and internationally.</p>
+    <p class="content-feature__tagline">Reaching the world for Jesus, one person at a time.</p>
+  </section>
+
+  <!-- In-page nav: sticks under the header; underlines the section being read -->
+  <nav class="content-subnav" aria-label="On this page" data-toc="scope">
+    <ol class="content-subnav__list">
+      <li><a class="content-subnav__link" href="#global">Global outreach</a></li>
+      <li><a class="content-subnav__link" href="#local">Local outreach</a></li>
+    </ol>
+  </nav>
+
+  <!-- ===== GLOBAL ===== -->
+  <div class="sermons-divider" id="global"><h2>Global outreach</h2></div>
+
+  <p class="content-standfirst">VRL focuses on <strong>community development that leads to church planting</strong>. In each country we come alongside a local leader to make disciples who make disciples, in their church, their community and beyond.</p>
+
+  <!-- Partners: Uganda and Philippines open a modal (photo + bio, at the end of the article) -->
+  <section class="content-split content-split--reverse" id="partners" aria-labelledby="out-uganda">
+    <div class="content-split__text">
+      <p class="content-kicker">Fort Portal</p>
+      <h2 id="out-uganda">Uganda</h2>
+      <p>We partner with Ronald and Muzina Kizito and Living Spring Church to care for widows and orphans, plant churches and make disciples through a relational process.</p>
+      <p><button type="button" class="btn btn--outline" data-modal-open="partner-uganda" aria-haspopup="dialog">Meet Ronald &amp; Muzina</button></p>
+    </div>
+    <div class="content-split__media">
+      <figure class="content-photo"><img src="/GetImage.ashx?guid=af6f648b-7dc9-4c74-86dc-11224ee9a8e7&amp;w=1200" alt="Valley Real Life's partners in Fort Portal, Uganda" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section class="content-split" aria-labelledby="out-philippines">
+    <div class="content-split__text">
+      <p class="content-kicker">Baguio</p>
+      <h2 id="out-philippines">Philippines</h2>
+      <p>We partner with John and Hannah Bagalawis and Covenant City Church to reach the community, connect people relationally, find opportunities to serve and create disciple-making movements.</p>
+      <p><button type="button" class="btn btn--outline" data-modal-open="partner-philippines" aria-haspopup="dialog">Meet John &amp; Hannah</button></p>
+    </div>
+    <div class="content-split__media">
+      <figure class="content-photo"><img src="/GetImage.ashx?guid=0af54981-81f6-4724-9632-49599f1cdea6&amp;w=1200" alt="Valley Real Life's partners in Baguio, Philippines" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section class="content-split content-split--reverse" aria-labelledby="out-other">
+    <div class="content-split__text">
+      <p class="content-kicker">Around the world</p>
+      <h2 id="out-other">Other locations</h2>
+      <p>We also work alongside indigenous leaders in other areas, leading movements that are reaching many for Christ. Because of the sensitive nature of that work, we only share the details face to face.</p>
+    </div>
+    <div class="content-split__media">
+      <figure class="content-photo content-photo--placeholder"><span>Photo: no faces or places (sensitive work)</span></figure>
+    </div>
+  </section>
+
+  <!-- ===== SHORT-TERM OPPORTUNITIES (replaces Teams and Trips). PLACEHOLDER throughout ===== -->
+  <div class="sermons-divider" id="short-term"><h2>Short-term opportunities</h2></div>
+
+  <p class="content-standfirst">Short-term trips are part of how we make disciples: <strong>grow in your faith, serve alongside our partners</strong> and build relationships that last.</p>
+
+  {%- comment -%} PLACEHOLDER: trip photos. Swap each figure's <span> for <img src="…" alt="…" loading="lazy"> and drop content-photo--placeholder. {%- endcomment %}
+  <div class="content-bento">
+    <figure class="content-photo content-photo--placeholder"><span>Photo: trip team, wide</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: serving</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: worship</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: kids</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: building</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: the whole team</span></figure>
+  </div>
+
+  <section aria-labelledby="out-upcoming">
+    <h3 class="content-subhead" id="out-upcoming">Upcoming trips</h3>
+    {%- comment -%}
+      PLACEHOLDER: upcoming trips. ROCK: trips as events on the calendar (an
+      "Outreach trips" audience); these rows then list them as the Students
+      tile does on the Location page (content-events), each linking to its
+      event page: details, and Apply through the event's registration.
+    {%- endcomment %}
+    <ul class="content-events content-events--grid" aria-label="Upcoming trips (placeholder)">
+      <li class="content-event">
+        <div class="content-event__thumb content-photo--placeholder"></div>
+        <div class="content-event__body">
+          <p class="content-event__label">Placeholder</p>
+          <h4 class="content-event__title">Trip name</h4>
+          <p class="content-event__meta">Dates · details and Apply on the trip's page</p>
+        </div>
+      </li>
+      <li class="content-event">
+        <div class="content-event__thumb content-photo--placeholder"></div>
+        <div class="content-event__body">
+          <p class="content-event__label">Placeholder</p>
+          <h4 class="content-event__title">Trip name</h4>
+          <p class="content-event__meta">Dates · details and Apply on the trip's page</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  {%- if showPastTrips %}
+  <section aria-labelledby="out-past">
+    <h3 class="content-subhead" id="out-past">Past trips</h3>
+    {%- comment -%}
+      PLACEHOLDER: past trips, each card linking to that trip's videos and
+      report (pages to come). Swap a card's figure for its photo and add the link.
+    {%- endcomment %}
+    <ul class="content-gallery content-gallery--swipe" aria-label="Past trips (placeholder)">
+      <li class="content-gallery__item">
+        <figure class="content-photo content-photo--placeholder"><span>Past trip photo</span></figure>
+        <h3>Placeholder: trip name, year (video and report)</h3>
+      </li>
+      <li class="content-gallery__item">
+        <figure class="content-photo content-photo--placeholder"><span>Past trip photo</span></figure>
+        <h3>Placeholder: trip name, year (video and report)</h3>
+      </li>
+      <li class="content-gallery__item">
+        <figure class="content-photo content-photo--placeholder"><span>Past trip photo</span></figure>
+        <h3>Placeholder: trip name, year (video and report)</h3>
+      </li>
+    </ul>
+  </section>
+  {%- endif %}
+
+  <!-- ===== LOCAL ===== -->
+  <div class="sermons-divider" id="local"><h2>Local outreach</h2></div>
+
+  {%- comment -%} TODO: the Outreach team is reworking this copy; this is a shortened version of the current text until theirs arrives. {%- endcomment %}
+  <p class="content-standfirst">We support local ministries <strong>with prayer, finances and people</strong>: in schools, foster care, pregnancy, trafficking, poverty and refugee care. Volunteer with a partner, join a weekend drive, or be ready when a need comes up.</p>
+
+  {%- if showPrayForSent %}
+  <section aria-labelledby="out-sent">
+    <h3 class="content-subhead" id="out-sent">Pray for and support our people</h3>
+    {%- comment -%}
+      PLACEHOLDER: a way to pray for and support those VRL has sent out. Needs
+      from the Outreach team: who to feature, how to pray, and how to give
+      (e.g. a giving fund in Rock, a prayer sign-up, or a contact).
+    {%- endcomment %}
+    <div class="content-placeholder">
+      <p class="content-placeholder__label">Placeholder</p>
+      <p>The people VRL has sent out, how to pray for them and how to support them (details to come from the Outreach team).</p>
+    </div>
+  </section>
+  {%- endif %}
+
+  <!-- Local: photos and the Care cross-link, with the partners as an aside -->
+  <div class="content-columns">
+    <div class="content-columns__main">
+      {%- comment -%} PLACEHOLDER: local outreach photos. Swap each <span> for <img src="…" alt="…" loading="lazy"> and drop content-photo--placeholder. {%- endcomment %}
+      <div class="content-mosaic">
+        <figure class="content-photo content-photo--placeholder"><span>Photo: serving with a local partner</span></figure>
+        <figure class="content-photo content-photo--placeholder"><span>Photo: food drive</span></figure>
+        <figure class="content-photo content-photo--placeholder"><span>Photo: school supply drive</span></figure>
+      </div>
+
+      <section class="content-tile content-crosslink" aria-labelledby="out-care">
+        <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-lifebuoy"/></svg></span>
+        <div>
+          <h3 id="out-care">Going through a hard time?</h3>
+          <p>Our Care team is here to listen, pray with you and walk with you through it.</p>
+        </div>
+        <a class="btn btn--primary" href="/ministries/care">Visit VRL Care</a>
+      </section>
+    </div>
+
+    <aside class="content-aside" aria-labelledby="out-local-partners">
+      <h2 id="out-local-partners">Our local partners</h2>
+      <h3 class="content-aside__group">Trafficking</h3>
+      <div class="row-links">
+        <a class="row-link" href="https://helpingcaptives.org" target="_blank" rel="noopener"><span class="row-link__label">Helping Captives</span><span class="row-link__chev">{{ extIcon }}</span></a>
+      </div>
+      <h3 class="content-aside__group">Poverty</h3>
+      <div class="row-links">
+        <a class="row-link" href="https://www.uniongospelmission.org" target="_blank" rel="noopener"><span class="row-link__label">Union Gospel Mission</span><span class="row-link__chev">{{ extIcon }}</span></a>
+        <a class="row-link" href="https://www.familypromiseofspokane.org/" target="_blank" rel="noopener"><span class="row-link__label">Family Promise of Spokane</span><span class="row-link__chev">{{ extIcon }}</span></a>
+        <a class="row-link" href="http://partnersinw.org/" target="_blank" rel="noopener"><span class="row-link__label">Partners INW</span><span class="row-link__chev">{{ extIcon }}</span></a>
+      </div>
+      <h3 class="content-aside__group">Foster, adoption &amp; family</h3>
+      <div class="row-links">
+        <a class="row-link" href="https://embracewa.org" target="_blank" rel="noopener"><span class="row-link__label">Embrace Washington</span><span class="row-link__chev">{{ extIcon }}</span></a>
+      </div>
+      <h3 class="content-aside__group">Schools</h3>
+      <div class="row-links">
+        <a class="row-link" href="https://www.vrl.church/page/1209?OpportunityId=79"><span class="row-link__label">Central Valley Schools: volunteer</span><span class="row-link__chev">{{ extIcon }}</span></a>
+      </div>
+      <h3 class="content-aside__group">Refugees</h3>
+      <div class="row-links">
+        <a class="row-link" href="https://worldrelief.org/spokane/" target="_blank" rel="noopener"><span class="row-link__label">World Relief Spokane</span><span class="row-link__chev">{{ extIcon }}</span></a>
+        <a class="row-link" href="https://thriveint.org/spokane-thrive-center" target="_blank" rel="noopener"><span class="row-link__label">Thrive Spokane</span><span class="row-link__chev">{{ extIcon }}</span></a>
+      </div>
+    </aside>
+  </div>
+
+  </div>
+
+  <!-- Partner modals: photo + bio (PLACEHOLDER until the Outreach team sends them) -->
+  <dialog class="content-modal" id="partner-uganda" aria-labelledby="partner-uganda-title">
+    <button type="button" class="content-modal__close" data-modal-close><span class="u-visually-hidden">Close</span><svg width="20" height="20" aria-hidden="true"><use href="#i-x"/></svg></button>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: Ronald and Muzina Kizito</span></figure>
+    <div class="content-modal__body">
+      <p class="content-kicker">Living Spring Church · Fort Portal, Uganda</p>
+      <h2 id="partner-uganda-title">Ronald &amp; Muzina Kizito</h2>
+      <div class="content-placeholder">
+        <p class="content-placeholder__label">Placeholder</p>
+        <p>A short bio of Ronald and Muzina (to come from the Outreach team).</p>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="content-modal" id="partner-philippines" aria-labelledby="partner-philippines-title">
+    <button type="button" class="content-modal__close" data-modal-close><span class="u-visually-hidden">Close</span><svg width="20" height="20" aria-hidden="true"><use href="#i-x"/></svg></button>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: John and Hannah Bagalawis</span></figure>
+    <div class="content-modal__body">
+      <p class="content-kicker">Covenant City Church · Baguio, Philippines</p>
+      <h2 id="partner-philippines-title">John &amp; Hannah Bagalawis</h2>
+      <div class="content-placeholder">
+        <p class="content-placeholder__label">Placeholder</p>
+        <p>A short bio of John and Hannah (to come from the Outreach team).</p>
+      </div>
+    </div>
+  </dialog>
+</article>

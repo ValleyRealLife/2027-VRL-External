@@ -1,0 +1,22 @@
+{%- comment -%}
+  LIFE GROUPS HERO — the Life Groups page's hero (Assets/Lava/Partials/
+  VideoHero.lava, Styles/_video-hero.scss), as Renew's, Outreach's and Care's.
+
+  Block:                    an HTML block in the Life Groups page's Feature zone
+  Block content:            {% include '~~/Assets/Lava/LifegroupsHero.lava' %}
+  Enabled Lava Commands:    none
+  Page:                     InnerDefault, PageHeaderStyle Hidden, DarkHeader
+                            checked
+
+  The lead line under "Life Groups" is the page's Description (Page
+  Properties). The button jumps to Join a group on this page.
+  No video yet: a labelled green placeholder stands in. When the video is in
+  Rock, delete heroPlaceholder and set heroMediaId to its media element id.
+
+  The page content under it: Assets/Lava/Lifegroups.lava (Main zone).
+{%- endcomment -%}
+{%- assign heroPlaceholder = 'Video: Life Groups' -%}
+{%- capture heroActions -%}
+  <a class="btn btn--primary" href="#join">Find a group</a>
+{%- endcapture -%}
+{% include '~~/Assets/Lava/Partials/VideoHero.lava' %}

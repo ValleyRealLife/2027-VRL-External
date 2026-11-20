@@ -111,7 +111,7 @@
       <p class="kids__copy">
         Safe, simple check-in and a team that can't wait to meet your family.
       </p>
-      <p class="kids__actions"><a class="btn btn--solid" href="/kids">Learn more</a></p>
+      <p class="kids__actions"><a class="btn btn--solid" href="/ministries/kids">Learn more</a></p>
     </div>
 
     <div class="kids__cluster">
@@ -144,7 +144,7 @@
       <p class="students__body">
         A place to belong, grow in Jesus and find out church is anything but boring.
       </p>
-      <p class="students__actions"><a class="btn btn--primary" href="/students">Learn more</a></p>
+      <p class="students__actions"><a class="btn btn--primary" href="/ministries/students">Learn more</a></p>
     </div>
 
     <!-- Four pre-framed photos on transparent ground

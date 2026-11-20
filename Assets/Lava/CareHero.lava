@@ -1,0 +1,24 @@
+{%- comment -%}
+  CARE HERO — the Care page's hero (Assets/Lava/Partials/VideoHero.lava,
+  Styles/_video-hero.scss), as Renew's and Outreach's.
+
+  Block:                    an HTML block in the Care page's Feature zone
+  Block content:            {% include '~~/Assets/Lava/CareHero.lava' %}
+  Enabled Lava Commands:    none
+  Page:                     InnerDefault, PageHeaderStyle Hidden, DarkHeader
+                            checked
+
+  The lead line under "Care" is the page's Description (Page Properties).
+  The button opens the same care dialog as the utility bar's Request care
+  link (data-care-trigger: theme.js "Care dialog", markup in UtilityBar.lava);
+  without JavaScript it goes to the Request help form.
+  No video yet: a labelled green placeholder stands in. When the video is in
+  Rock, delete heroPlaceholder and set heroMediaId to its media element id.
+
+  The page content under it: Assets/Lava/Care.lava (Main zone).
+{%- endcomment -%}
+{%- assign heroPlaceholder = 'Video: Care' -%}
+{%- capture heroActions -%}
+  <a class="btn btn--primary" href="/care/request-help" data-care-trigger>Request care</a>
+{%- endcapture -%}
+{% include '~~/Assets/Lava/Partials/VideoHero.lava' %}

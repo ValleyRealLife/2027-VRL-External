@@ -15,7 +15,8 @@
 
     Page header: the PageHeaderStyle page attribute picks SideImage (the
     default: a card with the title, description and PageImage overlapping a
-    gray stripe, styled like the landing cards), SimpleGrayStripe,
+    gray stripe, styled like the landing cards), Banner (the PageImage as
+    an ultrawide photo with the title and description over it), SimpleGrayStripe,
     SimpleGreenStripe, SimpleGradStripe, or None (no header). Every style
     shows the page Description as a lead line when it's set and the page's
     Show Description property is on.
@@ -39,6 +40,8 @@
                 //   SimpleGreenStripe  a solid brand-green band
                 //   SimpleGradStripe   the gray band with a soft green wash at the right
                 //   SideImage          a card with the PageImage overlapping a gray stripe
+                //   Banner             the PageImage as an ultrawide photo, the title and
+                //                      description over it at the bottom left
                 //   None               no page header
                 // Empty (or an unknown value): SideImage.
                 // The old value SimpleStripe reads as SimpleGradStripe. One markup for
@@ -54,10 +57,12 @@
                     case "simplegraystripe":  headerClass = "page-head--simple page-head--simple-gray"; break;
                     case "simplegreenstripe": headerClass = "page-head--simple page-head--simple-green"; break;
                     case "simplegradstripe":  headerClass = "page-head--simple page-head--simple-grad"; break;
+                    case "banner":            headerClass = "page-head--banner"; break;
                     case "none":              headerClass = ""; break;
                     default:                  headerStyle = "sideimage"; headerClass = "page-head--side-image"; break;
                 }
                 var isSideImage = headerStyle == "sideimage";
+                var hasMedia = isSideImage || headerStyle == "banner";
                 // Page Properties → Show Description (PageDisplayDescription) gates the lead
                 var pageDescription = page.PageDisplayDescription ? ( page.Description ?? "" ).Trim() : "";
                 var pageImageGuid = ( page.GetAttributeValue( "PageImage" ) ?? "" ).Trim();
@@ -77,7 +82,7 @@
                 }
                 if ( pageImageUrl == "" && pageImageGuid != "" )
                 {
-                    pageImageUrl = "/GetImage.ashx?guid=" + System.Web.HttpUtility.UrlEncode( pageImageGuid ) + "&w=1400&h=900&mode=crop";
+                    pageImageUrl = "/GetImage.ashx?guid=" + System.Web.HttpUtility.UrlEncode( pageImageGuid ) + ( headerStyle == "banner" ? "&w=2400" : "&w=1400&h=900&mode=crop" );
                 }
             %>
             <% if ( showPageTitle && headerStyle != "none" ) { %>
@@ -90,7 +95,7 @@
                                     <p class="page-head__lead"><%= System.Web.HttpUtility.HtmlEncode( pageDescription ) %></p>
                                 <% } %>
                             </div>
-                            <% if ( isSideImage ) { %>
+                            <% if ( hasMedia ) { %>
                                 <div class="page-head__media<%= pageImageUrl == "" ? " page-head__media--empty" : "" %>">
                                     <% if ( pageImageUrl != "" ) { %>
                                         <img src="<%= System.Web.HttpUtility.HtmlAttributeEncode( pageImageUrl ) %>" alt="" />

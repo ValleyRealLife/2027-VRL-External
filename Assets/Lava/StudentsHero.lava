@@ -1,0 +1,27 @@
+{%- comment -%}
+  STUDENTS HERO — the Students page's hero (Assets/Lava/Partials/
+  VideoHero.lava, Styles/_video-hero.scss), as the other ministry pages', in
+  the homepage VRL Students section's colours (heroTheme 'students': the
+  charcoal gradient and film grain).
+
+  Block:                    an HTML block in the Students page's Feature zone
+  Block content:            {% include '~~/Assets/Lava/StudentsHero.lava' %}
+  Enabled Lava Commands:    none
+  Page:                     InnerDefault, PageHeaderStyle Hidden, DarkHeader
+                            checked
+
+  The lead line under "VRL Students" is the page's Description (Page
+  Properties). The button jumps to the first weekly night (MSM) on this page.
+  No video yet: a labelled green placeholder stands in. When the video is in
+  Rock, delete heroPlaceholder and set heroMediaId to its media element id.
+
+  The page content under it: Assets/Lava/Students.lava (Main zone).
+{%- endcomment -%}
+{%- assign heroTheme = 'students' -%}
+{%- assign heroTitle = 'VRL Students' -%}
+{%- assign heroKicker = 'Middle school & high school' -%}
+{%- assign heroPlaceholder = 'Video: VRL Students' -%}
+{%- capture heroActions -%}
+  <a class="btn btn--primary" href="#msm">Find your night</a>
+{%- endcapture -%}
+{% include '~~/Assets/Lava/Partials/VideoHero.lava' %}

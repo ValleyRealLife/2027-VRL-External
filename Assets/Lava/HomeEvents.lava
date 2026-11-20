@@ -34,6 +34,14 @@
 {%- assign detailsPageUrl = '/events' -%}
 
 {%- comment -%} ===== DATA SOURCE ===== {%- endcomment -%}
+{%- comment -%}
+  "Now" is Rock's clock (local time, as NextStartDateTime and PromotionStart
+  are stored), not the SQL server's GETDATE(), which runs on UTC. An event
+  stays listed until listedAfterStartMinutes after it starts (as the events
+  page, Partials/EventVisibleOccurrences.lava).
+{%- endcomment -%}
+{%- assign rockNow = 'Now' | Date:'yyyy-MM-ddTHH:mm:ss' -%}
+{%- assign listedAfterStartMinutes = 30 -%}
 {% sql return:'events' securityenabled:'false' %}
     SELECT TOP ({{ maxCards }})
         eio.[Id] AS [OccurrenceId],
@@ -52,13 +60,13 @@
             ORDER BY dv.[Order]
         ) AS [Affinity]
     FROM (
-        /* All future occurrences, numbered per event: row 1 is the next one */
+        /* Upcoming occurrences (or started in the last 30 min), numbered per event: row 1 is the next one */
         SELECT
             o.[Id],
             o.[EventItemId],
             o.[NextStartDateTime],
             CASE WHEN p.[PromotionStart] IS NOT NULL
-                  AND GETDATE() < DATEADD(day, 2, CAST(CAST(p.[PromotionStart] AS date) AS datetime2))
+                  AND CAST('{{ rockNow }}' AS datetime2) < DATEADD(day, 2, CAST(CAST(p.[PromotionStart] AS date) AS datetime2))
                  THEN 1 ELSE 0 END AS [IsNew],
             ROW_NUMBER() OVER (PARTITION BY o.[EventItemId] ORDER BY o.[NextStartDateTime] ASC) AS [rn]
         FROM [EventItemOccurrence] o
@@ -70,8 +78,8 @@
             INNER JOIN [EntityType] et ON et.[Id] = a.[EntityTypeId]
             WHERE av.[EntityId] = o.[Id] AND et.[Name] = 'Rock.Model.EventItemOccurrence' AND a.[Key] = 'PromotionStart'
         ) p
-        WHERE o.[NextStartDateTime] >= GETDATE()
-          AND (p.[PromotionStart] IS NULL OR p.[PromotionStart] <= GETDATE())
+        WHERE o.[NextStartDateTime] >= DATEADD(minute, -{{ listedAfterStartMinutes }}, CAST('{{ rockNow }}' AS datetime2))
+          AND (p.[PromotionStart] IS NULL OR p.[PromotionStart] <= CAST('{{ rockNow }}' AS datetime2))
     ) eio
     INNER JOIN [EventItem] ei ON eio.[EventItemId] = ei.[Id]
     INNER JOIN [EventItemAudience] eia ON ei.[Id] = eia.[EventItemId]

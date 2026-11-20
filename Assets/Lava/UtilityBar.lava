@@ -19,7 +19,7 @@
 {% endcomment %}
 <div class="container utilbar__inner">
     <div class="utilbar__links">
-        <a class="utilbar__link" href="/care" data-care-trigger>
+        <a class="utilbar__link" href="/ministries/care" data-care-trigger>
             <svg width="15" height="15" aria-hidden="true"><use href="#i-lifebuoy"/></svg>
             Request care
         </a>

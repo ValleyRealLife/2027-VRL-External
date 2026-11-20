@@ -11,7 +11,9 @@
                    cards (event-card--feature: date top left, View details
                    bottom right) in a swipe rail (rail arrows: theme.js)
       Filter       one chip per audience (defined type 16, minus 150) that
-                   an upcoming event has, plus All. Filters the list below in
+                   an upcoming event has, plus All, and Today (events whose
+                   next date is today, Rock's clock; only when there are
+                   some). Filters the list below in
                    the browser (theme.js "Events filter"); ?audience=<id> in
                    the address picks one on load, so a view can be shared.
                    Without JavaScript the chips stay hidden and every event
@@ -20,7 +22,8 @@
                    three across), with a time row. Featured events are
                    included, so filtering still finds them.
 
-    One card per event: its next occurrence on calendar `calendarId`.
+    One card per event: its next occurrence on calendar `calendarId`; it
+    stays listed until 30 minutes after it starts (the shared partial).
     Promotion: an occurrence with a PromotionStart in the future is hidden
     until then; once it passes, the card gets a "New" sticker until the end
     of the next day. Empty PromotionStart = shown, no sticker.
@@ -110,6 +113,8 @@
 
 {%- assign eventCount = events | Size -%}
 {%- assign featuredCount = 0 -%}
+{%- assign todayKey = 'Now' | Date:'yyyy-MM-dd' -%}
+{%- assign todayCount = 0 -%}
 
 {%- assign featuredHtml = '' -%}
 {%- assign allHtml = '' -%}
@@ -158,6 +163,12 @@
     {%- assign cardItemMeta = true -%}
     {%- assign cardItemFeature = false -%}
     {%- assign cardItemAudiences = event.AudienceIds | Default:'' -%}
+    {%- comment -%} Today: the filter's "today" chip matches this token {%- endcomment -%}
+    {%- assign eventDayKey = event.NextStartDateTime | Date:'yyyy-MM-dd' -%}
+    {%- if eventDayKey == todayKey -%}
+        {%- assign todayCount = todayCount | Plus:1 -%}
+        {%- assign cardItemAudiences = cardItemAudiences | Append:' today' | Trim -%}
+    {%- endif -%}
     {%- assign cardItemShareId = 'event-share-' | Append:event.OccurrenceId -%}
     {%- capture allCard %}{% include '~~/Assets/Lava/Partials/EventCard.lava' %}{% endcapture -%}
     {%- assign allHtml = allHtml | Append:allCard -%}
@@ -197,9 +208,12 @@
     {%- else %}
     <div class="events-page__bar">
       {%- assign audienceCount = audiences | Size -%}
-      {%- if audienceCount > 1 %}
-      <div class="events-filter" role="group" aria-label="Filter by audience" data-event-filter-chips hidden>
+      {%- if audienceCount > 1 or todayCount > 0 %}
+      <div class="events-filter" role="group" aria-label="Filter events" data-event-filter-chips hidden>
         <button type="button" class="pill-btn" data-audience="" aria-pressed="true">All</button>
+        {%- if todayCount > 0 %}
+        <button type="button" class="pill-btn" data-audience="today" aria-pressed="false">Today</button>
+        {%- endif %}
         {%- for audience in audiences %}
         <button type="button" class="pill-btn" data-audience="{{ audience.Id }}" aria-pressed="false">{{ audience.Value }}</button>
         {%- endfor %}
@@ -213,7 +227,7 @@
     <ul class="events-grid" role="list" data-event-list>
       {{ allHtml }}
     </ul>
-    <p class="events__empty" data-event-empty hidden>No upcoming events for this audience yet.</p>
+    <p class="events__empty" data-event-empty hidden>No upcoming events here yet.</p>
     {%- endif %}
   </section>
 

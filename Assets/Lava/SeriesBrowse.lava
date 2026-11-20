@@ -55,7 +55,7 @@
             CROSS APPLY ( SELECT TOP 1 s.[Slug] FROM [ContentChannelItemSlug] s WHERE s.[ContentChannelItemId] = m.[Id] ORDER BY s.[Id] ) sl
             WHERE ca.[ContentChannelItemId] = ser.[Id]
               AND m.[ContentChannelId] = 5
-              AND m.[StartDateTime] <= GETDATE()
+              AND m.[StartDateTime] <= CAST('{{ now }}' AS datetime2)  /* Rock's clock: GETDATE() is UTC */
               AND EXISTS (
                   SELECT 1 FROM [AttributeValue] av
                   INNER JOIN [Attribute] a ON a.[Id] = av.[AttributeId]

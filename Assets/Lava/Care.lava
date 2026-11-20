@@ -1,0 +1,128 @@
+{% comment %}
+    CARE — the Care page (route `ministries/care`, InnerDefault,
+    PageHeaderStyle Hidden: the hero is the page head).
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/Care.lava' %}
+    Enabled Lava Commands:    none
+
+    Laid out like Renew and Outreach: the hero is Assets/Lava/CareHero.lava
+    in the Feature zone (its button opens the care dialog). Content from the
+    current site (www.vrl.church/ministries/care), with The Care Center and
+    VRL Compassion combined into one VRL Care.
+
+    Sections:
+      Intro           a centred feature: Matthew 11:28 (MSG, as the current
+                      page; shortened at "Come to me…" to fit the feature
+                      size) and the welcome
+      Prayer          near the top: request prayer (opens the care dialog
+                      straight to the prayer form)
+      Photos          a bento grid (PLACEHOLDER photos)
+      VRL Care        a short intro, then what we help with (two lists) and
+                      the Request care button and the Care Center's address,
+                      beside an aside: counseling with The Couch (a partner)
+
+    Care dialog: data-care-trigger opens it at its options; data-care-frame
+    opens it straight to that form (theme.js "Care dialog"; the forms are
+    the dialog's, set in Assets/Lava/UtilityBar.lava).
+    Why it's laid out this way (for explaining it): Resources/PageContent/
+    Care-notes.md.
+    Styles: Styles/_content.scss (content-feature, content-verse,
+    content-crosslink, content-bento, content-standfirst, content-columns,
+    content-lists, content-bullets, content-aside, row-links, row-link).
+{% endcomment %}
+{%- assign careAddress = '16114 E. Indiana Ave Ste 310, Spokane Valley, WA 99216' -%}
+{%- assign careMapsQuery = '16114+E+Indiana+Ave+Ste+310,+Spokane+Valley,+WA+99216' -%}
+{%- assign chevron = '<svg width="18" height="18" aria-hidden="true"><use href="#i-chevron-right"/></svg>' -%}
+{%- assign extIcon = '<svg width="18" height="18" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>' -%}
+
+<article class="content-page care" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Care">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  <!-- Verse + welcome: a centred feature (as Renew) -->
+  <section class="content-feature" aria-label="Welcome to Care">
+    <blockquote class="content-verse content-verse--feature">
+      <p>Are you tired? Worn out? Burned out on religion? Come to me…</p>
+      <cite>Matthew 11:28 (MSG)</cite>
+    </blockquote>
+    <p>This life is full of twists and turns, and it's easy to lose heart. We have teams of people to help you, persevere with you and encourage you, in the church and in our community.</p>
+    <p class="content-feature__tagline">You don't have to go through it alone.</p>
+  </section>
+
+  <!-- Prayer requests: near the top; opens the care dialog straight to the prayer form -->
+  <section class="content-tile content-crosslink" aria-labelledby="care-prayer">
+    <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-heart"/></svg></span>
+    <div>
+      <h2 id="care-prayer">Prayer requests</h2>
+      <p>We'd be honored to pray with you and for you, whatever you're facing. Our team prays together through the week, and there's always someone to pray with you at our weekend services.</p>
+    </div>
+    <a class="btn btn--primary" href="/care/prayer" data-care-frame="/care/prayer" data-care-title="Pray for me">Request prayer</a>
+  </section>
+
+  {%- comment -%} PLACEHOLDER: care photos. Swap each figure's <span> for <img src="…" alt="…" loading="lazy"> and drop content-photo--placeholder. {%- endcomment %}
+  <div class="content-bento">
+    <figure class="content-photo content-photo--placeholder"><span>Photo: praying together, wide</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a visit</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a meal delivered</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: the Care Center</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a conversation</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: the care team</span></figure>
+  </div>
+
+  <!-- ===== VRL CARE (The Care Center + VRL Compassion) ===== -->
+  <div class="sermons-divider" id="vrl-care"><h2>VRL Care</h2></div>
+
+  <p class="content-standfirst">VRL Care walks with you <strong>through crisis and life's hard seasons</strong>, from guidance and prayer to meals, visits and help with bills.</p>
+
+  <div class="content-columns">
+    <div class="content-columns__main">
+      <div class="content-lists">
+        <section aria-labelledby="care-support">
+          <h3 class="content-subhead" id="care-support">Support and guidance</h3>
+          <ul class="content-bullets">
+            <li>Emotional and spiritual guidance through crisis</li>
+            <li>Pastoral and biblical guidance</li>
+            <li>Intentional prayer and encouragement</li>
+            <li>Ongoing one-on-one support</li>
+            <li>Groups focused on personal healing</li>
+            <li>Help finding the right community resources</li>
+          </ul>
+        </section>
+        <section aria-labelledby="care-practical">
+          <h3 class="content-subhead" id="care-practical">Practical help</h3>
+          <ul class="content-bullets">
+            <li>Visits for those who are homebound or in the hospital</li>
+            <li>Meals and help during a hospital stay or chronic illness</li>
+            <li>Help around the home for widows and widowers</li>
+            <li>Financial help in a crisis (mainly utilities, gas and food)</li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="content-place__actions">
+        <a class="btn btn--primary" href="/care/request-help" data-care-trigger>Request care</a>
+      </div>
+
+      <div class="content-visit">
+        <h3 class="content-subhead">Visit the Care Center</h3>
+        <address class="content-place__address">{{ careAddress }}</address>
+        <a class="text-cta" href="https://maps.google.com/?q={{ careMapsQuery }}" target="_blank" rel="noopener">Get directions <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      </div>
+    </div>
+
+    <!-- Counseling: a partnership with The Couch -->
+    <aside class="content-aside" aria-labelledby="care-counseling">
+      <p class="content-kicker">Our partner</p>
+      <h2 id="care-counseling">Counseling with The Couch</h2>
+      <p>The Couch provides professional counseling at The Care Center: faith-based counselors offering in-person and online therapy for individuals, couples and families. Every counselor is licensed or pursuing licensure.</p>
+      <nav class="row-links" aria-label="Contact The Couch">
+        <a class="row-link" href="https://www.thecouch.us" target="_blank" rel="noopener"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-link"/></svg></span><span class="row-link__label">thecouch.us</span><span class="row-link__chev">{{ extIcon }}</span></a>
+        <a class="row-link" href="mailto:office@thecouch.us"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-mail"/></svg></span><span class="row-link__label">office@thecouch.us</span><span class="row-link__chev">{{ chevron }}</span></a>
+        <a class="row-link" href="tel:+15096559843"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-phone"/></svg></span><span class="row-link__label">509.655.9843</span><span class="row-link__chev">{{ chevron }}</span></a>
+      </nav>
+    </aside>
+  </div>
+
+  </div>
+</article>

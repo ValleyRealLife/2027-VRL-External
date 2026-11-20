@@ -1,0 +1,29 @@
+{%- comment -%}
+  KIDS HERO — the Kids page's hero (Assets/Lava/Partials/VideoHero.lava,
+  Styles/_video-hero.scss), as Renew's, Outreach's and Care's, in the homepage
+  VRL Kids section's colours (heroTheme 'kids': the green field, scribbles
+  and grain) with the VRL Kids wordmark as the title.
+
+  Block:                    an HTML block in the Kids page's Feature zone
+  Block content:            {% include '~~/Assets/Lava/KidsHero.lava' %}
+  Enabled Lava Commands:    none
+  Page:                     InnerDefault, PageHeaderStyle Hidden, DarkHeader
+                            checked
+
+  The lead line under the wordmark is the page's Description (Page
+  Properties). The button is pre-registration (the current site's form until
+  the new site has one; also linked from the page and the Location page).
+  No video yet: a labelled green placeholder stands in. When the video is in
+  Rock, delete heroPlaceholder and set heroMediaId to its media element id.
+
+  The page content under it: Assets/Lava/Kids.lava (Main zone).
+{%- endcomment -%}
+{%- assign heroTheme = 'kids' -%}
+{%- assign heroTitle = 'VRL Kids' -%}
+{%- assign heroKicker = 'Birth through 5th grade' -%}
+{%- capture heroTitleHtml -%}<img src="{{ '~~/Assets/Images/VRLKids.webp' | ResolveRockUrl }}" width="1389" height="252" alt="VRL Kids">{%- endcapture -%}
+{%- assign heroPlaceholder = 'Video: VRL Kids' -%}
+{%- capture heroActions -%}
+  <a class="btn btn--primary" href="https://www.vrl.church/familypreregistration">Pre-register your kids</a>
+{%- endcapture -%}
+{% include '~~/Assets/Lava/Partials/VideoHero.lava' %}

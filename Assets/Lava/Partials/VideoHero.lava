@@ -23,12 +23,22 @@
       heroEmbedHtml  OR ready-made embed markup (a player that needs its own
                      iframe attributes or script, such as the Resi live
                      player); wins over the other two
+      heroPlaceholder OR a label for a green gradient stand-in until the page
+                     has a video (e.g. 'Video: Outreach'); the others win
       heroLive       true: a pulsing "Live now" line above the title (pair
                      with a live embed; see RenewHero.lava for a scheduled swap)
       heroActions    the button(s): one primary .btn btn--primary (the
                      theme's standard size; keep the hero to one action)
       heroLayout     'split' (default: text left, video right) or 'stacked'
                      (text centred, the video wide under it)
+      heroTheme      the band's look: empty (default: ink), 'kids' (the
+                     homepage VRL Kids section's green field and scribbles,
+                     white text and button; KidsHero.lava) or 'students'
+                     (the homepage VRL Students section's charcoal and
+                     grain; StudentsHero.lava)
+      heroTitleHtml  markup for inside the h1 in place of the title text (a
+                     wordmark <img> with alt text); heroTitle is still used
+                     to name the video
 
     Review: add ?hero=split or ?hero=stacked to the page's address to see
     the other layout without editing the block.
@@ -41,14 +51,17 @@
 {%- assign heroEmbedUrl = heroEmbedUrl | Default:'' | Trim -%}
 {%- assign heroMediaId = heroMediaId | Default:0 | AsInteger -%}
 {%- assign heroEmbedHtml = heroEmbedHtml | Default:'' | Trim -%}
+{%- assign heroPlaceholder = heroPlaceholder | Default:'' | Trim -%}
 {%- assign heroLive = heroLive | Default:false -%}
+{%- assign heroTheme = heroTheme | Default:'' | Trim | Downcase -%}
+{%- assign heroTitleHtml = heroTitleHtml | Default:'' | Trim -%}
 
 {%- assign heroLayout = heroLayout | Default:'split' | Downcase -%}
 {%- assign heroLayoutParam = 'Global' | PageParameter:'hero' | Default:'' | Downcase -%}
 {%- if heroLayoutParam == 'split' or heroLayoutParam == 'stacked' %}{% assign heroLayout = heroLayoutParam %}{% endif -%}
 {%- if heroLayout != 'stacked' %}{% assign heroLayout = 'split' %}{% endif -%}
 
-<section class="video-hero video-hero--{{ heroLayout }} on-ink" aria-labelledby="page-hero-title">
+<section class="video-hero video-hero--{{ heroLayout }}{% if heroTheme != '' %} video-hero--{{ heroTheme }}{% endif %} on-ink" aria-labelledby="page-hero-title">
   <div class="video-hero__glow" aria-hidden="true"></div>
   <div class="container video-hero__inner">
     <div class="video-hero__text">
@@ -57,7 +70,7 @@
       {%- elsif heroKicker != '' %}
       <p class="video-hero__kicker">{{ heroKicker }}</p>
       {%- endif %}
-      <h1 id="page-hero-title">{{ heroTitle }}</h1>
+      <h1 id="page-hero-title">{% if heroTitleHtml != '' %}{{ heroTitleHtml }}{% else %}{{ heroTitle }}{% endif %}</h1>
       {%- if heroLead != '' %}
       <p class="video-hero__lead">{{ heroLead }}</p>
       {%- endif %}
@@ -68,14 +81,16 @@
       </div>
       {%- endif %}
     </div>
-    {%- if heroEmbedHtml != '' or heroMediaId > 0 or heroEmbedUrl != '' %}
+    {%- if heroEmbedHtml != '' or heroMediaId > 0 or heroEmbedUrl != '' or heroPlaceholder != '' %}
     <div class="video-hero__media">
       {%- if heroEmbedHtml != '' %}
       {{ heroEmbedHtml }}
       {%- elsif heroMediaId > 0 %}
       {[ mediaplayer media:'{{ heroMediaId }}' autoresumeindays:'14' combineplaystatisticsindays:'14' ]}{[ endmediaplayer ]}
-      {%- else %}
+      {%- elsif heroEmbedUrl != '' %}
       <iframe src="{{ heroEmbedUrl }}" title="{{ heroTitle | Escape }} video" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+      {%- else %}
+      <div class="video-hero__placeholder"><span>{{ heroPlaceholder }}</span></div>
       {%- endif %}
     </div>
     {%- endif %}

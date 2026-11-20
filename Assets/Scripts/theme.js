@@ -450,7 +450,9 @@
   // --- Events filter ([data-event-filter]: Events.lava) ----------------------------
   // Audience chips over the All events grid. A chip shows the cards whose
   // data-audiences include its id (All: every card), shows the empty note
-  // when none match, and puts ?audience=<id> in the address so the view can be shared. The chips
+  // when none match, and puts ?audience=<id> in the address so the view can be shared. Today
+  // is the same mechanism: Events.lava adds the token "today" to the cards on today's date
+  // (?audience=today). The chips
   // are hidden in the markup, so without JavaScript every event just shows.
   document.querySelectorAll('[data-event-filter]').forEach(function (section) {
     var chipRow = section.querySelector('[data-event-filter-chips]');
@@ -481,6 +483,22 @@
     var wanted = new URLSearchParams(location.search).get('audience') || '';
     var known = chips.some(function (chip) { return chip.getAttribute('data-audience') === wanted; });
     apply(known ? wanted : '', false);
+  });
+
+  // --- Content modals (.content-modal <dialog>, e.g. Outreach's partners) -----------
+  // A [data-modal-open="<dialog id>"] button opens that dialog; [data-modal-close]
+  // inside it, Esc (the browser's own) or a click on the backdrop closes it. The
+  // dialog fills its box, so a click whose target is the dialog itself is the backdrop.
+  document.addEventListener('click', function (e) {
+    var opener = e.target.closest('[data-modal-open]');
+    if (opener) {
+      var dlg = document.getElementById(opener.getAttribute('data-modal-open'));
+      if (dlg && typeof dlg.showModal === 'function') { e.preventDefault(); dlg.showModal(); }
+      return;
+    }
+    var closer = e.target.closest('[data-modal-close]');
+    if (closer) { var open = closer.closest('dialog'); if (open) open.close(); return; }
+    if (e.target.matches && e.target.matches('dialog.content-modal[open]')) e.target.close();
   });
 
   // --- Site search: live results (Assets/Lava/SiteSearch.lava) ----------------------
@@ -864,6 +882,9 @@
   // last section whose top has passed a line a third of the way down the
   // screen. On phones the list is a chip row; the current chip scrolls into view.
   // Also sets data-tone="ink" while the glass panel sits over an .on-ink band.
+  // data-toc="scope" (the sticky subnav, .content-subnav): its links point at
+  // section starts (dividers), so the last one stays current until the end of
+  // the page body rather than the end of its target.
 
   document.querySelectorAll('[data-toc]').forEach(function (toc) {
     var links = Array.prototype.slice.call(toc.querySelectorAll('a[href^="#"]'));
@@ -882,7 +903,7 @@
       var line = window.innerHeight / 3;
       var pick = -1;
       targets.forEach(function (t, i) { if (t && t.getBoundingClientRect().top <= line) pick = i; });
-      var last = targets[targets.length - 1];
+      var last = toc.getAttribute('data-toc') === 'scope' ? toc.parentNode : targets[targets.length - 1];
       if (last && last.getBoundingClientRect().bottom < 0) pick = -1;   // read past the list
       var next = pick >= 0 ? links[pick] : null;
       if (next === current) return;

@@ -1,0 +1,200 @@
+{% comment %}
+    KIDS — the VRL Kids page (route `ministries/kids`, InnerDefault,
+    PageHeaderStyle Hidden: the hero is the page head).
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/Kids.lava' %}
+    Enabled Lava Commands:    none
+
+    Laid out like Renew, Outreach, Care and Life Groups: the hero is
+    Assets/Lava/KidsHero.lava in the Feature zone (the homepage Kids colours).
+    Content from the current site (www.vrl.church/ministries/kids); the staff
+    photo block is left out for now. New copy fills the pattern: see
+    Resources/PageContent/Kids-notes.md for what's new and needs approval.
+
+    Sections:
+      Intro           a centred feature: Matthew 19:14 (NIV), the Kids team's
+                      welcome, a tagline
+      Subnav          a sticky in-page nav (.content-subnav) to the four
+                      sections below; add a link for any new big section
+      Photos          a bento grid (PLACEHOLDER photos)
+      First visit     pre-register, the New Family kiosk, check-out (tiles)
+      Kids classes    Early childhood and Elementary (photo beside text)
+      Playground      the indoor playground beside its hours (an aside)
+      Milestones      Child dedication and VRL Kids baptism (photo beside text)
+      Serve           a crosslink to volunteer with VRL Kids
+
+    LINKS: pre-registration is the current site's form until the new site
+    has one; kidsContactUrl is where "ask the Kids team" goes until there's a
+    Kids team form or address.
+    Styles: Styles/_content.scss (content-feature, content-verse,
+    content-subnav, content-bento, content-standfirst, content-tiles--thirds,
+    content-split, content-columns, content-aside, content-times,
+    content-fineprint, content-crosslink).
+{% endcomment %}
+
+{%- comment -%} ===== LINKS ===== {%- endcomment -%}
+{%- assign preRegisterUrl = 'https://www.vrl.church/familypreregistration' -%}
+{%- assign kidsContactUrl = '/about/contact' -%}
+{%- assign baptismUrl = '/next-steps/baptism' -%}
+{%- assign volunteerUrl = '/next-steps/volunteer' -%}
+
+<article class="content-page kids-page" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="VRL Kids">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  <!-- Verse + welcome: a centred feature (as Renew) -->
+  <section class="content-feature" aria-label="Welcome to VRL Kids">
+    <blockquote class="content-verse content-verse--feature">
+      <p>Let the little children come to me, and do not hinder them, for the kingdom of heaven belongs to such as these.</p>
+      <cite>Matthew 19:14</cite>
+    </blockquote>
+    <p>Our Kids team is committed to raising up a Christ-centered generation. We love caring for the littlest in God's kingdom and helping parents navigate these amazing ages, and we're here to partner with your family in any way we can.</p>
+    <p class="content-feature__tagline">Big faith starts small.</p>
+  </section>
+
+  <!-- In-page nav: sticks under the header; underlines the section being read -->
+  <nav class="content-subnav" aria-label="On this page" data-toc="scope">
+    <ol class="content-subnav__list">
+      <li><a class="content-subnav__link" href="#first-visit">First visit</a></li>
+      <li><a class="content-subnav__link" href="#classes">Classes</a></li>
+      <li><a class="content-subnav__link" href="#playground">Playground</a></li>
+      <li><a class="content-subnav__link" href="#milestones">Milestones</a></li>
+    </ol>
+  </nav>
+
+  {%- comment -%} PLACEHOLDER: VRL Kids photos. Swap each figure's <span> for <img src="…" alt="…" loading="lazy"> and drop content-photo--placeholder. {%- endcomment %}
+  <div class="content-bento">
+    <figure class="content-photo content-photo--placeholder"><span>Photo: kids worshipping, wide</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: check-in</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a Bible story</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: small group time</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: the indoor playground</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a leader and a kid</span></figure>
+  </div>
+
+  <!-- ===== FIRST VISIT ===== -->
+  <div class="sermons-divider" id="first-visit"><h2>Your first visit</h2></div>
+
+  <p class="content-standfirst">We're excited to support you in your child's spiritual development, and <strong>safe, simple check-in</strong> makes the first visit easy.</p>
+
+  <ul class="content-tiles content-tiles--thirds" aria-label="Your first visit, step by step">
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-user-circle"/></svg></span>
+      <h3>Pre-register</h3>
+      <p class="content-kicker">Before you come</p>
+      <p>Checking in kids from birth to 5th grade? Pre-register your family to speed up your first visit.</p>
+      <div class="content-tile__actions">
+        <a class="btn btn--primary" href="{{ preRegisterUrl }}">Pre-register your kids</a>
+      </div>
+    </li>
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-map-pin"/></svg></span>
+      <h3>Visit the New Family kiosk</h3>
+      <p class="content-kicker">When you arrive</p>
+      <p>We'll quickly show you how to check in, then show you around and walk you to your kids' classes.</p>
+    </li>
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-lock"/></svg></span>
+      <h3>Pick up securely</h3>
+      <p class="content-kicker">After the service</p>
+      <p>Check-in prints a matching tag for you. Bring it back to pick up your kids, so they only go home with you.</p>
+    </li>
+  </ul>
+
+  <!-- ===== CLASSES ===== -->
+  <div class="sermons-divider" id="classes"><h2>Kids classes</h2></div>
+
+  <p class="content-standfirst">Classes for <strong>birth through 5th grade</strong> happen during every service, with fully screened staff and volunteers.</p>
+
+  <section class="content-split" aria-labelledby="kids-early">
+    <div class="content-split__text">
+      <p class="content-kicker">Birth to preschool</p>
+      <h2 id="kids-early">Early childhood</h2>
+      <p>These are fun and active stages in your child's life, and we care for your kids by providing a safe and fun place to grow. We believe in active, hands-on teaching: fun activities to grab their attention, creative Bible stories, worship (singing and interacting with their leaders), small groups, and prayer, where they learn what it means to talk to God.</p>
+      <p>If your child has any allergies or special needs, please let their teacher know.</p>
+    </div>
+    <div class="content-split__media">
+      <figure class="content-photo"><img src="/GetImage.ashx?guid=66acb2e8-5aea-4d7a-947f-dccbf035135e&amp;w=1200" alt="A leader holding two toddlers in a VRL Kids nursery room" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section class="content-split content-split--reverse" aria-labelledby="kids-elementary">
+    <div class="content-split__text">
+      <p class="content-kicker">Kindergarten to 5th grade</p>
+      <h2 id="kids-elementary">Elementary</h2>
+      <p>Elementary-age kids are in a constant state of discovery: think of everything they're trying for the first time, and all they're learning every day, even how to make (and keep) friends. Our Elementary classes are designed to help with their spiritual development on purpose.</p>
+      <p>We believe church and family were made to work together to raise our children to be Christ followers. As parents lead their children to know God, we're here to support and resource every step.</p>
+    </div>
+    <div class="content-split__media">
+      <figure class="content-photo"><img src="/GetImage.ashx?guid=3220ee15-5b5c-418d-906e-15e7c04b2f79&amp;w=1200" alt="Elementary kids cheering in a VRL Kids large group" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <!-- ===== PLAYGROUND ===== -->
+  <div class="sermons-divider" id="playground"><h2>Indoor playground</h2></div>
+
+  <p class="content-standfirst">Sometimes it's just too cold to play outside. Our indoor playground is open <strong>through the week for kids 2 to 12</strong>.</p>
+
+  <div class="content-columns">
+    <div class="content-columns__main">
+      {%- comment -%} PLACEHOLDER: a photo of the indoor playground {%- endcomment %}
+      <figure class="content-photo content-photo--placeholder"><span>Photo: the indoor playground</span></figure>
+      <p>Relax in our warm lobby with a coffee from our volunteer-staffed coffee shop, and let your kids get their wiggles out.</p>
+    </div>
+
+    <aside class="content-aside kids-hours" aria-labelledby="kids-hours">
+      <p class="content-kicker">Open to everyone</p>
+      <h2 id="kids-hours">Playground hours</h2>
+      <dl class="content-times">
+        <div><dt>Sunday to Tuesday</dt><dd>9:00am–1:00pm</dd></div>
+        <div><dt>Wednesday</dt><dd>11:30am–1:00pm</dd></div>
+        <div><dt>Thursday</dt><dd>9:00am–1:00pm &amp; 5:30–8:00pm</dd></div>
+      </dl>
+      <p class="content-fineprint">Socks and parental supervision are required at all times.</p>
+    </aside>
+  </div>
+
+  <!-- ===== MILESTONES ===== -->
+  <div class="sermons-divider" id="milestones"><h2>Milestones</h2></div>
+
+  <p class="content-standfirst">Celebrate the big steps of faith <strong>together as a family</strong>.</p>
+
+  <section class="content-split" aria-labelledby="kids-dedication">
+    <div class="content-split__text">
+      <p class="content-kicker">For parents</p>
+      <h2 id="kids-dedication">Child dedication</h2>
+      <p>Child dedication gives parents the opportunity to dedicate their little one to the Lord and publicly commit to Christian parenting. Dedications happen during each of our services, followed by a celebration for the families with snacks, refreshments and pictures.</p>
+      <p><a class="btn btn--outline" href="{{ kidsContactUrl }}">Ask about dedication</a></p>
+    </div>
+    <div class="content-split__media">
+      <figure class="content-photo"><img src="/GetImage.ashx?guid=24679bbb-5736-41b8-b56c-364b51a4d39e&amp;w=1200" alt="Families on stage with their little ones at a child dedication" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section class="content-split content-split--reverse" aria-labelledby="kids-baptism">
+    <div class="content-split__text">
+      <p class="content-kicker">For kids</p>
+      <h2 id="kids-baptism">VRL Kids baptism</h2>
+      <p>Is your kid interested in getting baptized, or do they have questions? We have a study that parents and kids can go through together to help figure out if your child is ready to take that next step.</p>
+      <p><a class="btn btn--outline" href="{{ kidsContactUrl }}">Ask about kids baptism</a></p>
+      <p><a class="text-cta" href="{{ baptismUrl }}">What baptism means <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow-right"/></svg></a></p>
+    </div>
+    <div class="content-split__media">
+      {%- comment -%} PLACEHOLDER: a photo of a kid's baptism {%- endcomment %}
+      <figure class="content-photo content-photo--placeholder"><span>Photo: a kid's baptism</span></figure>
+    </div>
+  </section>
+
+  <!-- Serve: volunteer with VRL Kids -->
+  <section class="content-tile content-crosslink" aria-labelledby="kids-serve">
+    <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-heart"/></svg></span>
+    <div>
+      <h2 id="kids-serve">Serve with VRL Kids</h2>
+      <p>We're building a team of people who are excited to reach the next generation for Jesus, one kid at a time. Volunteer and make a difference.</p>
+    </div>
+    <a class="btn btn--primary" href="{{ volunteerUrl }}">Volunteer with VRL Kids</a>
+  </section>
+
+  </div>
+</article>

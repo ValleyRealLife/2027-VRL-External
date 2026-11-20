@@ -7,14 +7,22 @@
     then start a {% sql %} with:  WITH {{ visibleOccSql }}  and select from
     [nextOcc].
 
-    [nextOcc]: future occurrences whose PromotionStart (an Event Item
+    [nextOcc]: upcoming occurrences whose PromotionStart (an Event Item
     Occurrence attribute, date/time) is empty or has passed, numbered per
-    event (rn = 1 is the next one). IsNew = 1 from PromotionStart until the
+    event (rn = 1 is the next one). An occurrence stays listed until
+    `listedAfterStartMinutes` (30) after it starts, so it's still at the top
+    of the list while people are arriving. IsNew = 1 from PromotionStart until the
     end of the following day (live at 4 pm Monday = New until midnight Tuesday
-    night). Times are the SQL server's clock (GETDATE()), like
-    NextStartDateTime. HomeEvents.lava has the same rule inline.
+    night). HomeEvents.lava has the same rule inline.
+
+    "Now" is Rock's clock (the organization's time zone), written into the SQL
+    as a literal: Rock stores NextStartDateTime and PromotionStart in local
+    time, but the SQL server's GETDATE() runs on UTC (8 hours ahead), which hid
+    every event 8 hours before it started.
 {% endcomment %}
 {%- assign promotionKey = promotionKey | Default:'PromotionStart' -%}
+{%- assign rockNow = 'Now' | Date:'yyyy-MM-ddTHH:mm:ss' -%}
+{%- assign listedAfterStartMinutes = 30 -%}
     [promo] AS (
         SELECT av.[EntityId] AS [OccurrenceId],
                COALESCE(av.[ValueAsDateTime], TRY_CONVERT(datetime2, NULLIF(av.[Value], ''))) AS [PromotionStart]
@@ -27,11 +35,11 @@
         SELECT
             eio.[Id], eio.[EventItemId], eio.[NextStartDateTime], eio.[Location],
             CASE WHEN p.[PromotionStart] IS NOT NULL
-                  AND GETDATE() < DATEADD(day, 2, CAST(CAST(p.[PromotionStart] AS date) AS datetime2))
+                  AND CAST('{{ rockNow }}' AS datetime2) < DATEADD(day, 2, CAST(CAST(p.[PromotionStart] AS date) AS datetime2))
                  THEN 1 ELSE 0 END AS [IsNew],
             ROW_NUMBER() OVER (PARTITION BY eio.[EventItemId] ORDER BY eio.[NextStartDateTime] ASC) AS [rn]
         FROM [EventItemOccurrence] eio
         LEFT JOIN [promo] p ON p.[OccurrenceId] = eio.[Id]
-        WHERE eio.[NextStartDateTime] >= GETDATE()
-          AND (p.[PromotionStart] IS NULL OR p.[PromotionStart] <= GETDATE())
+        WHERE eio.[NextStartDateTime] >= DATEADD(minute, -{{ listedAfterStartMinutes }}, CAST('{{ rockNow }}' AS datetime2))
+          AND (p.[PromotionStart] IS NULL OR p.[PromotionStart] <= CAST('{{ rockNow }}' AS datetime2))
     )

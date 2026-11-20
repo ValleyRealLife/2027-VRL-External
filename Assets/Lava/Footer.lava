@@ -93,7 +93,7 @@
             </p>
             <p class="today-line">
                 <svg width="16" height="16" aria-hidden="true"><use href="#i-clock"/></svg>
-                <a href="/kids#playground">{% if playgroundToday == 'Closed' %}Playground closed today{% else %}Playground today · {{ playgroundToday }}{% endif %}</a>
+                <a href="/ministries/kids#playground">{% if playgroundToday == 'Closed' %}Playground closed today{% else %}Playground today · {{ playgroundToday }}{% endif %}</a>
             </p>
         </div>
 
@@ -122,7 +122,7 @@
                 <dl>
                     <div><dt>Playground · {{ todayName }}</dt><dd>{{ playgroundToday }}</dd></div>
                 </dl>
-                <a href="/kids#playground">All playground hours</a>
+                <a href="/ministries/kids#playground">All playground hours</a>
             </div>
             <ul class="social" aria-label="Valley Real Life on social media">
                 <li><a href="#" aria-label="Instagram"><svg width="18" height="18" aria-hidden="true"><use href="#i-instagram"/></svg></a></li>

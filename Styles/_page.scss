@@ -49,6 +49,8 @@
 //                              a full-width gray stripe: title + description on
 //                              the left, PageImage on the right with the landing
 //                              cards' slanted edge
+//   .page-head--banner         the PageImage as an ultrawide photo, the title
+//                              and description over it at the bottom left
 // The stripe stops --head-overlap above the header's bottom edge (a hard-stop
 // gradient), so the card hangs over it without negative margins.
 // ---------------------------------------------------------------------------
@@ -171,6 +173,60 @@
     height: 100%;
     // Image right: its left edge slants in toward the bottom (wider at the top)
     clip-path: polygon(0 0, 100% 0, 100% 100%, 30% 100%);
+  }
+}
+
+// Banner: the PageImage as an ultrawide photo (the look of .content-banner,
+// Styles/_content.scss), the title and description over it at the bottom left
+// on a dark wash. It hangs over the gray stripe as SideImage does. The card
+// is at least 3:1 from 900px (16:9 on small tablets, 4:3 on phones) and
+// grows if the text needs more room. The photo is absolutely placed, so its
+// own shape never sets the height. Phones: edge to edge under the site
+// header, no breadcrumbs (as SideImage).
+.page-head--banner {
+  --head-overlap: clamp(2rem, 5vw, 3.5rem);
+  padding-top: clamp(1.25rem, 4vw, 2.5rem);
+  background: linear-gradient(to bottom,
+    var(--page-title-background) calc(100% - var(--head-overlap)),
+    transparent calc(100% - var(--head-overlap)));
+}
+.page-head--banner > .container { container-type: inline-size; }   // 100cqi = the card's width
+.page-head--banner .page-head__card {
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  min-height: calc(100cqi * 3 / 4);
+  overflow: hidden;
+  border-radius: var(--radius-2xl);
+  background: var(--brand-deep);
+  box-shadow: var(--shadow-md);
+}
+.page-head--banner .page-head__card > * { grid-area: 1 / 1; min-width: 0; }
+.page-head--banner .page-head__media { order: 0; aspect-ratio: auto; height: 100%; clip-path: none; }
+.page-head--banner .page-head__media img { position: absolute; inset: 0; object-position: 50% 40%; }
+.page-head--banner .page-head__media--empty { background: linear-gradient(135deg, var(--ink) 0%, var(--brand-deep) 100%); }
+.page-head--banner .page-head__body {
+  z-index: 1;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: var(--space-lg) var(--gutter);
+  background: linear-gradient(to top, rgb(0 0 0 / 0.72), rgb(0 0 0 / 0.2) 60%, rgb(0 0 0 / 0) 85%);
+}
+.page-head--banner .page-title-heading { color: var(--on-ink); text-wrap: balance; }
+.page-head--banner .page-head__lead { max-width: 46ch; color: var(--on-ink); }
+
+@media (max-width: #{$bp-md - 1px}) {
+  .page-head--banner { padding-top: 0; background: none; }
+  .page-head--banner > .container { padding-inline: 0; }
+  .page-head--banner .page-head__card { border-radius: 0; box-shadow: none; }
+  .page-head--banner + .breadcrumb-container { display: none; }
+}
+@media (min-width: #{$bp-sm}) {
+  .page-head--banner .page-head__card { min-height: calc(100cqi * 9 / 16); }
+}
+@media (min-width: #{$bp-md}) {
+  .page-head--banner .page-head__card { min-height: calc(100cqi / 3); }
+  .page-head--banner .page-head__body {
+    padding: var(--space-xl) var(--space-lg) var(--space-xl) clamp(1.5rem, 4vw, 3.5rem);
+    background: linear-gradient(to top right, rgb(0 0 0 / 0.75), rgb(0 0 0 / 0.25) 45%, rgb(0 0 0 / 0) 70%);
   }
 }
 

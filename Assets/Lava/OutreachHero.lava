@@ -1,0 +1,19 @@
+{%- comment -%}
+  OUTREACH HERO — the Outreach page's hero (Assets/Lava/Partials/VideoHero.lava,
+  Styles/_video-hero.scss), as Renew's.
+
+  Block:                    an HTML block in the Outreach page's Feature zone
+  Block content:            {% include '~~/Assets/Lava/OutreachHero.lava' %}
+  Enabled Lava Commands:    none
+  Page:                     InnerDefault, PageHeaderStyle Hidden, DarkHeader
+                            checked
+
+  The lead line under "Outreach" is the page's Description (Page Properties).
+  No video yet: a labelled green placeholder stands in. When the video is in
+  Rock, delete heroPlaceholder and set heroMediaId to its media element id.
+  No button for now (no events yet).
+
+  The page content under it: Assets/Lava/Outreach.lava (Main zone).
+{%- endcomment -%}
+{%- assign heroPlaceholder = 'Video: Outreach' -%}
+{% include '~~/Assets/Lava/Partials/VideoHero.lava' %}

@@ -1,0 +1,147 @@
+{% comment %}
+    LOCATION — the Location page (route `about/location`, InnerDefault, the page
+    header as set in Page Properties).
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/Location.lava' %}
+    Enabled Lava Commands:    RockEntity  (the student-night events)
+
+    Content from www.vrl.church/about/locations, tightened for a first-time
+    guest. Barker is the one campus (Riverside was already hidden on the old
+    page). Service times match the footer (Footer.lava, PageNav.lava); the
+    online times match the live page's stream (Sundays only). Student nights
+    from their event pages: Middle School Wednesdays 6:30–8pm (/events/618),
+    High School Sundays 6–8pm (/events/617). The old page's MIDWEEK is retired.
+
+    Sections (the title and intro line are the page header's, from Page
+    Properties, so the content starts with the visit card):
+      Visit          the Barker campus card (map, address, times, directions)
+                      beside a quiet "Can't make it?" aside (watching online is
+                      a convenience, not its own community: stream times and
+                      where to watch, as row links)
+      What to expect  photo + text (photo placeholder for now)
+      For your family Kids and Students tiles
+
+    Styles: Styles/_content.scss (content-columns, content-place,
+    content-aside, row-link, content-split, content-tiles, content-times).
+    ROCK: the address and times are hardcoded here and in the footer/nav; pull
+    them from the campus and its schedules when those are set up. The student
+    nights come from their events (studentEvents, below).
+{% endcomment %}
+{%- assign mapsQuery = '1831+S+Barker+Rd,+Spokane+Valley,+WA+99016' -%}
+{%- comment -%}
+  Student nights in the Students tile: event occurrence id ^ the label above
+  its name, in order. Each row is the event's photo, name and next date
+  (from Rock), linked to /events/{id}. An inactive or missing one is skipped.
+{%- endcomment -%}
+{%- assign studentEvents = '618^Middle school|617^High school' -%}
+{%- assign fallbackImageGuid = 'ea573748-2354-4f4a-875d-b8d2dfa30e5d' -%}
+{%- assign chevron = '<svg width="18" height="18" aria-hidden="true"><use href="#i-chevron-right"/></svg>' -%}
+
+<article class="content-page location" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Location">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  <div class="content-columns">
+
+    <section class="content-place" aria-labelledby="loc-barker">
+      <iframe class="content-place__map" src="https://www.google.com/maps?q=Valley+Real+Life,+{{ mapsQuery }}&amp;z=14&amp;output=embed" title="Map to Valley Real Life, 1831 S. Barker Rd, Spokane Valley" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <div class="content-place__body">
+        <p class="content-kicker">In person</p>
+        <h2 id="loc-barker">Barker Campus</h2>
+        <address class="content-place__address">1831 S. Barker Rd, Spokane Valley, WA 99016</address>
+        <p>Off South Barker Road in Spokane Valley, on 44 acres in the Saltese Flats next to the wetlands.</p>
+        <dl class="content-times">
+          <div><dt>Thursday</dt><dd>6:30pm</dd></div>
+          <div><dt>Sunday</dt><dd>8:00, 9:30, 11:00am &amp; 12:30pm</dd></div>
+        </dl>
+        <div class="content-place__actions">
+          <a class="btn btn--primary" href="https://maps.google.com/?q={{ mapsQuery }}" target="_blank" rel="noopener">Get directions</a>
+        </div>
+      </div>
+    </section>
+
+    <aside class="content-aside" aria-labelledby="loc-online">
+      <h2 id="loc-online">Can't make it?</h2>
+      <p>Sunday services stream live at 8:00, 9:30 and 11:00am, and every message is online afterward.</p>
+      <nav class="content-aside__links" aria-label="Watch online">
+        <a class="row-link" href="/watch/live"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-play"/></svg></span><span class="row-link__label">Watch live</span><span class="row-link__chev">{{ chevron }}</span></a>
+        <a class="row-link" href="/watch/previous-messages"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-microphone"/></svg></span><span class="row-link__label">Previous messages</span><span class="row-link__chev">{{ chevron }}</span></a>
+        <a class="row-link" href="https://www.youtube.com/c/ValleyRealLife" target="_blank" rel="noopener"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-youtube"/></svg></span><span class="row-link__label">YouTube</span><span class="row-link__chev">{{ chevron }}</span></a>
+        <a class="row-link" href="https://www.facebook.com/valleyreallife" target="_blank" rel="noopener"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-facebook"/></svg></span><span class="row-link__label">Facebook</span><span class="row-link__chev">{{ chevron }}</span></a>
+      </nav>
+    </aside>
+
+  </div>
+
+  <section class="content-split content-split--reverse" aria-labelledby="loc-expect">
+    <div class="content-split__text">
+      <h2 id="loc-expect">What to expect</h2>
+      <p>You'll be greeted by smiling faces from all walks of life. Wear your Sunday best or jeans and a hoodie, whatever's comfortable. We'll spend about an hour together in a mix of music and a biblically-centered message.</p>
+      <p>First time here? Park up front (we have a spot just for you) and stop by the Connecting Point in the lobby. We have a gift for you.</p>
+    </div>
+    <div class="content-split__media">
+      <figure class="content-photo content-photo--placeholder"><span>Photo: greeters at the front doors</span></figure>
+    </div>
+  </section>
+
+  <div class="sermons-divider" id="family"><h2>For your family</h2></div>
+
+  <ul class="content-tiles" aria-label="Kids and students">
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-heart"/></svg></span>
+      <h3>Kids</h3>
+      <p class="content-kicker">Birth–5th grade</p>
+      <p>Kids love their time at VRL, and we know yours will too. We have classes for birth through 5th grade during every service, with secure check-in and check-out and fully screened staff and volunteers.</p>
+      <p>First time? Stop by the New Family kiosk and we'll show you around and help you check in.</p>
+      {%- comment -%} ROCK: Family Pre-Registration lives on the current site; point at the new site's page when it has one {%- endcomment %}
+      <p><a class="btn btn--primary" href="https://www.vrl.church/familypreregistration">Pre-register your kids</a></p>
+      <div class="content-tile__actions">
+        <a class="text-cta" href="/ministries/kids">Explore VRL Kids <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      </div>
+    </li>
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-users"/></svg></span>
+      <h3>Students</h3>
+      <p class="content-kicker">6th–12th grade</p>
+      <p>Students are welcome in our worship services with their families. They also have nights just for them: a fun, safe place to bring friends, learn about Jesus and do life together.</p>
+      {%- comment -%} Student nights: the events themselves (photo, name, next date) {%- endcomment -%}
+      {%- capture studentEventsHtml -%}
+      {%- assign studentEventList = studentEvents | Split:'|' -%}
+      {%- for entry in studentEventList -%}
+        {%- assign entryParts = entry | Split:'^' -%}
+        {%- assign occId = entryParts[0] | AsInteger -%}
+        {%- assign occLabel = entryParts[1] -%}
+        {%- eventitemoccurrence id:'{{ occId }}' securityenabled:'false' -%}
+          {%- if eventitemoccurrence and eventitemoccurrence.EventItem.IsActive -%}
+          {%- assign ev = eventitemoccurrence.EventItem -%}
+          {%- assign evPhotoGuid = ev.Photo.Guid | Default:fallbackImageGuid -%}
+          <li class="content-event" data-card>
+            <img class="content-event__thumb" src="/GetImage.ashx?guid={{ evPhotoGuid }}&amp;w=320&amp;h=180&amp;mode=crop" alt="" loading="lazy">
+            <div class="content-event__body">
+              <p class="content-event__label">{{ occLabel }}</p>
+              <h4 class="content-event__title"><a href="/events/{{ occId }}" data-card-link>{{ ev.Name }}</a></h4>
+              {%- if eventitemoccurrence.NextStartDateTime %}
+              <p class="content-event__meta"><svg width="14" height="14" aria-hidden="true"><use href="#i-clock"/></svg> Next: {{ eventitemoccurrence.NextStartDateTime | Date:'ddd, MMM d · h:mm tt' }}</p>
+              {%- endif %}
+            </div>
+            <span class="content-event__chev" aria-hidden="true">{{ chevron }}</span>
+          </li>
+          {%- endif -%}
+        {%- endeventitemoccurrence -%}
+      {%- endfor -%}
+      {%- endcapture -%}
+      {%- assign studentEventsHtml = studentEventsHtml | Trim -%}
+      {%- if studentEventsHtml != '' %}
+      <ul class="content-events" aria-label="Student nights">
+        {{ studentEventsHtml }}
+      </ul>
+      {%- endif %}
+      <div class="content-tile__actions">
+        <a class="text-cta" href="/ministries/students">Explore VRL Students <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow-right"/></svg></a>
+      </div>
+    </li>
+  </ul>
+
+  </div>
+</article>

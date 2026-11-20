@@ -1,0 +1,202 @@
+{% comment %}
+    LIFE GROUPS — the Life Groups page (route `ministries/life-groups`,
+    InnerDefault, PageHeaderStyle Hidden: the hero is the page head).
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/Lifegroups.lava' %}
+    Enabled Lava Commands:    RockEntity  (this week's group questions, Rooted)
+
+    Laid out like Renew, Outreach and Care: the hero is
+    Assets/Lava/LifegroupsHero.lava in the Feature zone. The Life Groups team
+    hasn't supplied copy yet, so most of the text is new, drawn from the
+    current site (www.vrl.church/ministries/life-groups); see
+    Resources/PageContent/Lifegroups-notes.md for what's new and needs approval.
+
+    Sections:
+      Intro           a centred feature: Hebrews 10:24–25 (NIV, shortened),
+                      why Life Groups, a tagline
+    Subnav: a sticky in-page nav (.content-subnav) after the intro links to
+    Start with Rooted (while it's scheduled), Join a group and Group
+    resources; add a link there for any new big section.
+      Photos          a bento grid (PLACEHOLDER photos)
+      Start here      Rooted, from its event, while it's scheduled (ROOTED
+                      below)
+      Join a group    On site, Drop in and Off site, each linking to the group
+                      finder with its filter set (FINDER below)
+      Group resources this week's group questions (from the latest message
+                      that has them; hidden if none), more resources, and a
+                      "Leading a group?" aside linking to My groups in My Account
+
+    FINDER: the group finder page isn't built on the new site yet, so these
+    links go nowhere until it is. When it exists, set its address and the
+    query string each tile adds to set its filter.
+    Styles: Styles/_content.scss (content-feature, content-verse,
+    content-subnav, content-bento, content-standfirst, content-promo, content-tiles--thirds,
+    content-columns, content-crosslink, content-aside, row-links, row-link).
+{% endcomment %}
+
+{%- comment -%} ===== FINDER ===== {%- endcomment -%}
+{%- assign groupFinderUrl = '/ministries/life-groups/find' -%}
+{%- assign finderOnSite  = '?Meets=OnSite' -%}
+{%- assign finderDropIn  = '?Meets=DropIn' -%}
+{%- assign finderOffSite = '?Meets=OffSite' -%}
+{%- assign myGroupsUrl = '/my-account#my-groups' -%}
+
+{%- comment -%} ===== ROOTED =====
+  "New to Life Groups?": Rooted, the place to start, from its event
+  occurrence: its photo (the Rooted logo) as a card with the next date and
+  a sign-up button, the whole card linking to /events/{id}
+  (Assets/Lava/Partials/EventPromo.lava).
+  Shown only while it's scheduled: the event is active and approved and has
+  a next date no more than 30 minutes past (as the events list). Otherwise
+  the section and its subnav link are left out. Point rootedOccurrenceId at
+  another occurrence to feature a different starting point (and change the
+  name in the section's opening line and subnav link).
+{%- endcomment -%}
+{%- assign rootedOccurrenceId = 639 -%}
+{%- assign extIcon = '<svg width="18" height="18" aria-hidden="true"><use href="#i-arrow-up-right"/></svg>' -%}
+{%- assign chevron = '<svg width="18" height="18" aria-hidden="true"><use href="#i-chevron-right"/></svg>' -%}
+
+{%- comment -%}
+  This week's group questions: the newest message (channel 5) that has
+  started and has a GroupQuestions link or a GroupQuestionsFile, as the
+  message pages' Group questions pill (Partials/MessageResources.lava).
+{%- endcomment -%}
+{%- assign questionsUrl = '' -%}
+{%- assign questionsItem = null -%}
+{%- assign nowStamp = 'Now' | Date:'yyyy-MM-ddTHH:mm:ss' -%}
+{% contentchannelitem where:'ContentChannelId == 5 && StartDateTime <= "{{ nowStamp }}"' sort:'StartDateTime desc' limit:'8' %}
+  {%- for item in contentchannelitemItems -%}
+    {%- assign itemQuestions = item | Attribute:'GroupQuestions','RawValue' | Trim -%}
+    {%- if itemQuestions == '' -%}
+      {%- assign itemQuestionsFile = item | Attribute:'GroupQuestionsFile','RawValue' | Trim -%}
+      {%- if itemQuestionsFile != '' %}{% assign itemQuestions = '/GetFile.ashx?guid=' | Append:itemQuestionsFile %}{% endif -%}
+    {%- endif -%}
+    {%- if itemQuestions != '' -%}
+      {%- assign questionsUrl = itemQuestions -%}
+      {%- assign questionsItem = item -%}
+      {%- break -%}
+    {%- endif -%}
+  {%- endfor -%}
+{% endcontentchannelitem %}
+
+{%- assign promoOccurrenceId = rootedOccurrenceId -%}
+{%- capture rootedHtml %}{% include '~~/Assets/Lava/Partials/EventPromo.lava' %}{% endcapture -%}
+{%- assign rootedHtml = rootedHtml | Trim -%}
+
+<article class="content-page lifegroups" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Life Groups">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  <!-- Verse + why: a centred feature (as Renew) -->
+  <section class="content-feature" aria-label="Welcome to Life Groups">
+    <blockquote class="content-verse content-verse--feature">
+      <p>Let us consider how we may spur one another on toward love and good deeds, not giving up meeting together…</p>
+      <cite>Hebrews 10:24–25</cite>
+    </blockquote>
+    <p>Community is an essential part of our faith. Life Groups are smaller groups that meet through the week to build friendships, care for each other, study the Bible and talk about how God's Word is working in our lives.</p>
+    <p class="content-feature__tagline">Find your people.</p>
+  </section>
+
+  <!-- In-page nav: sticks under the header; underlines the section being read -->
+  <nav class="content-subnav" aria-label="On this page" data-toc="scope">
+    <ol class="content-subnav__list">
+      {%- if rootedHtml != '' %}
+      <li><a class="content-subnav__link" href="#start">Start with Rooted</a></li>
+      {%- endif %}
+      <li><a class="content-subnav__link" href="#join">Join a group</a></li>
+      <li><a class="content-subnav__link" href="#resources">Group resources</a></li>
+    </ol>
+  </nav>
+
+  {%- comment -%} PLACEHOLDER: Life Group photos. Swap each figure's <span> for <img src="…" alt="…" loading="lazy"> and drop content-photo--placeholder. {%- endcomment %}
+  <div class="content-bento">
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a group around a table, wide</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: open Bibles</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: laughing together</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: praying for each other</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a home group</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a group at VRL</span></figure>
+  </div>
+
+  {%- if rootedHtml != '' %}
+  <!-- ===== START HERE: ROOTED (only while it's scheduled) ===== -->
+  <div class="sermons-divider" id="start"><h2>New to Life Groups?</h2></div>
+
+  <p class="content-standfirst">Start with <strong>Rooted</strong>, the easiest way to meet new friends and find your way into a group.</p>
+
+  {{ rootedHtml }}
+  {%- endif %}
+
+  <!-- ===== JOIN A GROUP ===== -->
+  <div class="sermons-divider" id="join"><h2>Join a group</h2></div>
+
+  <p class="content-standfirst">There's a group for every stage and schedule: <strong>men's, women's, mixed, young adult and recovery</strong> groups, at VRL and in homes around the valley.</p>
+
+  <ul class="content-tiles content-tiles--thirds" aria-label="Ways to join a group">
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-map-pin"/></svg></span>
+      <h3>On site</h3>
+      <p class="content-kicker">At VRL</p>
+      <p>Groups that meet at the Barker campus through the week. Sign up, and you'll meet with the same people each week.</p>
+      <div class="content-tile__actions">
+        <a class="btn btn--outline" href="{{ groupFinderUrl }}{{ finderOnSite }}">Find an on-site group</a>
+      </div>
+    </li>
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-clock"/></svg></span>
+      <h3>Drop in</h3>
+      <p class="content-kicker">No sign-up</p>
+      <p>Come any week, no sign-up needed. Find one that fits your schedule and just show up.</p>
+      <div class="content-tile__actions">
+        <a class="btn btn--outline" href="{{ groupFinderUrl }}{{ finderDropIn }}">Find a drop-in group</a>
+      </div>
+    </li>
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-home"/></svg></span>
+      <h3>Off site</h3>
+      <p class="content-kicker">Around the valley</p>
+      <p>Groups that meet in homes and other places around Spokane Valley, on different days and times.</p>
+      <div class="content-tile__actions">
+        <a class="btn btn--outline" href="{{ groupFinderUrl }}{{ finderOffSite }}">Find an off-site group</a>
+      </div>
+    </li>
+  </ul>
+
+  <!-- ===== GROUP RESOURCES ===== -->
+  <div class="sermons-divider" id="resources"><h2>Group resources</h2></div>
+
+  <p class="content-standfirst">Every week's message comes with <strong>questions for your group</strong>, so you can keep the conversation going.</p>
+
+  <div class="content-columns">
+    <div class="content-columns__main">
+      {%- if questionsUrl != '' %}
+      <section class="content-tile content-crosslink" aria-labelledby="lg-questions">
+        <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-message-question"/></svg></span>
+        <div>
+          <h3 id="lg-questions">This week's group questions</h3>
+          <p>For “{{ questionsItem.Title }}”, {{ questionsItem.StartDateTime | Date:'MMMM d' }}</p>
+        </div>
+        <a class="btn btn--primary" href="{{ questionsUrl }}" target="_blank" rel="noopener">Open the questions<span class="u-visually-hidden"> (opens in a new tab)</span></a>
+      </section>
+      {%- endif %}
+
+      <nav class="row-links" aria-label="More group resources">
+        <a class="row-link" href="/watch/previous-messages"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-message-question"/></svg></span><span class="row-link__label">Questions for every past message</span><span class="row-link__chev">{{ chevron }}</span></a>
+        <a class="row-link" href="https://app.rightnowmedia.org/en/join/VRL" target="_blank" rel="noopener"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-play"/></svg></span><span class="row-link__label">Video Bible studies on RightNow Media</span><span class="row-link__chev">{{ extIcon }}</span></a>
+      </nav>
+    </div>
+
+    <!-- Leaders: their groups are in My Account -->
+    <aside class="content-aside" aria-labelledby="lg-leaders">
+      <p class="content-kicker">For leaders</p>
+      <h2 id="lg-leaders">Leading a Life Group?</h2>
+      <p>Thank you! Your groups, and the tools to manage them, are in My Account under My groups.</p>
+      <div class="row-links">
+        <a class="row-link" href="{{ myGroupsUrl }}"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-users"/></svg></span><span class="row-link__label">Go to My groups</span><span class="row-link__chev">{{ chevron }}</span></a>
+      </div>
+    </aside>
+  </div>
+
+  </div>
+</article>

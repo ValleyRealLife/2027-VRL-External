@@ -1,0 +1,190 @@
+{% comment %}
+    BAPTISM — the Baptism page (route `next-steps/baptism`, InnerDefault,
+    PageHeaderStyle SideImage: the title, the page Description and the
+    PageImage are the page header's, from Page Properties, so the content
+    starts with the opening line).
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/Baptism.lava' %}
+    Enabled Lava Commands:    none
+
+    Content from the current site (www.vrl.church/next-steps/baptism). The
+    FAQ answers are the current page's wording (two typos fixed: Matthew
+    28:18–20, and a missing bracket). The next-step tiles are new; the
+    volunteer tile's text is from the Baptism & Prayer Team's description on
+    the current volunteer page.
+
+    Sections:
+      Intro           a centred feature: the current page's opening line and
+                      a tagline
+      Banner +        two cards side by side (2/3 + 1/3): a photo with
+      Interest        "Buried with him… raised to new life." over it (from
+                      Romans 6:4; bannerImageGuid), and "Ready to be
+                      baptized?", which opens the baptism interest form in a
+                      dialog
+      Questions       the current page's FAQs, opening in place
+      Next steps      The Journey, a Life Group, and volunteering on the
+                      Baptism & Prayer Team
+
+    INTEREST FORM: a Rock workflow entry page, shown in the site's form dialog
+    (the care dialog in Assets/Lava/UtilityBar.lava: data-care-frame opens it
+    straight to that page, as the live page's Get connected link). The page
+    isn't built yet, so interestFormUrl is a PLACEHOLDER: the dialog opens on
+    a "page not found" until it exists. The link's href is the same page, so
+    it still works without JavaScript.
+    Styles: Styles/_content.scss (content-banner, content-columns--stretch, content-feature,
+    content-crosslink, content-intro, content-faq, content-bullets,
+    content-standfirst, content-tiles--thirds).
+{% endcomment %}
+
+{%- comment -%} ===== LINKS ===== {%- endcomment -%}
+{%- assign interestFormUrl = '/next-steps/baptism/interest' -%}{%- comment -%} PLACEHOLDER: the workflow entry page {%- endcomment -%}
+{%- assign interestFormTitle = 'Baptism interest' -%}
+{%- assign journeyUrl = '/next-steps/the-journey' -%}
+{%- assign lifeGroupsUrl = '/ministries/life-groups#join' -%}
+{%- assign volunteerUrl = '/next-steps/volunteer' -%}
+{%- assign bannerImageGuid = 'a95756f6-f735-40be-bf0c-541eaff61939' -%}{%- comment -%} for now {%- endcomment -%}
+{%- assign chevronDown = '<svg width="18" height="18" aria-hidden="true"><use href="#i-chevron-down"/></svg>' -%}
+
+<article class="content-page baptism" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Baptism">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  <!-- Why: a centred feature (as Renew) -->
+  <section class="content-feature" aria-label="About baptism">
+    <p>Accepting Jesus Christ as your Lord and Savior is a big step. Baptism is the outward expression of the change He's made in your heart.</p>
+    <p class="content-feature__tagline">Go public with your faith.</p>
+  </section>
+
+  <!-- The verse over a baptism photo (2/3) beside "Ready to be baptized?" (1/3) -->
+  <div class="content-columns content-columns--stretch">
+    <figure class="content-banner">
+      <img src="/GetImage.ashx?guid={{ bannerImageGuid }}&amp;w=1600" srcset="/GetImage.ashx?guid={{ bannerImageGuid }}&amp;w=800 800w, /GetImage.ashx?guid={{ bannerImageGuid }}&amp;w=1600 1600w" sizes="(min-width: 1300px) 800px, (min-width: 900px) 66vw, 100vw" alt="">
+      <blockquote class="content-banner__text">
+        <p>Buried with him… raised to new life.</p>
+        <cite>Romans 6:4</cite>
+      </blockquote>
+    </figure>
+
+    <!-- Interest: opens the baptism interest form (a workflow) in the form dialog -->
+    <section class="content-tile content-crosslink" aria-labelledby="bap-ready">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-message"/></svg></span>
+      <div>
+        <h2 id="bap-ready">Ready to be baptized?</h2>
+        <p>Whether you're ready now or would like to learn more first, let us know and we'll be in touch. Baptisms happen every week.</p>
+      </div>
+      <a class="btn btn--primary" href="{{ interestFormUrl }}" data-care-frame="{{ interestFormUrl }}" data-care-title="{{ interestFormTitle }}">I'm ready</a>
+    </section>
+  </div>
+
+  <!-- ===== QUESTIONS (the current page's FAQs) ===== -->
+  <div class="sermons-divider" id="questions"><h2>Questions about baptism</h2></div>
+
+  <section aria-label="Questions about baptism">
+    <div class="content-intro">
+      <p>Here are the questions we hear most. Still have one? <a href="{{ interestFormUrl }}" data-care-frame="{{ interestFormUrl }}" data-care-title="{{ interestFormTitle }}">Ask us on the interest form</a>, and we'll talk it through.</p>
+    </div>
+
+    <div class="content-faq">
+      <details>
+        <summary>Why should I be baptized? {{ chevronDown }}</summary>
+        <div>
+          <ul class="content-bullets">
+            <li>To follow the example set by Jesus (Mark 1:9).</li>
+            <li>Because Christ and the Apostles commanded it (Matthew 28:18–20; Acts 2:38).</li>
+            <li>It publicly demonstrates that I really am a follower (Acts 18:8a; 1 John 2:3).</li>
+            <li>Because every conversion account in Acts includes it (Acts 2:38–41; Acts 8:12–13a; Acts 8:35–38; Acts 9:17–18; Acts 10:47–48; Acts 16:13–15; Acts 16:30–34).</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>What is the meaning of baptism? {{ chevronDown }}</summary>
+        <div>
+          <ul class="content-bullets">
+            <li>It illustrates Christ's death and resurrection (1 Corinthians 15:3–4; Colossians 2:12).</li>
+            <li>It illustrates our new birth as a Christian (2 Corinthians 5:17; Romans 6:4).</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Why should I be baptized by immersion and not by sprinkling or pouring? {{ chevronDown }}</summary>
+        <div>
+          <ul class="content-bullets">
+            <li>Because Jesus was baptized that way (Matthew 3:16a).</li>
+            <li>Every baptism in the New Testament was by immersion (Acts 8:38–39a).</li>
+            <li>The Greek word for baptize is <i lang="grc-Latn">baptizo</i>, which means “to immerse or dip under water.”</li>
+          </ul>
+        </div>
+      </details>
+      <details>
+        <summary>Should infants be baptized? {{ chevronDown }}</summary>
+        <div>
+          <p>The Bible teaches that Christ saves. Acts 4:12 states that salvation is found “in no other” than Jesus. However, receiving Christ necessitates some response on our part. The Bible makes it clear that our response should include faith, repentance, confession, and baptism. Each is important, but none is more important than the other. These are merely the ways we express the fact that we trust Christ for salvation. They do not save us; Christ does… but each is mentioned in reference to our becoming Christians in the Scriptures.</p>
+          <p>When people accepted Christ as Savior in New Testament times they BELIEVED in Him (Acts 16:31), they REPENTED of their sins (Acts 2:38), they CONFESSED Christ as Lord (Matthew 16:16–18; Romans 10:9–10), and they were BAPTIZED (Matthew 28:19–20; Acts 2:38–41; Acts 8:36–38).</p>
+          <p>Our role as Christians is to teach people to do the same things that the Apostles taught people to do back then. It simply is not profitable or fruitful to argue about “at which point” one is saved. Instead, we encourage people who would accept Christ to “BELIEVE, REPENT, CONFESS, AND BE BAPTIZED.” We refrain from making judgments about anyone who has followed a different pattern. Judgment belongs only to God (Romans 14:4, 8–12).</p>
+        </div>
+      </details>
+      <details>
+        <summary>Can my family be baptized together? {{ chevronDown }}</summary>
+        <div>
+          <p>Yes! If each family member understands fully the meaning of baptism, and each one has personally placed his/her trust in Christ for salvation. We encourage children to meet with our pastors about baptism before they are immersed. However, it is important to remember that baptism is a personal statement of faith and obedience, not a family tradition. It is usually not wise to delay your baptism while waiting on other family members to accept Christ.</p>
+        </div>
+      </details>
+      <details>
+        <summary>What should I wear when I am baptized? {{ chevronDown }}</summary>
+        <div>
+          <p>A dark t-shirt, shorts, one-piece swimsuit or other appropriate clothing. What matters is what God does to you at baptism, not what you wear to your baptism.</p>
+        </div>
+      </details>
+      <details>
+        <summary>Will I have to say anything? {{ chevronDown }}</summary>
+        <div>
+          <p>Yes. We will ask you to confess that you believe that Jesus is the Son of God and that you have accepted Him as your Lord and Savior.</p>
+        </div>
+      </details>
+      <details>
+        <summary>What if I was baptized in another church? {{ chevronDown }}</summary>
+        <div>
+          <p>That is fine as long as you were baptized in the name of the Lord Jesus (Acts 19:5) or in the name of the Father, Son and Holy Spirit (Matthew 28:18–19).</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===== NEXT STEPS ===== -->
+  <div class="sermons-divider" id="next-steps"><h2>After you're baptized</h2></div>
+
+  <p class="content-standfirst">Baptism is a beginning. Here's where to <strong>keep growing</strong> once you're out of the water.</p>
+
+  <ul class="content-tiles content-tiles--thirds" aria-label="Next steps after baptism">
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-notebook"/></svg></span>
+      <h3>The Journey</h3>
+      <p class="content-kicker">A class</p>
+      <p>Get to know VRL: our vision, how we grow as disciples, what we believe, and how to take your next step. Just over an hour, with lunch and childcare.</p>
+      <div class="content-tile__actions">
+        <a class="btn btn--outline" href="{{ journeyUrl }}">About The Journey</a>
+      </div>
+    </li>
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-users"/></svg></span>
+      <h3>Join a Life Group</h3>
+      <p class="content-kicker">Community</p>
+      <p>Grow alongside a smaller group who'll study the Bible with you, pray for you, and walk with you through the week.</p>
+      <div class="content-tile__actions">
+        <a class="btn btn--outline" href="{{ lifeGroupsUrl }}">Find a group</a>
+      </div>
+    </li>
+    <li class="content-tile">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-heart"/></svg></span>
+      <h3>Serve at baptisms</h3>
+      <p class="content-kicker">Baptism &amp; Prayer Team</p>
+      <p>Welcome people as they come to be baptized, help them get ready, then hand them a towel, help them light a bulb on the cross, and connect them to their next step.</p>
+      <div class="content-tile__actions">
+        <a class="btn btn--outline" href="{{ volunteerUrl }}">Volunteer on this team</a>
+      </div>
+    </li>
+  </ul>
+
+  </div>
+</article>
