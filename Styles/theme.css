@@ -3686,6 +3686,10 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   display: none;
 }
 
+html.is-framed #cms-admin-footer {
+  display: none !important;
+}
+
 .sermons-livebar {
   display: flex;
   flex-wrap: wrap;

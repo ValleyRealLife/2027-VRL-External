@@ -32,31 +32,31 @@
 @use "config" as *;
 
 // ---------------------------------------------------------------------------
-// Group colours, all light (dark text on every band): mixed is the light brand
-// green, young adults a warm sand, men a soft blue and women a reddish-orange
-// coral (blue and coral are the complements, kept dusty so they sit with the
-// lime instead of fighting it, as the first pastels did). Without data-tone
-// everything falls back to neutral surfaces.
+// Group colours, all light (dark text on every band): Lime (mixed, the light
+// brand green), Sky (men, a soft blue), Coral (women, a reddish orange) and
+// Sand (young adults, a warm sand). Sky and Coral are the lime's complements,
+// kept dusty so they sit with it instead of fighting it, as the first pastels
+// did. Without data-tone everything falls back to neutral surfaces.
 // ---------------------------------------------------------------------------
-[data-tone="mixed"] {
+[data-tone="mixed"] {         // Lime
   --tone:        oklch(0.91 0.11 124);   // ≈ v-green-200
   --tone-strong: oklch(0.55 0.14 124);
   --tone-wash:   oklch(0.91 0.11 124 / 0.45);
   --on-tone:     var(--v-neutral-900);
 }
-[data-tone="men"] {
+[data-tone="men"] {           // Sky
   --tone:        oklch(0.90 0.055 240);
   --tone-strong: oklch(0.52 0.09 240);
   --tone-wash:   oklch(0.90 0.055 240 / 0.5);
   --on-tone:     var(--v-neutral-900);
 }
-[data-tone="women"] {
+[data-tone="women"] {         // Coral
   --tone:        oklch(0.88 0.08 42);
   --tone-strong: oklch(0.55 0.13 42);
   --tone-wash:   oklch(0.88 0.08 42 / 0.5);
   --on-tone:     var(--v-neutral-900);
 }
-[data-tone="young-adult"] {
+[data-tone="young-adult"] {   // Sand
   --tone:        oklch(0.90 0.055 82);
   --tone-strong: oklch(0.55 0.08 82);
   --tone-wash:   oklch(0.90 0.055 82 / 0.5);

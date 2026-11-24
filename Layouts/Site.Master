@@ -175,6 +175,10 @@
     --%>
     <script defer src="<%# ResolveRockUrl("~~/Assets/Scripts/theme.js", true) %>"></script>
 
+    <%-- Inside an iframe (one of the site's pop-ups): html.is-framed, before
+         first paint, as on Blank.aspx. Hides Rock's admin footer in the frame. --%>
+    <script>if (window.self !== window.top) document.documentElement.classList.add('is-framed');</script>
+
     <asp:ContentPlaceHolder ID="head" runat="server"></asp:ContentPlaceHolder>
 
 </head>

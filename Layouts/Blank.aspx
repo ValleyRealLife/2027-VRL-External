@@ -22,7 +22,8 @@
 
     <script defer src="<%# ResolveRockUrl("~~/Assets/Scripts/theme.js", true) %>"></script>
 
-    <%-- Inside an iframe (a pop-up): html.is-framed, before first paint --%>
+    <%-- Inside an iframe (a pop-up): html.is-framed, before first paint. Hides
+         Rock's admin footer in the frame (Styles/_rock-blocks.scss). --%>
     <script>if (window.self !== window.top) document.documentElement.classList.add('is-framed');</script>
 
     <style>

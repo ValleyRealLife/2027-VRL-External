@@ -124,3 +124,11 @@ $ok: ':where(#{$not-admin})';
 // Workflow Entry: the page title already names the form (the block sets it
 // from the workflow type), so the panel heading would only repeat it
 #{$in}.workflow-entry .panel-block > .panel-heading#{$ok} { display: none; }
+
+// ---------------------------------------------------------------------------
+// Rock's admin footer (#cms-admin-footer: the edit toolbar people with edit
+// rights see) is hidden on a page shown INSIDE one of the site's pop-ups
+// (html.is-framed, set by Site.Master and Blank.aspx), where it would sit at
+// the bottom of the pop-up. Open the page on its own to edit it.
+// ---------------------------------------------------------------------------
+html.is-framed #cms-admin-footer { display: none !important; }
