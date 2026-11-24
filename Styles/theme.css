@@ -11358,6 +11358,14 @@ html.is-framed .group-detail__band {
   color: var(--text-secondary);
 }
 
+.signup-no-home-phone .rock-phonenumber-box ~ .rock-phonenumber-box {
+  display: none;
+}
+
+.signup-no-address .address-control {
+  display: none;
+}
+
 .group-detail__form .actions {
   margin-top: var(--space-lg);
   padding-top: 0;

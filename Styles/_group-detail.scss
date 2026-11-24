@@ -218,6 +218,14 @@ html.is-framed .group-detail__band { padding-right: 4.25rem; }   // clear of the
 .group-detail__form .input-group { display: flex; width: 100%; }   // (Bootstrap's table layout would shrink the field without its add-on)
 .group-detail__form .input-group > .form-control { flex: 1 1 auto; width: 100%; border-radius: var(--radius-md); }
 .group-detail__form .checkbox label { font-size: 0.875rem; color: var(--text-secondary); }
+// Fields the block can't turn off. Its Full mode always asks for Home Phone and
+// Address as well as Mobile Phone; these classes in the block's CSS Class
+// (Block Properties) hide them. Both are optional, so a hidden one is just sent
+// blank, as if left empty. Home Phone shares Mobile's control
+// (.rock-phonenumber-box) but always comes after it (Mobile, Email, Home Phone,
+// Address), so it's the phone box that follows another.
+.signup-no-home-phone .rock-phonenumber-box ~ .rock-phonenumber-box { display: none; }
+.signup-no-address .address-control { display: none; }
 
 // The captcha, then Register across the card
 .group-detail__form .actions { margin-top: var(--space-lg); padding-top: 0; border-top: 0; }

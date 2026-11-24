@@ -13,6 +13,9 @@
       (theme.js finds it by Rock's own class, group-registration; to use a
       different block, give it the CSS Class group-signup)
       Its Lava template:      blank (this card already shows the group)
+      Its CSS Class (optional): signup-no-home-phone and/or signup-no-address
+                              hide those Full-mode fields, which the block
+                              itself can't turn off (Styles/_group-detail.scss)
 
     THE CARD
       Front   a band in the kind of group's colour (as on the finder's cards)
