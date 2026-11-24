@@ -29,8 +29,9 @@
                      with a live embed; see RenewHero.lava for a scheduled swap)
       heroActions    the button(s): one primary .btn btn--primary (the
                      theme's standard size; keep the hero to one action)
-      heroLayout     'split' (default: text left, video right) or 'stacked'
-                     (text centred, the video wide under it)
+      heroLayout     'split' (default: the kicker and title across the band,
+                     then the lead and button left, video right) or
+                     'stacked' (text centred, the video wide under it)
       heroTheme      the band's look: empty (default: ink), 'kids' (the
                      homepage VRL Kids section's green field and scribbles,
                      white text and button; KidsHero.lava) or 'students'
@@ -64,13 +65,15 @@
 <section class="video-hero video-hero--{{ heroLayout }}{% if heroTheme != '' %} video-hero--{{ heroTheme }}{% endif %} on-ink" aria-labelledby="page-hero-title">
   <div class="video-hero__glow" aria-hidden="true"></div>
   <div class="container video-hero__inner">
-    <div class="video-hero__text">
+    <div class="video-hero__head">
       {%- if heroLive == true %}
       <p class="video-hero__kicker video-hero__kicker--live"><span class="video-hero__dot" aria-hidden="true"></span>Live now</p>
       {%- elsif heroKicker != '' %}
       <p class="video-hero__kicker">{{ heroKicker }}</p>
       {%- endif %}
       <h1 id="page-hero-title">{% if heroTitleHtml != '' %}{{ heroTitleHtml }}{% else %}{{ heroTitle }}{% endif %}</h1>
+    </div>
+    <div class="video-hero__text">
       {%- if heroLead != '' %}
       <p class="video-hero__lead">{{ heroLead }}</p>
       {%- endif %}

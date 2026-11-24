@@ -50,14 +50,14 @@
     <p class="content-feature__tagline">You don't have to go through it alone.</p>
   </section>
 
-  <!-- Prayer requests: near the top; opens the care dialog straight to the prayer form -->
+  <!-- Prayer requests: near the top; opens the care dialog -->
   <section class="content-tile content-crosslink" aria-labelledby="care-prayer">
     <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-heart"/></svg></span>
     <div>
       <h2 id="care-prayer">Prayer requests</h2>
       <p>We'd be honored to pray with you and for you, whatever you're facing. Our team prays together through the week, and there's always someone to pray with you at our weekend services.</p>
     </div>
-    <a class="btn btn--primary" href="/care/prayer" data-care-frame="/care/prayer" data-care-title="Pray for me">Request prayer</a>
+    <a class="btn btn--primary" href="/ministries/care" data-care-trigger>Request prayer</a>
   </section>
 
   {%- comment -%} PLACEHOLDER: care photos. Swap each figure's <span> for <img src="…" alt="…" loading="lazy"> and drop content-photo--placeholder. {%- endcomment %}

@@ -9,9 +9,10 @@
 // out of its bottom edge into the page by --hero-overlap, across the green
 // stripe, so the page pulls you down into it. Two layouts:
 //
-//   .video-hero--split    (default) text left, video right (7fr), the video
-//                         lower than the text so it reads as stepping down
-//                         into the page
+//   .video-hero--split    (default) the kicker and title across the band's
+//                         full width (.video-hero__head), then the lead and
+//                         actions left (5fr) beside the video right (7fr),
+//                         the video stepping down into the page
 //   .video-hero--stacked  text centred, the video wide and centred under it
 //
 // Phones: both stack (text, then the video full width, still overlapping).
@@ -54,11 +55,12 @@
 .video-hero__inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-xl);
 }
 
-// Text
-.video-hero__text { display: grid; justify-items: start; align-content: center; }
+// Text: the head (kicker + title), then the lead and actions
+.video-hero__head { display: grid; justify-items: start; min-width: 0; }
+.video-hero__text { display: grid; justify-items: start; align-content: start; }
+.video-hero__text:empty { display: none; }
 .video-hero__kicker {
   margin-bottom: var(--space-sm);
   font-size: 0.75rem; font-weight: 800;
@@ -99,6 +101,7 @@
 // The video: hangs out of the band by --hero-overlap
 .video-hero__media {
   position: relative; z-index: 1;
+  margin-top: var(--space-xl);
   margin-bottom: calc(-1 * (var(--hero-overlap) + var(--hero-pad-bottom) + 5px));
   overflow: hidden;
   aspect-ratio: 16 / 9;
@@ -130,14 +133,16 @@
 @media (min-width: #{$bp-md}) {
   .video-hero--split .video-hero__inner {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: clamp(2rem, 5vw, 4.5rem);
-    align-items: end;
+    column-gap: clamp(2rem, 5vw, 4.5rem);
   }
-  .video-hero--split .video-hero__text { align-self: center; padding-bottom: var(--space-md); }
+  .video-hero--split .video-hero__head { grid-column: 1 / -1; }   // the title runs over the video's column too
+  .video-hero--split .video-hero__text { grid-column: 1; padding-top: var(--space-lg); }
+  .video-hero--split .video-hero__text .video-hero__lead:first-child { margin-top: 0; }
+  .video-hero--split .video-hero__media { grid-column: 2; margin-top: var(--space-lg); }
 
   // Stacked: the video is the band's lower half, so it hangs further
   .video-hero--stacked { --hero-overlap: clamp(7rem, 20vw, 16rem); }
-  .video-hero--stacked .video-hero__text { justify-items: center; text-align: center; }
+  .video-hero--stacked :is(.video-hero__head, .video-hero__text) { justify-items: center; text-align: center; }
   .video-hero--stacked .video-hero__lead { max-width: 40rem; }
   .video-hero--stacked .video-hero__actions { justify-content: center; }
   .video-hero--stacked .video-hero__media { justify-self: center; width: min(100%, 60rem); margin-top: var(--space-md); }

@@ -1,0 +1,24 @@
+{%- comment -%}
+  DISCOVER VRL HERO — the Discover VRL page's hero (Assets/Lava/Partials/
+  VideoHero.lava, Styles/_video-hero.scss), as the ministry pages'.
+
+  Block:                    an HTML block in the Discover VRL page's Feature zone
+  Block content:            {% include '~~/Assets/Lava/DiscoverVRLHero.lava' %}
+  Enabled Lava Commands:    none
+  Page:                     InnerDefault, PageHeaderStyle Hidden, DarkHeader
+                            checked
+
+  The title is the page's title ("Discover VRL"); the lead line under it is
+  the page's Description (Page Properties). The button jumps to What to expect
+  on this page.
+  The video: "We are VRL", Rock media element 1157 (Rock's media player, so
+  views are tracked like the messages).
+
+  The page content under it: Assets/Lava/DiscoverVRL.lava (Main zone).
+{%- endcomment -%}
+{%- assign heroKicker = 'New here?' -%}
+{%- assign heroMediaId = 1157 -%}
+{%- capture heroActions -%}
+  <a class="btn btn--primary" href="#expect">Plan your visit</a>
+{%- endcapture -%}
+{% include '~~/Assets/Lava/Partials/VideoHero.lava' %}

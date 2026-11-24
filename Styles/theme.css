@@ -9129,6 +9129,19 @@ html.stage-static .deck .nextstep-card {
   color: var(--text);
 }
 
+.content-split__text > .content-panel {
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+.content-panel > :last-child {
+  margin-bottom: 0;
+}
+
+.content-split__text > .content-times + * {
+  margin-top: var(--space-lg);
+}
+
 .content-split__media .content-photo {
   aspect-ratio: 4/3;
 }
@@ -9464,6 +9477,8 @@ html.stage-static .deck .nextstep-card {
 }
 
 .content-promo {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   max-width: 46rem;
   margin-inline: auto;
@@ -9480,10 +9495,24 @@ html.stage-static .deck .nextstep-card {
   box-shadow: var(--shadow-md), var(--shadow-card);
 }
 
+.content-promo::before {
+  content: "";
+  position: absolute;
+  inset: -2rem;
+  z-index: -1;
+  background: var(--promo-bg, none) center/cover no-repeat;
+  filter: blur(28px) saturate(1.4);
+}
+
 .content-promo__image {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.content-promo__image.content-photo--placeholder {
+  display: grid;
+  aspect-ratio: 16/9;
 }
 
 .content-promo__title {
@@ -9502,7 +9531,10 @@ html.stage-static .deck .nextstep-card {
   justify-content: space-between;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  border-top: 1px solid var(--border-subtle);
+  background: oklch(from var(--bg-elevated) l c h/0.7);
+  border-top: 1px solid oklch(100% 0 0deg / 0.5);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
 }
 
 .content-promo__when {
@@ -9959,13 +9991,22 @@ html.stage-static .deck .nextstep-card {
 .video-hero__inner {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-xl);
+}
+
+.video-hero__head {
+  display: grid;
+  justify-items: start;
+  min-width: 0;
 }
 
 .video-hero__text {
   display: grid;
   justify-items: start;
-  align-content: center;
+  align-content: start;
+}
+
+.video-hero__text:empty {
+  display: none;
 }
 
 .video-hero__kicker {
@@ -10035,6 +10076,7 @@ html.stage-static .deck .nextstep-card {
 .video-hero__media {
   position: relative;
   z-index: 1;
+  margin-top: var(--space-xl);
   margin-bottom: calc(-1 * (var(--hero-overlap) + var(--hero-pad-bottom) + 5px));
   overflow: hidden;
   aspect-ratio: 16/9;
@@ -10080,17 +10122,26 @@ html.stage-static .deck .nextstep-card {
 @media (min-width: 900px) {
   .video-hero--split .video-hero__inner {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: clamp(2rem, 5vw, 4.5rem);
-    align-items: end;
+    column-gap: clamp(2rem, 5vw, 4.5rem);
+  }
+  .video-hero--split .video-hero__head {
+    grid-column: 1/-1;
   }
   .video-hero--split .video-hero__text {
-    align-self: center;
-    padding-bottom: var(--space-md);
+    grid-column: 1;
+    padding-top: var(--space-lg);
+  }
+  .video-hero--split .video-hero__text .video-hero__lead:first-child {
+    margin-top: 0;
+  }
+  .video-hero--split .video-hero__media {
+    grid-column: 2;
+    margin-top: var(--space-lg);
   }
   .video-hero--stacked {
     --hero-overlap: clamp(7rem, 20vw, 16rem);
   }
-  .video-hero--stacked .video-hero__text {
+  .video-hero--stacked :is(.video-hero__head, .video-hero__text) {
     justify-items: center;
     text-align: center;
   }

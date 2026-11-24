@@ -1,8 +1,9 @@
 {% comment %}
     EVENT PROMO — one event as a card (.content-promo, Styles/_content.scss):
-    its photo (a logo or title graphic, never cropped) over a bar with its
-    next date and a button, the whole card linking to /events/{id}. Used for
-    Rooted on Life Groups and MSM/HSM on Students.
+    its photo (a logo or title graphic, never cropped) over a frosted bar (a
+    blurred copy of the photo behind it) with its next date and a button, the
+    whole card linking to /events/{id}. Used for Rooted on Life Groups,
+    MSM/HSM on Students and First Step Lunch on Discover VRL.
 
     Needs RockEntity on the calling block. Set, then include:
 
@@ -30,7 +31,7 @@
     {%- assign promoMinutesAway = 'Now' | DateDiff:eventitemoccurrence.NextStartDateTime,'m' -%}
     {%- if promoMinutesAway >= -30 -%}
     {%- if promoButtonText == '' %}{% assign promoButtonText = 'Sign up for ' | Append:promoEvent.Name %}{% endif -%}
-  <div class="content-promo" data-card>
+  <div class="content-promo" data-card{% if promoEvent.Photo.Guid %} style="--promo-bg: url('/GetImage.ashx?guid={{ promoEvent.Photo.Guid }}&amp;w=400')"{% endif %}>
     {%- if promoEvent.Photo.Guid %}
     <img class="content-promo__image" src="/GetImage.ashx?guid={{ promoEvent.Photo.Guid }}&amp;w=1400" alt="{{ promoEvent.Name | Escape }}" loading="lazy">
     {%- else %}

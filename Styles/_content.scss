@@ -811,6 +811,11 @@
 .content-split { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); align-items: center; }
 .content-split__text { display: grid; justify-items: start; align-content: center; }
 .content-split__text h2 { margin-bottom: var(--space-md); font-size: clamp(1.75rem, 4vw, 2.75rem); text-transform: uppercase; color: var(--text); }
+// A panel (a highlighted note) in a split: the column's width, set off from
+// the text above; and room above a button after a row of times
+.content-split__text > .content-panel { width: 100%; margin-top: var(--space-sm); }
+.content-panel > :last-child { margin-bottom: 0; }
+.content-split__text > .content-times + * { margin-top: var(--space-lg); }
 .content-split__media .content-photo { aspect-ratio: 4 / 3; }
 .content-split__tagline { margin-top: var(--space-md); font-weight: 700; color: var(--brand-text); }
 @media (min-width: #{$bp-md}) {
@@ -957,11 +962,15 @@
 .content-visit { display: grid; justify-items: start; gap: var(--space-xs); padding-top: var(--space-lg); border-top: 1px solid var(--border-subtle); }
 .content-visit > * { margin: 0; }
 
-// Promo: one featured thing (an event: Rooted on Life Groups) as a card.
-// Its image keeps its own shape (a logo or title graphic, never cropped),
-// over a bar with the next date and the sign-up button. The whole card
-// follows the button's link ([data-card], theme.js).
+// Promo: one featured thing (an event: Rooted on Life Groups, MSM and HSM on
+// Students, First Step Lunch on Discover VRL) as a card. Its image keeps its
+// own shape (a logo or title graphic, never cropped, never covered); under
+// it, the bar with the next date and the sign-up button is frosted glass over
+// a blurred copy of the same image (--promo-bg, set on the card by
+// Partials/EventPromo.lava), as if the photo carried on behind it. The whole
+// card follows the button's link ([data-card], theme.js).
 .content-promo {
+  position: relative; isolation: isolate;
   width: 100%; max-width: 46rem;
   margin-inline: auto;
   overflow: hidden;
@@ -972,13 +981,22 @@
   transition: box-shadow var(--duration) var(--ease-out), transform var(--duration) var(--ease-out);
 }
 .content-promo:hover { transform: translateY(-2px); box-shadow: var(--shadow-md), var(--shadow-card); }
+.content-promo::before {   // the blurred photo behind the bar
+  content: ""; position: absolute; inset: -2rem; z-index: -1;
+  background: var(--promo-bg, none) center / cover no-repeat;
+  filter: blur(28px) saturate(1.4);
+}
 .content-promo__image { display: block; width: 100%; height: auto; }
+.content-promo__image.content-photo--placeholder { display: grid; aspect-ratio: 16 / 9; }   // a stand-in until the event has a photo
 .content-promo__title { padding: var(--space-xl) var(--space-lg); font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; text-align: center; text-transform: uppercase; color: var(--text); }
 .content-promo__bar {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
   gap: var(--space-md);
   padding: var(--space-md) var(--space-lg);
-  border-top: 1px solid var(--border-subtle);
+  background: oklch(from var(--bg-elevated) l c h / 0.7);
+  border-top: 1px solid oklch(1 0 0 / 0.5);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
 }
 .content-promo__when { margin: 0; }
 .content-promo__when dt { font-size: 0.75rem; font-weight: 800; letter-spacing: var(--tracking-widest); text-transform: uppercase; color: var(--text-muted); }

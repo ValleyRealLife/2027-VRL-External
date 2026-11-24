@@ -1,0 +1,271 @@
+{% comment %}
+    DISCOVER VRL — the page for first-time guests (route `discover-vrl`,
+    InnerDefault, PageHeaderStyle Hidden: the hero is the page head). The
+    header's "Discover VRL" button comes here.
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/DiscoverVRL.lava' %}
+    Enabled Lava Commands:    RockEntity  (the First Step Lunch event)
+
+    Laid out like the ministry pages (Kids, Life Groups, Care): the hero is
+    Assets/Lava/DiscoverVRLHero.lava in the Feature zone (the "We are VRL"
+    video). Content from the page owner, shortened for the web; see
+    Resources/PageContent/DiscoverVRL-notes.md for what changed and what's new.
+
+    Sections:
+      Intro            a centred welcome, a tagline
+      Subnav           a sticky in-page nav (.content-subnav) to the sections
+                       below; add a link for any new big section
+      Photos           a bento grid (PLACEHOLDER photos)
+      What to expect   a Sunday at VRL (photo beside text)
+      Questions        the FAQ (wear, parking, arrival, kids, students,
+                       prayer and pastors) beside a photo
+      When you arrive  Connecting Point (with a map of the lobby) and the
+                       Café (first drink on us)
+      First Step Lunch the event's card beside text: when, lunch, childcare
+                       (FIRST STEP LUNCH below)
+      Directions       the campus card (map, address, service times) beside
+                       "Can't make it?", as on the Location page
+
+    Prayer: "share a prayer request" opens the care dialog (data-care-
+    trigger, theme.js "Care dialog"; Assets/Lava/UtilityBar.lava).
+    LINKS (below): an empty one leaves its link out and the sentence reads
+    without it, so nothing on the page is broken while a form is missing.
+    Styles: Styles/_content.scss (content-feature, content-verse,
+    content-subnav, content-bento, content-standfirst, content-split,
+    content-columns, content-faq, content-panel, content-times, content-promo,
+    content-place, content-aside, row-link).
+    ROCK: the address and times are hardcoded here, on the Location page and
+    in the footer/nav; pull them from the campus and its schedules when those
+    are set up.
+{% endcomment %}
+
+{%- comment -%} ===== LINKS ===== {%- endcomment -%}
+{%- assign preRegisterUrl = 'https://www.vrl.church/familypreregistration' -%}{%- comment -%} as Kids.lava: the current site's form until the new site has one {%- endcomment -%}
+{%- assign kidsUrl = '/ministries/kids' -%}
+{%- assign studentsUrl = '/ministries/students' -%}
+{%- assign pastorFormUrl = '' -%}{%- comment -%} a "meet with a pastor" form, if one is ever made (there's no general contact form): until then, Connecting Point {%- endcomment -%}
+{%- assign newGuestFormUrl = '' -%}{%- comment -%} PLACEHOLDER: the New Guest Form (first drink on us) {%- endcomment -%}
+{%- assign cafeHoursUrl = '' -%}{%- comment -%} PLACEHOLDER: the Café's weekday schedule {%- endcomment -%}
+{%- assign mapsQuery = '1831+S+Barker+Rd,+Spokane+Valley,+WA+99016' -%}
+
+{%- comment -%} ===== FIRST STEP LUNCH =====
+  The event card (Partials/EventPromo.lava, as MSM and HSM on Students and
+  Rooted on Life Groups): the event's photo over a frosted bar with its next
+  date and Save your seat, the whole card linking to /events/{id}. It shows
+  while the event is scheduled: active, approved, and a next date no more
+  than 30 minutes past.
+  PLACEHOLDER: the event isn't in Rock yet. Until firstStepOccurrenceId is set
+  (or while it isn't scheduled) a stand-in card in the same style says
+  "First Sundays" and its button goes to firstStepFallbackUrl, the events list.
+{%- endcomment -%}
+{%- assign firstStepOccurrenceId = 0 -%}
+{%- assign firstStepFallbackUrl = '/next-steps/events' -%}
+
+{%- assign promoOccurrenceId = firstStepOccurrenceId -%}
+{%- assign promoButtonText = 'Save your seat' -%}
+{%- capture firstStepCard %}{% include '~~/Assets/Lava/Partials/EventPromo.lava' %}{% endcapture -%}
+{%- assign firstStepCard = firstStepCard | Trim -%}
+
+{%- assign chevron = '<svg width="18" height="18" aria-hidden="true"><use href="#i-chevron-right"/></svg>' -%}
+{%- assign chevronDown = '<svg width="18" height="18" aria-hidden="true"><use href="#i-chevron-down"/></svg>' -%}
+
+<article class="content-page discover-page" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Discover VRL">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  <!-- Welcome: a centred feature (as the ministry pages' verse + welcome) -->
+  <section class="content-feature" aria-label="Welcome to Valley Real Life">
+    <div class="content-verse content-verse--feature">
+      <p>We're so glad you're thinking about visiting.</p>
+    </div>
+    <p>Whether it's been a while since you've been to church or you've never been at all, we want you to feel right at home. Valley Real Life is made up of all kinds of people from every stage of life, and there's a place for you here, wherever you're coming from.</p>
+    <p>There's no pressure and nothing you need to know ahead of time. We'd simply love to meet you.</p>
+    <p class="content-feature__tagline">Come as you are.</p>
+  </section>
+
+  <!-- In-page nav: sticks under the header; underlines the section being read -->
+  <nav class="content-subnav" aria-label="On this page" data-toc="scope">
+    <ol class="content-subnav__list">
+      <li><a class="content-subnav__link" href="#expect">What to expect</a></li>
+      <li><a class="content-subnav__link" href="#questions">Questions</a></li>
+      <li><a class="content-subnav__link" href="#arrive">When you arrive</a></li>
+      <li><a class="content-subnav__link" href="#first-step">First Step Lunch</a></li>
+      <li><a class="content-subnav__link" href="#directions">Directions</a></li>
+    </ol>
+  </nav>
+
+  {%- comment -%} PLACEHOLDER: photos of a Sunday at VRL. Swap each figure's <span> for <img src="…" alt="…" loading="lazy"> and drop content-photo--placeholder. {%- endcomment %}
+  <div class="content-bento">
+    <figure class="content-photo content-photo--placeholder"><span>Photo: worship, wide</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: greeters at the doors</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: the Café</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: kids check-in</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: friends in the lobby</span></figure>
+    <figure class="content-photo content-photo--placeholder"><span>Photo: the message</span></figure>
+  </div>
+
+  <!-- ===== WHAT TO EXPECT ===== -->
+  <div class="sermons-divider" id="expect"><h2>What to expect</h2></div>
+
+  <p class="content-standfirst">Services last about <strong>65 minutes</strong>, and there's nothing you need to know ahead of time.</p>
+
+  <section class="content-split" aria-labelledby="dv-service">
+    <div class="content-split__text">
+      <p class="content-kicker">A Sunday at VRL</p>
+      <h2 id="dv-service">Not your traditional church service</h2>
+      <p>The music is upbeat and contemporary, and you may even recognize a song or two. Sometimes we're loud, and we guarantee you won't fall asleep.</p>
+      <p>Come early and grab a drink at the Café on your way in. Drinks are welcome in the auditorium, so bring yours along and settle in for worship.</p>
+    </div>
+    <div class="content-split__media">
+      {%- comment -%} PLACEHOLDER: a photo of a service {%- endcomment %}
+      <figure class="content-photo content-photo--placeholder"><span>Photo: a Sunday service</span></figure>
+    </div>
+  </section>
+
+  <!-- ===== QUESTIONS ===== -->
+  <div class="sermons-divider" id="questions"><h2>Questions</h2></div>
+
+  <div class="content-columns">
+    <div class="content-faq">
+      <details>
+        <summary>What should I wear? {{ chevronDown }}</summary>
+        <div><p>Whatever you're comfortable in. We're pretty casual around here.</p></div>
+      </details>
+      <details>
+        <summary>Where should I park? {{ chevronDown }}</summary>
+        <div><p>We have First Time Guest parking right outside the doors at our southeast entrance, near the fountain.</p></div>
+      </details>
+      <details>
+        <summary>What time should I arrive? {{ chevronDown }}</summary>
+        <div><p>About 15 minutes early. That gives you time to check in your kids, grab a coffee and find a seat before the service starts, without feeling rushed. We'd love to say hi in the lobby.</p></div>
+      </details>
+      <details>
+        <summary>What about my kids? {{ chevronDown }}</summary>
+        <div>
+          <p>VRL Kids is for birth through 5th grade, during every service. Our fully screened volunteers serve at the same service each week, so your kids make friends and learn about Jesus in the most fun way possible, and you can enjoy the service worry-free.</p>
+          <p>To speed up check-in, pre-register your family, then stop by the New Family kiosk to print your child's label.</p>
+          <p class="content-contact"><a class="btn btn--primary" href="{{ preRegisterUrl }}">Pre-register your kids</a> <a class="btn btn--outline" href="{{ kidsUrl }}">Explore VRL Kids</a></p>
+        </div>
+      </details>
+      <details>
+        <summary>What about my middle or high schooler? {{ chevronDown }}</summary>
+        <div>
+          <p>Students are welcome in any service with your family. They also have nights just for them, middle school and high school, with worship, teaching and small groups: a fun, safe place to bring friends and learn about Jesus.</p>
+          <p class="content-contact"><a class="btn btn--outline" href="{{ studentsUrl }}">Explore VRL Students</a></p>
+        </div>
+      </details>
+      <details>
+        <summary>Can someone pray with me, or can I meet with a pastor? {{ chevronDown }}</summary>
+        <div>
+          <p>Our prayer team is at both sides of the stage after every service, and they'd love to pray with you. You can also <a href="/ministries/care" data-care-trigger>share a prayer request</a>, and our prayer team will pray for you during the week.</p>
+          <p>To meet with a pastor, {% if pastorFormUrl != '' %}<a href="{{ pastorFormUrl }}">fill out this form</a> or {% endif %}stop by Connecting Point before or after the service.</p>
+        </div>
+      </details>
+    </div>
+    {%- comment -%} PLACEHOLDER: a photo of guests being welcomed {%- endcomment %}
+    <figure class="content-photo content-photo--placeholder"><span>Photo: a warm welcome at the doors</span></figure>
+  </div>
+
+  <!-- ===== WHEN YOU ARRIVE ===== -->
+  <div class="sermons-divider" id="arrive"><h2>When you arrive</h2></div>
+
+  <p class="content-standfirst">Two stops in the lobby make your first Sunday easy: <strong>Connecting Point</strong> and <strong>the Café</strong>.</p>
+
+  <section class="content-split" aria-labelledby="dv-connecting">
+    <div class="content-split__text">
+      <p class="content-kicker">Questions? Start here</p>
+      <h2 id="dv-connecting">Connecting Point</h2>
+      <p>Still have questions when you arrive? Stop by Connecting Point in the lobby. You'll find a friendly person to answer them and help you find your next step.</p>
+    </div>
+    <div class="content-split__media">
+      {%- comment -%} PLACEHOLDER: a map of the lobby showing where Connecting Point is {%- endcomment %}
+      <figure class="content-photo content-photo--placeholder"><span>Map: where to find Connecting Point</span></figure>
+    </div>
+  </section>
+
+  <section class="content-split content-split--reverse" aria-labelledby="dv-cafe">
+    <div class="content-split__text">
+      <p class="content-kicker">Coffee before the service</p>
+      <h2 id="dv-cafe">The Café</h2>
+      <p>Grab a fresh coffee, your favorite drink or a treat on your way in, and bring it into the service with you.</p>
+      <p>During the week the Café is a relaxed spot to meet up with friends, catch up on work or hold a casual meeting.{% if cafeHoursUrl != '' %} <a href="{{ cafeHoursUrl }}">See the Café's hours</a>.{% endif %}</p>
+      <div class="content-panel">
+        <p><strong>New here? Your first drink is on us.</strong> {% if newGuestFormUrl != '' %}Fill out our New Guest Form{% else %}Let us know it's your first time{% endif %}, then stop by the Café for a drink of your choice, our treat.</p>
+        {%- if newGuestFormUrl != '' %}
+        <p><a class="btn btn--primary" href="{{ newGuestFormUrl }}">Fill out the New Guest Form</a></p>
+        {%- endif %}
+      </div>
+    </div>
+    <div class="content-split__media">
+      {%- comment -%} PLACEHOLDER: a photo of the Café {%- endcomment %}
+      <figure class="content-photo content-photo--placeholder"><span>Photo: the Café counter</span></figure>
+    </div>
+  </section>
+
+  <!-- ===== FIRST STEP LUNCH ===== -->
+  <div class="sermons-divider" id="first-step"><h2>First Step Lunch</h2></div>
+
+  <p class="content-standfirst">The easiest way to <strong>get to know VRL</strong>, over lunch.</p>
+
+  <section class="content-split" aria-labelledby="dv-lunch">
+    <div class="content-split__text">
+      <p class="content-kicker">For newcomers</p>
+      <h2 id="dv-lunch">Lunch is on us</h2>
+      <p>Grab a plate, meet some new friends, and hear from our team about what we believe, what we're passionate about, how VRL is led and where we believe God is leading our church. By the end, you'll know where you can plug in and what your next step might be.</p>
+      <dl class="content-times">
+        <div><dt>First Sundays</dt><dd>12:30pm, about an hour</dd></div>
+        <div><dt>Bring the kids</dt><dd>Childcare provided</dd></div>
+      </dl>
+    </div>
+    <div class="content-split__media">
+      {%- if firstStepCard != '' %}
+      {{ firstStepCard }}
+      {%- else %}
+      {%- comment -%} PLACEHOLDER: until the event is in Rock, the card's look with a stand-in photo {%- endcomment %}
+      <div class="content-promo" data-card style="--promo-bg: linear-gradient(135deg, var(--v-green-300), var(--v-green-50))">
+        <div class="content-promo__image content-photo--placeholder"><span>Photo: First Step Lunch</span></div>
+        <div class="content-promo__bar">
+          <dl class="content-promo__when"><dt>Next</dt><dd>First Sunday of the month</dd></dl>
+          <a class="btn btn--primary" href="{{ firstStepFallbackUrl }}" data-card-link>Save your seat</a>
+        </div>
+      </div>
+      {%- endif %}
+    </div>
+  </section>
+
+  <!-- ===== DIRECTIONS (as the Location page) ===== -->
+  <div class="sermons-divider" id="directions"><h2>Directions</h2></div>
+
+  <div class="content-columns">
+
+    <section class="content-place" aria-labelledby="dv-barker">
+      <iframe class="content-place__map" src="https://www.google.com/maps?q=Valley+Real+Life,+{{ mapsQuery }}&amp;z=14&amp;output=embed" title="Map to Valley Real Life, 1831 S. Barker Rd, Spokane Valley" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+      <div class="content-place__body">
+        <p class="content-kicker">Join us this week</p>
+        <h2 id="dv-barker">Valley Real Life</h2>
+        <address class="content-place__address">1831 S. Barker Rd, Spokane Valley, WA 99016</address>
+        <p>First time? Park in First Time Guest parking at the southeast entrance, near the fountain.</p>
+        <dl class="content-times">
+          <div><dt>Thursday</dt><dd>6:30pm</dd></div>
+          <div><dt>Sunday</dt><dd>8:00, 9:30, 11:00am &amp; 12:30pm</dd></div>
+        </dl>
+        <div class="content-place__actions">
+          <a class="btn btn--primary" href="https://maps.google.com/?q={{ mapsQuery }}" target="_blank" rel="noopener">Get directions</a>
+        </div>
+      </div>
+    </section>
+
+    <aside class="content-aside" aria-labelledby="dv-online">
+      <h2 id="dv-online">Can't make it?</h2>
+      <p>Sunday services stream live at 8:00, 9:30 and 11:00am, and every message is online afterward.</p>
+      <nav class="content-aside__links" aria-label="Watch online">
+        <a class="row-link" href="/watch/live"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-play"/></svg></span><span class="row-link__label">Watch live</span><span class="row-link__chev">{{ chevron }}</span></a>
+        <a class="row-link" href="/watch/previous-messages"><span class="row-link__icon"><svg width="20" height="20" aria-hidden="true"><use href="#i-microphone"/></svg></span><span class="row-link__label">Previous messages</span><span class="row-link__chev">{{ chevron }}</span></a>
+      </nav>
+    </aside>
+
+  </div>
+
+  </div>
+</article>
