@@ -60,7 +60,7 @@
           <span class="btn btn--outline btn--sm">Learn more</span>
         </div>
       </a>
-      <a class="nextstep-card" href="/life-groups">
+      <a class="nextstep-card" href="/next-steps/find-a-group">
         <img src="https://picsum.photos/seed/vrl-step-groups/600/801" alt="" />
         <div class="nextstep-card__scrim" aria-hidden="true"></div>
         <div class="nextstep-card__body">

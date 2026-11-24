@@ -67,6 +67,6 @@ Each piece is marked:
 
 ## Still to do
 
-- **The group finder.** The three Join a group buttons go to a group finder page that hasn't been built on the new site yet. Until it is, those buttons lead to a "page not found". Each button opens the finder already filtered to on-site, drop-in or off-site groups, so groups will need a way to be marked that way in Rock.
+- **The group finder.** The three Join a group buttons go to the group finder (new.vrl.church/next-steps/find-a-group/search), which is being built. Each button opens the finder already filtered to on-site, drop-in or off-site groups, so groups will need a way to be marked that way in Rock.
 - **Photos and video.** Real photos for the six placeholders, and a video for the top of the page.
 - **Page Description.** Set the line under the title in Page Properties.

@@ -1,0 +1,366 @@
+{% comment %}
+    LIFE GROUP SEARCH — the group finder (route `next-steps/find-a-group/search`,
+    InnerDefault). Its start page is /next-steps/find-a-group (FindGroup.lava);
+    each card opens the group's page (LifeGroupDetails.lava).
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/LifeGroupSearch.lava' %}
+    Enabled Lava Commands:    RockEntity  (the groups, the campuses)
+
+    Built instead of Rock's Group Finder block (Rock 18.8): that block posts
+    the page back for every search and reads nothing from the address, so a
+    quiz can't hand it answers. There are about 50 public Life Groups, so this
+    renders them all as cards and the browser filters them instantly
+    (theme.js "Group finder"; Styles/_group-finder.scss). Without JavaScript
+    every group simply shows.
+
+    HOW IT WORKS
+      A short quiz, one question per screen, each answer showing how many
+      groups it leaves (answers that would leave none are disabled, so there's
+      always a group to show). "Skip to all groups" is always there. The
+      answers go in the address, so results can be shared, and a link that
+      already carries answers (the Life Groups page's buttons, the start page's
+      drop-in tile) skips the quiz. ?all shows every group.
+
+      On the results, a filter bar stays under the header as you scroll: one
+      button per question showing its answer. A button opens that question's
+      answers in a panel that grows the bar (it pushes the cards down rather
+      than covering them, phones included); changes apply at once. Clear all
+      keeps the results with no filters; Start over reopens the quiz.
+
+      Question                      Card data (from Rock)            Address
+      What kind of group?           GroupComp (Mixed, Men, Women,     who=men
+                                    Young Adult; multi-select)
+      Which days work?              DaysOfWeek (multi-select; the     days=monday,tuesday
+                                    schedule's text if it's empty)
+      Follow the weekend message?   Topic is "Sermon Series" or not   content=sermon | other
+      Need childcare?               HasChildcare Yes or Ask for       childcare=yes
+                                    Details (an "it depends" counts)
+      Meet at VRL?                  the group's location is the       where=campus | offsite
+                                    Barker campus (the campus's
+                                    location or a room in it, or an
+                                    address of 1831 S Barker)
+      (off campus) Where?           the location's city               area=liberty-lake
+      (not asked; from links)       IsDropInGroup                     dropin=yes
+
+      If an address's answers match no group, the finder leaves answers out,
+      least important first (area, days, content, place, childcare, drop in,
+      who), until groups show, and says which it left out.
+
+    CARDS: a band across the top with the day(s) and the kind of group, in
+    that kind's colour (colorByGroupType below; Styles/_group-finder.scss
+    "Group colours": mixed green, men blue, women rose, young adults violet;
+    a group that's both takes the more specific: young adults, then men or
+    women). A drop-in group gets a "Drop in" sticker; childcare (Yes, or Ask
+    for Details: "?") is an icon at the bottom right.
+
+    A card opens the group's page (LifeGroupDetails.lava) in a pop-up over the
+    results (theme.js "Group pop-up"; the address gets ?group=ID so it can be
+    shared). If the group's AlternateSignup attribute holds an address, the
+    card goes straight there instead ("Sign up"; a new tab when it's off-site).
+
+    PRIVACY: a home group shows its town, never its street. Coordinates (for
+    "Closest to me") are rounded to two decimals, about 1 km, for EVERY group,
+    so no home address can be read from the page. The visitor's own location
+    stays in their browser.
+
+    SETTINGS below: the group type, whether full groups show (marked "Full"),
+    the group page's address, colours by kind of group.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign groupTypeId = 25 -%}
+{%- assign showFullGroups = false -%}{%- comment -%} true: full groups show, marked Full {%- endcomment -%}
+{%- assign groupDetailUrl = '/next-steps/find-a-group/details' -%}
+{%- assign colorByGroupType = true -%}{%- comment -%} false: every band is neutral grey (keep LifeGroupDetails.lava's the same) {%- endcomment -%}
+
+{%- assign dayNames = 'sunday,monday,tuesday,wednesday,thursday,friday,saturday' | Split:',' -%}
+{%- assign clockIcon = '<svg width="16" height="16" aria-hidden="true"><use href="#i-clock"/></svg>' -%}
+{%- assign pinIcon = '<svg width="16" height="16" aria-hidden="true"><use href="#i-map-pin"/></svg>' -%}
+{%- assign childcareIcon = '<svg width="20" height="20" aria-hidden="true"><use href="#i-kid"/></svg>' -%}
+{%- assign compLabels = 'mixed:Mixed|men:Men’s|women:Women’s|young-adult:Young adults' | Split:'|' -%}
+
+{%- comment -%} Campus locations: a group there (or in a room inside one) meets at VRL {%- endcomment -%}
+{%- assign campusLocationIds = ',' -%}
+{%- campus where:'IsActive == true' securityenabled:'false' -%}
+  {%- for campusItem in campusItems -%}
+    {%- if campusItem.LocationId %}{% assign campusLocationIds = campusLocationIds | Append:campusItem.LocationId | Append:',' %}{% endif -%}
+  {%- endfor -%}
+{%- endcampus -%}
+
+{%- assign cardsHtml = '' -%}
+{%- assign cardCount = 0 -%}
+{%- group where:'GroupTypeId == {{ groupTypeId }} && IsActive == true && IsPublic == true && IsArchived == false' sort:'Name' limit:'500' securityenabled:'false' -%}
+{%- for group in groupItems -%}
+
+  {%- comment -%} Full: capacity set and reached {%- endcomment -%}
+  {%- assign isFull = false -%}
+  {%- assign capacity = group.GroupCapacity | Default:0 | AsInteger -%}
+  {%- if capacity > 0 -%}
+    {%- assign activeMembers = 0 -%}
+    {%- for member in group.Members -%}
+      {%- capture memberStatus %}{{ member.GroupMemberStatus }}{% endcapture -%}
+      {%- if memberStatus == 'Active' %}{% assign activeMembers = activeMembers | Plus:1 %}{% endif -%}
+    {%- endfor -%}
+    {%- if activeMembers >= capacity %}{% assign isFull = true %}{% endif -%}
+  {%- endif -%}
+  {%- if isFull and showFullGroups == false %}{% continue %}{% endif -%}
+
+  {%- comment -%} Who: GroupComp's values as keys (mixed, men, women, young-adult) {%- endcomment -%}
+  {%- assign compText = group | Attribute:'GroupComp' | Trim -%}
+  {%- assign compList = compText | Split:',' -%}
+  {%- assign compKeys = '' -%}
+  {%- assign kindText = '' -%}
+  {%- for compItem in compList -%}
+    {%- assign compName = compItem | Trim -%}
+    {%- if compName != '' -%}
+      {%- assign compKey = compName | Downcase | Replace:' ','-' -%}
+      {%- assign compKeys = compKeys | Append:' ' | Append:compKey -%}
+      {%- assign compLabel = compName -%}
+      {%- for pair in compLabels -%}
+        {%- assign pairKey = pair | Split:':' | First -%}
+        {%- if pairKey == compKey %}{% assign compLabel = pair | Split:':' | Last %}{% endif -%}
+      {%- endfor -%}
+      {%- if kindText != '' %}{% assign kindText = kindText | Append:' · ' %}{% endif -%}
+      {%- assign kindText = kindText | Append:compLabel -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- comment -%} Colour: the most specific kind (young adults, then men or women, then mixed) {%- endcomment -%}
+  {%- assign compPadded = compKeys | Append:' ' -%}
+  {%- assign toneKey = '' -%}
+  {%- if compPadded contains ' young-adult ' %}{% assign toneKey = 'young-adult' %}{% elsif compPadded contains ' men ' %}{% assign toneKey = 'men' %}{% elsif compPadded contains ' women ' %}{% assign toneKey = 'women' %}{% elsif compPadded contains ' mixed ' %}{% assign toneKey = 'mixed' %}{% endif -%}
+  {%- if colorByGroupType == false %}{% assign toneKey = '' %}{% endif -%}
+
+  {%- comment -%} Sign up somewhere else: AlternateSignup (an address) replaces the group page {%- endcomment -%}
+  {%- assign altSignup = group | Attribute:'AlternateSignup','RawValue' | Trim -%}
+  {%- assign altExternal = false -%}
+  {%- if altSignup != '' -%}
+    {%- assign altStart = altSignup | Slice:0,4 | Downcase -%}
+    {%- if altStart == 'http' %}{% unless altSignup contains 'vrl.church' %}{% assign altExternal = true %}{% endunless %}{% endif -%}
+  {%- endif -%}
+
+  {%- comment -%} Days: DaysOfWeek, or the schedule's text when it's empty {%- endcomment -%}
+  {%- assign schedText = group.Schedule.FriendlyScheduleText | Default:'' | Trim -%}
+  {%- assign daysText = group | Attribute:'DaysOfWeek' | Downcase -%}
+  {%- if daysText == '' %}{% assign daysText = schedText | Downcase %}{% endif -%}
+  {%- assign dayKeys = '' -%}
+  {%- assign dayShort = '' -%}
+  {%- for dayName in dayNames -%}
+    {%- if daysText contains dayName -%}
+      {%- assign dayKeys = dayKeys | Append:' ' | Append:dayName -%}
+      {%- assign dayAbbr = dayName | Slice:0,3 | Capitalize -%}
+      {%- if dayShort != '' %}{% assign dayShort = dayShort | Append:' · ' %}{% endif -%}
+      {%- assign dayShort = dayShort | Append:dayAbbr -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- comment -%} The schedule line: "Mondays at 6:30 PM" ("Weekly: " dropped); a multi-date list reads as "See the group for times" {%- endcomment -%}
+  {%- if schedText contains '<' %}{% assign schedText = 'See the group for times' %}{% endif -%}
+  {%- assign schedText = schedText | Replace:'Weekly: ','' -%}
+  {%- capture startTime %}{{ group.Schedule.StartTimeOfDay }}{% endcapture -%}
+  {%- assign startTime = startTime | Trim | Slice:0,5 -%}
+
+  {%- comment -%} Content, childcare, drop in {%- endcomment -%}
+  {%- assign topicText = group | Attribute:'Topic' | Downcase -%}
+  {%- assign contentKey = 'other' -%}
+  {%- if topicText contains 'sermon series' %}{% assign contentKey = 'sermon' %}{% endif -%}
+  {%- assign childcareText = group | Attribute:'HasChildcare' | Downcase | Trim -%}
+  {%- assign childcareKey = '' -%}
+  {%- assign childcareLabel = '' -%}
+  {%- if childcareText == 'yes' -%}
+    {%- assign childcareKey = 'yes' -%}{%- assign childcareLabel = 'Childcare available' -%}
+  {%- elsif childcareText contains 'ask' -%}
+    {%- assign childcareKey = 'yes' -%}{%- assign childcareLabel = 'Ask about childcare' -%}
+  {%- endif -%}
+  {%- assign dropInText = group | Attribute:'IsDropInGroup' | Downcase | Trim -%}
+  {%- assign dropInKey = '' -%}
+  {%- if dropInText == 'yes' or dropInText == 'true' %}{% assign dropInKey = 'yes' %}{% endif -%}
+
+  {%- comment -%} Place: at VRL, or the town; coordinates rounded (about 1 km) {%- endcomment -%}
+  {%- assign groupLocation = null -%}
+  {%- for gl in group.GroupLocations -%}
+    {%- if gl.Location %}{% assign groupLocation = gl.Location %}{% break %}{% endif -%}
+  {%- endfor -%}
+  {%- assign onCampus = false -%}
+  {%- assign areaName = '' -%}
+  {%- assign areaKey = '' -%}
+  {%- assign lat = '' -%}
+  {%- assign lng = '' -%}
+  {%- if groupLocation -%}
+    {%- assign street = groupLocation.Street1 | Default:'' | Downcase -%}
+    {%- assign locationName = groupLocation.Name | Default:'' | Downcase -%}
+    {%- assign locationKey = ',' | Append:groupLocation.Id | Append:',' -%}
+    {%- assign parentKey = ',' | Append:groupLocation.ParentLocationId | Append:',' -%}
+    {%- if street contains '1831' and street contains 'barker' %}{% assign onCampus = true %}{% endif -%}
+    {%- if locationName contains 'barker' %}{% assign onCampus = true %}{% endif -%}
+    {%- if campusLocationIds contains locationKey or campusLocationIds contains parentKey %}{% assign onCampus = true %}{% endif -%}
+    {%- if onCampus == false -%}
+      {%- assign areaName = groupLocation.City | Default:'' | Trim -%}
+      {%- assign areaKey = areaName | Downcase | Replace:' ','-' -%}
+    {%- endif -%}
+    {%- if groupLocation.Latitude -%}
+      {%- assign lat = groupLocation.Latitude | Format:'0.00' -%}
+      {%- assign lng = groupLocation.Longitude | Format:'0.00' -%}
+    {%- endif -%}
+  {%- endif -%}
+
+  {%- capture card -%}
+  <li class="group-card{% if dropInKey == 'yes' %} group-card--dropin{% endif %}"{% if toneKey != '' %} data-tone="{{ toneKey }}"{% endif %} data-card data-who="{{ compKeys | Trim }}" data-days="{{ dayKeys | Trim }}" data-content="{{ contentKey }}" data-childcare="{{ childcareKey }}" data-dropin="{{ dropInKey }}" data-where="{% if onCampus %}campus{% else %}offsite{% endif %}" data-area="{{ areaKey }}" data-area-name="{{ areaName | Escape }}" data-time="{{ startTime }}"{% if lat != '' %} data-lat="{{ lat }}" data-lng="{{ lng }}"{% endif %}>
+    {%- if dropInKey == 'yes' %}
+    <span class="group-card__sticker">Drop in</span>
+    {%- endif %}
+    <div class="group-card__band">
+      <p class="group-card__when">{% if dayShort != '' %}{{ dayShort }}{% else %}Day varies{% endif %}</p>
+      {%- if kindText != '' %}
+      <p class="group-card__kind">{{ kindText }}</p>
+      {%- endif %}
+    </div>
+    {%- if altSignup != '' %}
+    <h3 class="group-card__title"><a href="{{ altSignup | Escape }}"{% if altExternal %} target="_blank" rel="noopener"{% endif %} data-card-link>{{ group.Name }}</a></h3>
+    {%- else %}
+    <h3 class="group-card__title"><a href="{{ groupDetailUrl }}?GroupId={{ group.Id }}" data-card-link data-group-modal="{{ group.Id }}">{{ group.Name }}</a></h3>
+    {%- endif %}
+    <ul class="group-card__tags">
+      {%- if contentKey == 'sermon' %}<li>Follows the message</li>{% endif -%}
+      {%- if isFull %}<li class="group-card__full">Full</li>{% endif -%}
+    </ul>
+    {%- assign description = group.Description | StripHtml | Trim -%}
+    {%- if description != '' %}
+    <p class="group-card__desc">{{ description | TruncateWords:32 }}</p>
+    {%- endif %}
+    <ul class="group-card__meta">
+      {%- if schedText != '' %}
+      <li>{{ clockIcon }} {{ schedText }}</li>
+      {%- endif %}
+      <li>{{ pinIcon }} {% if onCampus %}At VRL{% elsif areaName != '' %}{{ areaName }}{% else %}Ask for the location{% endif %}<span class="group-card__distance" data-gf-distance></span></li>
+    </ul>
+    <div class="group-card__foot">
+      {%- if altSignup != '' %}
+      <span class="group-card__cta" aria-hidden="true">Sign up <svg width="14" height="14"><use href="#i-arrow-up-right"/></svg></span>
+      {%- else %}
+      <span class="group-card__cta" aria-hidden="true">View group <svg width="14" height="14"><use href="#i-arrow-right"/></svg></span>
+      {%- endif %}
+      {%- if childcareLabel != '' %}
+      <span class="group-card__childcare{% if childcareText contains 'ask' %} group-card__childcare--ask{% endif %}" title="{{ childcareLabel }}">{{ childcareIcon }}<span class="u-visually-hidden">{{ childcareLabel }}</span></span>
+      {%- endif %}
+    </div>
+  </li>
+  {%- endcapture -%}
+  {%- assign cardsHtml = cardsHtml | Append:card -%}
+  {%- assign cardCount = cardCount | Plus:1 -%}
+{%- endfor -%}
+{%- endgroup -%}
+
+<section class="gf" aria-label="Find a Life Group" data-group-finder>
+
+  {%- if cardCount > 0 %}
+  <!-- ===== QUIZ (shown by theme.js; without JavaScript every group shows) ===== -->
+  <div class="gf-quiz" data-gf-quiz hidden>
+    <div class="gf-quiz__head">
+      <p class="gf-quiz__progress" data-gf-progress>Question 1</p>
+      <button type="button" class="gf-quiz__skip" data-gf-skip>Skip to all groups</button>
+    </div>
+    <div class="gf-quiz__bar" aria-hidden="true"><span data-gf-bar></span></div>
+
+    <div class="gf-step" data-gf-step="who" hidden>
+      <p class="gf-step__intro">Answer a few quick questions and we'll show you the groups that fit.</p>
+      <h2 class="gf-step__q" tabindex="-1">What kind of group are you looking for?</h2>
+      <div class="gf-options">
+        <button type="button" class="gf-option" data-value="men"{% if colorByGroupType %} data-tone="men"{% endif %}>Men's group<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="women"{% if colorByGroupType %} data-tone="women"{% endif %}>Women's group<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="mixed"{% if colorByGroupType %} data-tone="mixed"{% endif %}>Mixed (men and women)<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="young-adult"{% if colorByGroupType %} data-tone="young-adult"{% endif %}>Young adults<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option gf-option--any" data-value="" data-gf-filter-only>Any<span class="gf-option__count" data-gf-count></span></button>
+      </div>
+    </div>
+
+    <div class="gf-step" data-gf-step="days" data-gf-multi hidden>
+      <h2 class="gf-step__q" tabindex="-1">Which days work for you?</h2>
+      <p class="gf-step__hint">Pick as many as you like.</p>
+      <div class="gf-options gf-options--days">
+        <button type="button" class="gf-option" data-value="sunday">Sunday<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="monday">Monday<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="tuesday">Tuesday<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="wednesday">Wednesday<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="thursday">Thursday<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="friday">Friday<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="saturday">Saturday<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option gf-option--any" data-value="">Any day<span class="gf-option__count" data-gf-count></span></button>
+      </div>
+    </div>
+
+    <div class="gf-step" data-gf-step="content" hidden>
+      <h2 class="gf-step__q" tabindex="-1">Do you want to follow along with the weekend message?</h2>
+      <p class="gf-step__hint">Many groups talk through Sunday's message each week. Others study a book or topic.</p>
+      <div class="gf-options">
+        <button type="button" class="gf-option" data-value="sermon">Yes, follow the message<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="other">Something else<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option gf-option--any" data-value="">Any<span class="gf-option__count" data-gf-count></span></button>
+      </div>
+    </div>
+
+    <div class="gf-step" data-gf-step="childcare" hidden>
+      <h2 class="gf-step__q" tabindex="-1">Do you need childcare while the group meets?</h2>
+      <div class="gf-options">
+        <button type="button" class="gf-option" data-value="yes">Yes, I need childcare<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option gf-option--any" data-value="" data-gf-filter-label="Any">No<span class="gf-option__count" data-gf-count></span></button>
+      </div>
+    </div>
+
+    <div class="gf-step" data-gf-step="where" hidden>
+      <h2 class="gf-step__q" tabindex="-1">Do you want a group that meets at VRL?</h2>
+      <div class="gf-options">
+        <button type="button" class="gf-option" data-value="campus">Yes, at VRL<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option" data-value="offsite">No, in a home or around town<span class="gf-option__count" data-gf-count></span></button>
+        <button type="button" class="gf-option gf-option--any" data-value="">Any<span class="gf-option__count" data-gf-count></span></button>
+      </div>
+    </div>
+
+    <div class="gf-step" data-gf-step="area" data-gf-multi hidden>
+      <h2 class="gf-step__q" tabindex="-1">Where would you like to meet?</h2>
+      <p class="gf-step__hint">Pick any areas that work, or let us sort by what's closest to you.</p>
+      <div class="gf-options gf-options--areas" data-gf-areas>
+        <button type="button" class="gf-option gf-option--any" data-value="">Anywhere<span class="gf-option__count" data-gf-count></span></button>
+      </div>
+      <p class="gf-step__near"><button type="button" class="pill-btn" data-gf-near><svg width="14" height="14" aria-hidden="true"><use href="#i-map-pin"/></svg> Closest to me</button></p>
+    </div>
+
+    <div class="gf-quiz__foot">
+      <button type="button" class="gf-quiz__back" data-gf-back><svg width="16" height="16" aria-hidden="true"><use href="#i-chevron-left"/></svg> Back</button>
+      <button type="button" class="btn btn--primary" data-gf-next hidden>Next</button>
+    </div>
+  </div>
+
+  <!-- ===== RESULTS ===== -->
+  <div class="gf-results" data-gf-results>
+    <div class="gf-results__head" data-gf-results-head hidden>
+      <p class="gf-results__count" data-gf-total aria-live="polite"></p>
+      <div class="gf-results__actions">
+        <div class="gf-results__sort" role="group" aria-label="Sort groups">
+          <button type="button" class="pill-btn" data-gf-sort="soon" aria-pressed="true">Soonest</button>
+          <button type="button" class="pill-btn" data-gf-sort="near" aria-pressed="false">Closest to me</button>
+        </div>
+        <button type="button" class="gf-results__restart" data-gf-restart><svg width="14" height="14" aria-hidden="true"><use href="#i-refresh"/></svg> Start over</button>
+      </div>
+    </div>
+
+    <!-- Filter bar: buttons and panels built by theme.js from the quiz's questions -->
+    <div class="gf-filters" data-gf-filters hidden>
+      <div class="gf-filters__inner">
+        <div class="gf-filters__row" role="group" aria-label="Filter groups">
+          <span class="gf-filters__label"><svg width="16" height="16" aria-hidden="true"><use href="#i-adjustments"/></svg><span>Filter</span></span>
+          <div class="gf-filters__buttons" data-gf-filter-buttons></div>
+          <button type="button" class="gf-filters__clear" data-gf-clear hidden>Clear all</button>
+        </div>
+        <div class="gf-filters__panel" id="gf-filter-panel" data-gf-panel hidden></div>
+      </div>
+    </div>
+    <p class="gf-results__note" data-gf-note hidden></p>
+    <ul class="gf-cards" data-gf-list>
+      {{ cardsHtml }}
+    </ul>
+  </div>
+  {%- else %}
+  <p class="gf-empty">Our group listings are being updated. Check back soon, or <a href="/ministries/life-groups">read about Life Groups</a>.</p>
+  {%- endif %}
+
+</section>

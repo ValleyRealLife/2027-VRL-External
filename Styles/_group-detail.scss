@@ -1,0 +1,279 @@
+// ===========================================================================
+// GROUP DETAILS — one Life Group (Assets/Lava/LifeGroupDetails.lava, Blank
+// layout), and the group finder's pop-up that shows it (theme.js "Group
+// pop-up" and "Group details").
+//
+//   .group-modal       the finder's <dialog>: the page in a same-origin iframe
+//                      sized to its content; the dialog scrolls past the
+//                      screen. A sticky close button over the card's band; a
+//                      loading card (in the group's colour) until it arrives
+//   .group-detail      the card. Front: the band (kind of group + Life Group,
+//                      name, when; Drop in sticker), the description beside
+//                      the facts (an icon tile each), the map, the buttons.
+//                      Back: a slim band (Back to the group, the name) and
+//                      Rock's Group Registration block (moved in by theme.js)
+//                      in the site's field styles, ending on a full-width
+//                      Register.
+//                      On its own page: centred on the page background, with
+//                      a shadow. In the pop-up (html.is-framed, set by
+//                      Blank.aspx): edge to edge, the dialog is the frame.
+//   Colours come from [data-tone] (Styles/_group-finder.scss "Group colours");
+//   without one, the band is a neutral surface and the tiles brand green.
+// All rules hang off .group-detail / .group-modal or a page that holds one, so
+// Rock's own Blank-layout pages are untouched.
+// ===========================================================================
+
+@use "config" as *;
+
+// ---------------------------------------------------------------------------
+// The page (Blank layout)
+// ---------------------------------------------------------------------------
+body.rock-blank:has(.group-detail) { background: var(--bg); }
+body.rock-blank:has(.group-detail) > form > main { padding: clamp(1rem, 4vw, 3rem) var(--gutter); }
+html.is-framed body.rock-blank:has(.group-detail) { background: transparent; }
+html.is-framed body.rock-blank:has(.group-detail) > form > main { padding: 0; }
+html.is-framed:has(.group-detail) { background: transparent; }
+
+// ---------------------------------------------------------------------------
+// The card
+// ---------------------------------------------------------------------------
+.group-detail {
+  max-width: 46rem;
+  margin-inline: auto;
+  perspective: 2400px;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+.group-detail__card {
+  container-type: inline-size;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+html.is-framed .group-detail { max-width: none; }
+html.is-framed .group-detail__card { box-shadow: none; }
+
+.group-detail__band {
+  position: relative;
+  padding: clamp(1.75rem, 6cqi, 2.75rem) clamp(1.25rem, 6cqi, 2.5rem) clamp(1.25rem, 5cqi, 2rem);
+  background: var(--tone, var(--surface));
+  color: var(--on-tone, var(--text));
+}
+html.is-framed .group-detail__band { padding-right: 4.25rem; }   // clear of the pop-up's close button
+.group-detail__band--slim { padding-block: clamp(1.25rem, 5cqi, 2rem) clamp(1rem, 4cqi, 1.5rem); }
+.group-detail__kicker {
+  margin: 0;
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-widest); text-transform: uppercase;
+  color: inherit; opacity: 0.75;
+}
+.group-detail__name {
+  margin: 0.4rem 0 0;
+  font-size: clamp(1.75rem, 7cqi, 2.5rem); line-height: 1.05;
+  text-transform: uppercase; text-wrap: balance;
+  color: inherit;
+}
+.group-detail__band--slim .group-detail__name { font-size: clamp(1.375rem, 5cqi, 1.75rem); }
+.group-detail__name:focus { outline: none; }
+.group-detail__when { margin: 0.5rem 0 0; font-weight: 700; color: inherit; }
+.group-detail__sticker { top: auto; bottom: -2rem; right: clamp(1rem, 5cqi, 2rem); }   // (the finder card's sticker, Styles/_group-finder.scss) on the band's edge
+
+.group-detail__body {
+  display: grid; gap: var(--space-xl);
+  padding: clamp(1.5rem, 6cqi, 2.5rem) clamp(1.25rem, 6cqi, 2.5rem);
+}
+@container (min-width: 38rem) {
+  .group-detail__body:has(> .group-detail__desc) { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .group-detail__body > .group-detail__map { grid-column: 1 / -1; }
+}
+.group-detail__body > p { margin: 0; }
+.group-detail__desc { font-size: 1rem; line-height: 1.65; color: var(--text-secondary); }
+
+.group-detail__facts { display: grid; gap: 0.9rem; align-content: start; margin: 0; padding: 0; list-style: none; }
+.group-detail__facts li { display: flex; align-items: flex-start; gap: 0.8rem; }
+.group-detail__icon {
+  flex: none;
+  display: grid; place-items: center;
+  width: 2.5rem; aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  background: var(--tone-wash, var(--brand-wash));
+  color: var(--tone-strong, var(--brand-text));
+}
+.group-detail__facts li > span:last-child { padding-top: 0.05rem; font-weight: 600; line-height: 1.4; }
+.group-detail__facts strong {
+  display: block; margin-bottom: 0.1rem;
+  font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: var(--tracking-widest); text-transform: uppercase;
+  color: var(--text-muted);
+}
+.group-detail__facts small { display: block; margin-top: 0.2rem; font-size: 0.875rem; font-weight: 500; color: var(--text-secondary); }
+
+// Map: a static image linking to Google Maps. Approximate: no pin, a shaded
+// circle (about 2 km across at this zoom) around the rounded point
+.group-detail__map {
+  position: relative; display: block;
+  aspect-ratio: 640 / 280;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  overflow: hidden;
+  text-decoration: none;
+}
+.group-detail__map img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.group-detail__map--approx::after {
+  content: "";
+  position: absolute; left: 50%; top: 50%;
+  width: 22%; aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 2px solid var(--tone-strong, var(--brand-dim));
+  background: oklch(from var(--tone-strong, var(--brand)) l c h / 0.2);
+}
+.group-detail__map-label {
+  position: absolute; left: 0.75rem; bottom: 0.75rem;
+  display: inline-flex; align-items: center; gap: 0.35em;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+  font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--text);
+}
+.group-detail__map:hover .group-detail__map-label { color: var(--brand-text); }
+
+.group-detail__actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm);
+  padding: 0 clamp(1.25rem, 6cqi, 2.5rem) clamp(1.5rem, 6cqi, 2.5rem);
+}
+.group-detail__actions .btn--primary { flex: 1 1 14rem; justify-content: center; }
+// Share: the design system's icon button, quiet, at the end of the row (its
+// menu opens upward over the card, from the right)
+.group-detail__share { margin-left: auto; }
+.group-detail__share .share__btn { color: var(--text-muted); }
+.group-detail__share .share__btn:hover,
+.group-detail__share .share__btn[aria-expanded="true"] { color: var(--brand-text); }
+.group-detail__full {
+  flex: 1 1 100%; margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+// Back: the band's way back to the front
+.group-detail__back {
+  display: inline-flex; align-items: center; gap: 0.3em;
+  margin: 0 0 var(--space-md) -0.15rem; padding: 0.3rem 0.75rem 0.3rem 0.5rem;
+  border: 1px solid oklch(from var(--on-tone, var(--text)) l c h / 0.25);
+  border-radius: var(--radius-pill);
+  background: oklch(1 0 0 / 0.35);
+  font: inherit; font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: inherit;
+  cursor: pointer;
+}
+.group-detail__back:hover { background: oklch(1 0 0 / 0.6); }
+.group-detail__back:focus-visible { outline: 2px solid var(--on-tone, var(--text)); outline-offset: 2px; }
+
+// Back: Rock's Group Registration block. It already has the site's field and
+// button styles (Styles/_rock-blocks.scss counts .group-detail__form as a
+// page); here it loses its panel, takes the login card's roomier fields, and
+// ends on a full-width Register.
+.group-detail__form { padding: clamp(1.5rem, 6cqi, 2.5rem) clamp(1.25rem, 6cqi, 2.5rem); }
+.group-detail__form .panel-block { margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.group-detail__form .panel-block > :is(.panel-heading, .panel-header) { display: none; }
+.group-detail__form .panel-block > .panel-body { padding: 0; }
+.group-detail__form fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+
+// The block's intro ("Please complete the form below…"): a plain line, not a blue box
+.group-detail__form .alert-info { margin: 0 0 var(--space-lg); padding: 0; border: 0; background: none; font-size: 1rem; line-height: 1.6; color: var(--text-secondary); }
+// What the form says back: registered, full, or what to fix
+.group-detail__form .alert:not(.alert-info) { margin: 0 0 var(--space-lg); padding: var(--space-md) var(--space-lg); border: 0; border-radius: var(--radius-lg); font-size: 1rem; line-height: 1.5; }
+.group-detail__form .alert-success { background: var(--brand-wash); color: var(--text); }
+.group-detail__form .alert-warning { background: oklch(0.95 0.05 80); color: var(--text); }
+.group-detail__form :is(.alert-validation, .alert-danger) { background: oklch(0.95 0.03 25); color: oklch(0.42 0.15 25); }
+.group-detail__form :is(.alert-validation, .alert-danger) ul { margin: var(--space-2xs) 0 0; padding-left: 1.25rem; }
+
+// Fields: the login card's (Styles/_login.scss)
+.group-detail__form .form-group { margin-bottom: var(--space-md); }
+.group-detail__form .control-label { margin-bottom: var(--space-xs); font-size: 0.875rem; font-weight: 700; }
+.group-detail__form .required > .control-label::before { display: none; }   // every field here is required; the optional ones say so
+.group-detail__form .form-group:not(.required):has(:is(input.form-control, select.form-control)) > .control-label::after { content: " (optional)"; font-weight: 500; color: var(--text-muted); }
+.group-detail__form :is(.form-control, select.form-control) {
+  height: 3rem; min-height: 3rem;
+  padding: 0 var(--space-md);
+  background: var(--bg-elevated) !important;   // over core.css's !important fill
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  font: inherit; font-size: 1rem;   // 16px: iOS won't zoom the page on focus
+  transition: border-color var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
+}
+.group-detail__form .form-control:hover { border-color: var(--border-strong); }
+.group-detail__form .form-control:focus { outline: 0; border-color: var(--brand-text); box-shadow: 0 0 0 4px var(--brand-glow-soft); }
+// Email's envelope add-on: dropped; the field reads on its own
+.group-detail__form .input-group-addon { display: none; }
+.group-detail__form .input-group { display: flex; width: 100%; }   // (Bootstrap's table layout would shrink the field without its add-on)
+.group-detail__form .input-group > .form-control { flex: 1 1 auto; width: 100%; border-radius: var(--radius-md); }
+.group-detail__form .checkbox label { font-size: 0.875rem; color: var(--text-secondary); }
+
+// The captcha, then Register across the card
+.group-detail__form .actions { margin-top: var(--space-lg); padding-top: 0; border-top: 0; }
+.group-detail__form .footer-actions { display: grid; gap: var(--space-md); width: 100%; }
+.group-detail__form .footer-actions .btn { width: 100%; min-height: 3rem; justify-content: center; }
+.group-detail__form .footer-secondary-actions:empty { display: none; }
+
+// ---------------------------------------------------------------------------
+// The pop-up (the finder page)
+// ---------------------------------------------------------------------------
+.group-modal {
+  width: min(46rem, calc(100% - 2rem)); max-width: none;
+  max-height: calc(100dvh - 2rem);
+  margin: auto; padding: 0; border: 0;
+  border-radius: var(--radius-2xl);
+  background: transparent;
+  box-shadow: var(--shadow-xl);
+  overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.group-modal::backdrop { background: oklch(0.16 0.01 135 / 0.6); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.group-modal__close {
+  position: sticky; top: 0.75rem; z-index: 2;
+  display: grid; place-items: center;
+  width: 2.5rem; height: 2.5rem;
+  margin: 0.75rem 0.75rem -3.25rem auto;   // over the card's band, clear of the flow
+  padding: 0; border: 0; border-radius: 50%;
+  background: oklch(0.16 0.01 135 / 0.72);
+  color: #fff;
+  cursor: pointer;
+}
+.group-modal__close:hover { background: var(--ink); }
+.group-modal__close:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.group-modal__loading {
+  display: grid; place-items: center;
+  min-height: 24rem;
+  border-radius: inherit;
+  background: linear-gradient(var(--tone, var(--surface)) 0 8rem, var(--bg-elevated) 8rem);
+}
+.group-modal__loading span {
+  width: 2rem; aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  border-top-color: var(--tone-strong, var(--brand));
+  animation: group-modal-spin 0.8s linear infinite;
+}
+@keyframes group-modal-spin { to { transform: rotate(1turn); } }
+.group-modal__frame { display: block; width: 100%; height: 0; border: 0; color-scheme: normal; opacity: 0; }
+.group-modal.is-loaded .group-modal__loading { display: none; }
+.group-modal.is-loaded .group-modal__frame { opacity: 1; transition: opacity var(--duration) var(--ease-out); }
+@media (max-width: #{$bp-sm - 1px}) {
+  .group-modal { width: calc(100% - 1rem); max-height: calc(100dvh - 1rem); border-radius: var(--radius-xl); }
+  html.is-framed .group-detail__card { border-radius: var(--radius-xl); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group-modal__loading span { animation-duration: 2.4s; }
+  .group-modal.is-loaded .group-modal__frame { transition: none; }
+}

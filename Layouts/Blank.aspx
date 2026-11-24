@@ -8,7 +8,22 @@
 
     <script src="<%# System.Web.Optimization.Scripts.Url("~/Scripts/Bundles/RockJQueryLatest" ) %>"></script>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <%-- As Site.Master: Montserrat, the theme, theme.js (defer). Pages on this
+         layout are often shown inside the site's pop-ups (e.g. the Life Group
+         details page in the group finder's), so they get the same type, icons
+         and behaviour. --%>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" />
+
     <link rel="stylesheet" href="<%# ResolveRockUrl("~~/Styles/theme.css", true) %>" />
+
+    <script defer src="<%# ResolveRockUrl("~~/Assets/Scripts/theme.js", true) %>"></script>
+
+    <%-- Inside an iframe (a pop-up): html.is-framed, before first paint --%>
+    <script>if (window.self !== window.top) document.documentElement.classList.add('is-framed');</script>
 
     <style>
         html, body {
@@ -27,6 +42,11 @@
 <body class="rock-blank">
     <form id="form1" runat="server">
         <asp:ScriptManager ID="sManager" runat="server" />
+
+        <%-- Inline SVG icon sprite, as Site.Master --%>
+        <Rock:Lava ID="lavaIconSprite" runat="server">
+            {% include '~~/Assets/Lava/Partials/IconSprite.lava' %}
+        </Rock:Lava>
 
         <asp:UpdateProgress ID="updateProgress" runat="server" DisplayAfter="800">
             <ProgressTemplate>

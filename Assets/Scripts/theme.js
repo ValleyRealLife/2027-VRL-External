@@ -485,6 +485,605 @@
     apply(known ? wanted : '', false);
   });
 
+  // --- Group finder ([data-group-finder]: LifeGroupSearch.lava) ---------------------
+  // Every public Life Group is a card whose data-* attributes hold its answers
+  // (data-who, -days, -content, -childcare, -dropin, -where, -area; space-
+  // separated keys). The quiz walks one question per screen, each option
+  // showing how many groups it would leave (none: disabled, so there's always
+  // a group); answers live in the address (?who=men&days=monday,tuesday…), so
+  // a link that carries answers, or ?all, opens straight on the results. A card
+  // shows when, for every answered question, it has one of the picked keys. If
+  // nothing matches (an old or hand-made link), answers are left out in RELAX
+  // order until something does, and the note says which. Sort: soonest (the
+  // next day it meets, from today, then its time) or closest to the visitor
+  // (browser location; the cards' coordinates are rounded to ~1 km).
+  // On the results, the filter bar (sticky under the header) has a button per
+  // question showing its answer; a button opens that question's options (cloned
+  // from the quiz) in a panel inside the bar, so it pushes the cards down
+  // instead of covering them. Changes apply at once; a single-answer question
+  // closes its panel when picked. Without JavaScript the quiz and bar stay
+  // hidden and every card shows.
+  document.querySelectorAll('[data-group-finder]').forEach(function (finder) {
+    var quiz = finder.querySelector('[data-gf-quiz]');
+    var list = finder.querySelector('[data-gf-list]');
+    if (!quiz || !list) return;
+    var slice = function (n) { return Array.prototype.slice.call(n); };
+    var cards = slice(list.querySelectorAll('.group-card'));
+    var steps = slice(quiz.querySelectorAll('[data-gf-step]'));
+    var head = finder.querySelector('[data-gf-results-head]');
+    var total = finder.querySelector('[data-gf-total]');
+    var note = finder.querySelector('[data-gf-note]');
+    var bar = finder.querySelector('[data-gf-filters]');
+    var barButtons = finder.querySelector('[data-gf-filter-buttons]');
+    var panel = finder.querySelector('[data-gf-panel]');
+    var clearBtn = finder.querySelector('[data-gf-clear]');
+    var progress = quiz.querySelector('[data-gf-progress]');
+    var progressBar = quiz.querySelector('[data-gf-bar]');
+    var backBtn = quiz.querySelector('[data-gf-back]');
+    var nextBtn = quiz.querySelector('[data-gf-next]');
+    var sortBtns = slice(finder.querySelectorAll('[data-gf-sort]'));
+    var KEYS = ['who', 'days', 'content', 'childcare', 'where', 'area', 'dropin'];
+    var RELAX = ['area', 'days', 'content', 'where', 'childcare', 'dropin', 'who'];
+    var DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    var LABELS = {
+      who: { men: "Men's", women: "Women's", mixed: 'Mixed', 'young-adult': 'Young adults' },
+      days: {},
+      content: { sermon: 'Follows the message', other: 'Other studies' },
+      childcare: { yes: 'Childcare' },
+      where: { campus: 'At VRL', offsite: 'Off campus' },
+      dropin: { yes: 'Drop in' },
+      area: {}
+    };
+    // A question's name: the filter button when it's unanswered, and the left-out note
+    var QUESTION = { who: 'Group type', days: 'Days', content: 'Content', childcare: 'Childcare', where: 'Location', area: 'Area', dropin: 'Drop in' };
+    DAYS.forEach(function (d) { LABELS.days[d] = d.charAt(0).toUpperCase() + d.slice(1, 3); });
+
+    // Areas: the towns off-campus groups meet in, as options on the area step
+    var areaBox = quiz.querySelector('[data-gf-areas]');
+    var areas = {};
+    cards.forEach(function (c) {
+      var key = c.getAttribute('data-area');
+      if (key) areas[key] = c.getAttribute('data-area-name') || key;
+    });
+    LABELS.area = areas;
+    if (areaBox) {
+      var anyArea = areaBox.querySelector('.gf-option--any');
+      Object.keys(areas).sort(function (a, b) { return areas[a].localeCompare(areas[b]); }).forEach(function (key) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'gf-option'; b.setAttribute('data-value', key);
+        b.textContent = areas[key];
+        var n = document.createElement('span'); n.className = 'gf-option__count'; n.setAttribute('data-gf-count', '');
+        b.appendChild(n);
+        areaBox.insertBefore(b, anyArea);
+      });
+    }
+
+    var state = {};
+    var sortMode = 'soon';
+    var me = null;
+    var current = 0;
+    var openKey = null;
+
+    var has = function (card, key, values) {
+      var mine = ' ' + (card.getAttribute('data-' + key) || '') + ' ';
+      return values.some(function (v) { return mine.indexOf(' ' + v + ' ') !== -1; });
+    };
+    var matches = function (card, st) {
+      return KEYS.every(function (k) { return !st[k] || !st[k].length || has(card, k, st[k]); });
+    };
+    var copy = function (st) { var o = {}; KEYS.forEach(function (k) { if (st[k] && st[k].length) o[k] = st[k].slice(); }); return o; };
+    var countFor = function (st) { return cards.filter(function (c) { return matches(c, st); }).length; };
+    var groupsText = function (n) { return n + (n === 1 ? ' group' : ' groups'); };
+    var anyDropIn = cards.some(function (c) { return c.getAttribute('data-dropin') === 'yes'; });
+    var stepFor = function (key) { return quiz.querySelector('[data-gf-step="' + key + '"]'); };
+
+    // The area question follows "off campus" (or an unanswered place)
+    var areaInPlay = function () {
+      var where = state.where || [];
+      return Object.keys(areas).length > 1 && (!where.length || where.indexOf('offsite') !== -1);
+    };
+
+    // One answer picked (quiz or filter panel). Returns true for a single-answer question.
+    var pick = function (key, v, multi) {
+      if (multi) {
+        var picked = state[key] || [];
+        if (!v) picked = [];
+        else if (picked.indexOf(v) !== -1) picked = picked.filter(function (x) { return x !== v; });
+        else picked = picked.concat(v);
+        if (picked.length) state[key] = picked; else delete state[key];
+      } else if (v) state[key] = [v];
+      else delete state[key];
+      if (key === 'where' && !areaInPlay()) delete state.area;
+      return !multi;
+    };
+
+    // --- Address ---
+    var fromUrl = function () {
+      var p = new URLSearchParams(location.search);
+      var st = {};
+      KEYS.forEach(function (k) {
+        var v = (p.get(k) || '').split(',').filter(Boolean);
+        if (v.length) st[k] = v;
+      });
+      return { state: st, results: p.has('all') || Object.keys(st).length > 0 };
+    };
+    var toUrl = function (showingResults) {
+      if (!history.replaceState) return;
+      var url = new URL(location.href);
+      KEYS.forEach(function (k) {
+        if (state[k] && state[k].length) url.searchParams.set(k, state[k].join(','));
+        else url.searchParams.delete(k);
+      });
+      url.searchParams.delete('all');
+      if (showingResults && !Object.keys(copy(state)).length) url.searchParams.set('all', '');
+      history.replaceState(null, '', url.toString().replace(/all=(&|$)/, 'all$1'));
+    };
+
+    // --- Sorting ---
+    var today = new Date().getDay();
+    var soonKey = function (card) {
+      var days = (card.getAttribute('data-days') || '').split(' ').filter(Boolean);
+      var ahead = days.length ? Math.min.apply(null, days.map(function (d) { return (DAYS.indexOf(d) - today + 7) % 7; })) : 7;
+      var t = (card.getAttribute('data-time') || '99:99').split(':');
+      return ahead * 2000 + (parseInt(t[0], 10) || 99) * 60 + (parseInt(t[1], 10) || 0);
+    };
+    var miles = function (card) {
+      var lat = parseFloat(card.getAttribute('data-lat')), lng = parseFloat(card.getAttribute('data-lng'));
+      if (!me || isNaN(lat) || isNaN(lng)) return Infinity;
+      var rad = Math.PI / 180, dLat = (lat - me.lat) * rad, dLng = (lng - me.lng) * rad;
+      var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(me.lat * rad) * Math.cos(lat * rad) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      return 3959 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    };
+    if (!cards.some(function (c) { return c.hasAttribute('data-lat'); })) {
+      sortBtns.concat(slice(finder.querySelectorAll('[data-gf-near]'))).forEach(function (b) { if (b.getAttribute('data-gf-sort') !== 'soon') b.hidden = true; });
+    }
+
+    // --- Options: counts, pressed, disabled (a quiz step or the filter panel) ---
+    // In the panel the "any" answer shows pressed when the question is unanswered.
+    var refreshOptions = function (box, key, multi, inPanel) {
+      slice(box.querySelectorAll('[data-value]')).forEach(function (opt) {
+        var v = opt.getAttribute('data-value');
+        var trial = copy(state);
+        if (v) trial[key] = [v]; else delete trial[key];
+        var n = countFor(trial);
+        var count = opt.querySelector('[data-gf-count]');
+        if (count) count.textContent = n;
+        var picked = v ? (state[key] || []).indexOf(v) !== -1 : !(state[key] && state[key].length);
+        opt.disabled = !!v && n === 0 && !picked;
+        opt.setAttribute('aria-pressed', String(multi || inPanel ? picked : picked && !!v));
+      });
+    };
+
+    // --- Filter bar ---
+    var filterKeys = function () {
+      return ['who', 'days', 'content', 'childcare', 'where', 'area', 'dropin'].filter(function (k) {
+        if (k === 'area') return areaInPlay() || !!state.area;
+        if (k === 'dropin') return anyDropIn || !!state.dropin;
+        return !!stepFor(k);
+      });
+    };
+    var summary = function (k) {
+      var v = state[k] || [];
+      if (!v.length) return QUESTION[k];
+      var first = (LABELS[k] || {})[v[0]] || v[0];
+      if (k === 'days') return v.length > 3 ? v.slice(0, 2).map(function (d) { return LABELS.days[d]; }).join(', ') + ' +' + (v.length - 2) : v.map(function (d) { return LABELS.days[d]; }).join(', ');
+      return v.length > 1 ? first + ' +' + (v.length - 1) : first;
+    };
+    var buildBar = function () {
+      if (!bar || !barButtons) return;
+      barButtons.textContent = '';
+      filterKeys().forEach(function (k) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'gf-filter';
+        var on = !!(state[k] && state[k].length);
+        if (on) b.classList.add('is-active');
+        if (k === 'dropin') {
+          b.setAttribute('data-gf-toggle', k);
+          b.setAttribute('aria-pressed', String(on));
+          b.textContent = LABELS.dropin.yes;
+        } else {
+          b.setAttribute('data-gf-filter', k);
+          b.setAttribute('aria-expanded', String(openKey === k));
+          b.setAttribute('aria-controls', 'gf-filter-panel');
+          b.innerHTML = '<span></span><svg width="14" height="14" aria-hidden="true"><use href="#i-chevron-down"/></svg>';
+          b.firstChild.textContent = summary(k);
+          if (on) b.setAttribute('aria-label', QUESTION[k] + ': ' + summary(k));
+        }
+        barButtons.appendChild(b);
+      });
+      if (clearBtn) clearBtn.hidden = !Object.keys(copy(state)).length;
+    };
+    var fillPanel = function () {
+      if (!panel) return;
+      if (!openKey || filterKeys().indexOf(openKey) === -1) { openKey = null; panel.hidden = true; panel.textContent = ''; panel.removeAttribute('data-gf-step'); return; }
+      var step = stepFor(openKey);
+      var multi = step.hasAttribute('data-gf-multi');
+      if (panel.getAttribute('data-gf-step') !== openKey) {
+        panel.textContent = '';
+        panel.setAttribute('data-gf-step', openKey);
+        panel.setAttribute('aria-label', QUESTION[openKey]);
+        var opts = step.querySelector('.gf-options').cloneNode(true);
+        slice(opts.querySelectorAll('[data-gf-filter-label]')).forEach(function (o) {
+          var count = o.querySelector('[data-gf-count]');
+          o.textContent = o.getAttribute('data-gf-filter-label');
+          if (count) o.appendChild(count);
+        });
+        panel.appendChild(opts);
+        if (multi) {
+          var foot = document.createElement('div');
+          foot.className = 'gf-filters__done';
+          foot.innerHTML = '<button type="button" class="btn btn--primary btn--sm" data-gf-done></button>';
+          panel.appendChild(foot);
+        }
+      }
+      refreshOptions(panel, openKey, multi, true);
+      var done = panel.querySelector('[data-gf-done]');
+      if (done) done.textContent = 'Show ' + groupsText(countFor(state));
+      panel.hidden = false;
+    };
+    // After a change, if the bar is stuck under the header, bring the first cards up to it
+    var settle = function () {
+      if (!bar || !head) return;
+      var gap = parseFloat(getComputedStyle(bar.parentNode).rowGap) || 0;
+      var natural = head.getBoundingClientRect().bottom + gap;
+      var stuck = bar.getBoundingClientRect().top;
+      if (natural < stuck - 1) window.scrollBy({ top: natural - stuck, behavior: 'instant' });   // a jump, not the page's smooth scroll: the cards just changed
+    };
+    // Changes to the results animate (view transitions): cards that stay slide
+    // to their new places, new ones fade in, dropped ones fade out. Only the
+    // cards on or near the screen are captured (named for the moment), not the
+    // page, which stays live underneath; the overlay is clipped below the
+    // filter bar (--gf-clip) so a moving card never slides over it or the
+    // header. Without support, or with reduced motion, the change just happens.
+    var vtSeq = 0;
+    var nameCards = function (on) {
+      var h = window.innerHeight;
+      cards.forEach(function (c, i) {
+        var r = on && !c.hidden && c.getBoundingClientRect();
+        c.style.viewTransitionName = r && r.bottom > -h / 2 && r.top < h * 1.5 ? 'gf-card-' + i : '';
+      });
+    };
+    var animate = function (update) {
+      if (!document.startViewTransition || reduced.matches || list.hidden) { update(); return; }
+      var root = document.documentElement;
+      var seq = ++vtSeq;
+      nameCards(true);
+      root.classList.add('gf-vt');
+      var vt = document.startViewTransition(function () {
+        update();
+        nameCards(true);
+        root.style.setProperty('--gf-clip', Math.max(0, bar && !bar.hidden ? bar.getBoundingClientRect().bottom : 0) + 'px');
+      });
+      vt.finished.finally(function () {
+        if (seq !== vtSeq) return;   // a newer change took over
+        root.classList.remove('gf-vt');
+        root.style.removeProperty('--gf-clip');
+        nameCards(false);
+      });
+    };
+    var closePanel = function () {
+      if (!openKey) return;
+      var k = openKey;
+      var focusInBar = bar.contains(document.activeElement);
+      openKey = null;
+      fillPanel();
+      buildBar();
+      var b = barButtons.querySelector('[data-gf-filter="' + k + '"]');
+      if (b && focusInBar) b.focus({ preventScroll: true });
+    };
+
+    // --- Results ---
+    var render = function () {
+      var st = copy(state);
+      var shown = cards.filter(function (c) { return matches(c, st); });
+      var left = [];
+      for (var i = 0; !shown.length && i < RELAX.length; i++) {
+        if (!st[RELAX[i]]) continue;
+        delete st[RELAX[i]];
+        left.push(QUESTION[RELAX[i]]);
+        shown = cards.filter(function (c) { return matches(c, st); });
+      }
+      var near = sortMode === 'near' && me;
+      shown.sort(function (a, b) { return near ? miles(a) - miles(b) || soonKey(a) - soonKey(b) : soonKey(a) - soonKey(b); });
+      cards.forEach(function (c) { c.hidden = shown.indexOf(c) === -1; });
+      shown.forEach(function (c) {
+        list.appendChild(c);
+        var d = c.querySelector('[data-gf-distance]');
+        if (d) { var m = near ? miles(c) : Infinity; d.textContent = isFinite(m) ? ' · about ' + (m < 1 ? 'a mile' : Math.round(m) + ' mi') + ' away' : ''; }
+      });
+      if (total) total.textContent = groupsText(shown.length);
+      if (note) {
+        note.hidden = !left.length;
+        note.textContent = left.length ? 'No group matches every filter, so these are left out: ' + left.join(', ') + '.' : '';
+      }
+      buildBar();
+      fillPanel();
+      sortBtns.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-gf-sort') === (near ? 'near' : 'soon'))); });
+      toUrl(true);
+    };
+    var showResults = function () {
+      quiz.hidden = true;
+      if (head) head.hidden = false;
+      if (bar) bar.hidden = false;
+      list.hidden = false;
+      render();
+    };
+
+    // --- Quiz ---
+    var inPlay = function () {
+      return steps.filter(function (s) { return s.getAttribute('data-gf-step') !== 'area' || areaInPlay(); });
+    };
+    var refresh = function (step) {
+      var multi = step.hasAttribute('data-gf-multi');
+      refreshOptions(step, step.getAttribute('data-gf-step'), multi, false);
+      if (nextBtn) {
+        nextBtn.hidden = !multi;
+        var play = inPlay();
+        nextBtn.textContent = play.indexOf(step) === play.length - 1 ? 'Show ' + groupsText(countFor(state)) : 'Next';
+      }
+    };
+    var showStep = function (i) {
+      var play = inPlay();
+      if (i >= play.length) { showResults(); return; }
+      current = Math.max(0, i);
+      steps.forEach(function (s) { s.hidden = true; });
+      var step = play[current];
+      step.hidden = false;
+      quiz.hidden = false;
+      if (head) head.hidden = true;
+      if (bar) bar.hidden = true;
+      if (note) note.hidden = true;
+      list.hidden = true;
+      openKey = null;
+      if (progress) progress.textContent = 'Question ' + (current + 1) + ' of ' + play.length;
+      if (progressBar) progressBar.style.width = Math.round((current + 1) / play.length * 100) + '%';
+      if (backBtn) backBtn.hidden = current === 0;
+      refresh(step);
+      toUrl(false);
+      var q = step.querySelector('.gf-step__q');
+      if (q && document.activeElement && quiz.contains(document.activeElement)) q.focus({ preventScroll: true });
+    };
+
+    var locate = function (done) {
+      if (!navigator.geolocation) return;
+      finder.classList.add('is-locating');
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        finder.classList.remove('is-locating');
+        me = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        sortMode = 'near';
+        done();
+      }, function () {
+        finder.classList.remove('is-locating');
+        done();
+        if (note) { note.hidden = false; note.textContent = "We couldn't get your location, so groups are sorted by the next day they meet."; }
+      }, { maximumAge: 600000, timeout: 10000 });
+    };
+
+    quiz.addEventListener('click', function (e) {
+      var opt = e.target.closest('[data-value]');
+      if (opt && !opt.disabled) {
+        var step = opt.closest('[data-gf-step]');
+        if (pick(step.getAttribute('data-gf-step'), opt.getAttribute('data-value'), step.hasAttribute('data-gf-multi'))) showStep(current + 1);
+        else refresh(step);
+        return;
+      }
+      if (e.target.closest('[data-gf-next]')) { showStep(current + 1); return; }
+      if (e.target.closest('[data-gf-back]')) { showStep(current - 1); return; }
+      if (e.target.closest('[data-gf-skip]')) { state = {}; showResults(); return; }
+      if (e.target.closest('[data-gf-near]')) { delete state.area; locate(showResults); }
+    });
+
+    if (bar) {
+      bar.addEventListener('click', function (e) {
+        var opt = e.target.closest('[data-value]');
+        if (opt && panel.contains(opt)) {
+          if (opt.disabled) return;
+          var key = openKey;
+          var single = pick(key, opt.getAttribute('data-value'), stepFor(key).hasAttribute('data-gf-multi'));
+          if (single) openKey = null;
+          animate(function () {
+            render();
+            settle();
+            if (single) { var b = barButtons.querySelector('[data-gf-filter="' + key + '"]'); if (b) b.focus({ preventScroll: true }); }
+          });
+          return;
+        }
+        if (e.target.closest('[data-gf-done]')) { closePanel(); settle(); return; }
+        var f = e.target.closest('[data-gf-filter]');
+        if (f) {
+          var k = f.getAttribute('data-gf-filter');
+          openKey = openKey === k ? null : k;
+          buildBar();
+          fillPanel();
+          var again = barButtons.querySelector('[data-gf-filter="' + k + '"]');
+          if (again) { again.focus({ preventScroll: true }); again.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+          return;
+        }
+        var t = e.target.closest('[data-gf-toggle]');
+        if (t) {
+          var tk = t.getAttribute('data-gf-toggle');
+          if (state[tk]) delete state[tk]; else state[tk] = ['yes'];
+          animate(function () {
+            render();
+            settle();
+            var t2 = barButtons.querySelector('[data-gf-toggle="' + tk + '"]');
+            if (t2) t2.focus({ preventScroll: true });
+          });
+          return;
+        }
+        if (e.target.closest('[data-gf-clear]')) {
+          state = {}; openKey = null;
+          animate(function () { render(); settle(); });
+        }
+      });
+      bar.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && openKey) { e.preventDefault(); closePanel(); }
+      });
+      document.addEventListener('click', function (e) {
+        if (openKey && e.target.isConnected && !bar.contains(e.target)) closePanel();   // (a bar button the click just rebuilt is no longer in the page)
+      });
+    }
+
+    finder.addEventListener('click', function (e) {
+      if (e.target.closest('[data-gf-restart]')) {
+        state = {};
+        showStep(0);
+        quiz.scrollIntoView({ block: 'start', behavior: reduced.matches ? 'auto' : 'smooth' });
+        return;
+      }
+      var sort = e.target.closest('[data-gf-sort]');
+      if (sort) {
+        var resort = function () { animate(render); };
+        if (sort.getAttribute('data-gf-sort') === 'near') { if (me) { sortMode = 'near'; resort(); } else locate(resort); }
+        else { sortMode = 'soon'; resort(); }
+      }
+    });
+
+    var start = fromUrl();
+    state = start.state;
+    if (start.results) showResults(); else showStep(0);
+  });
+
+  // --- Group pop-up ([data-group-modal] links: the finder's cards) ------------------
+  // A link with data-group-modal="<GroupId>" opens its page (LifeGroupDetails.lava,
+  // Blank layout) in an iframe inside a <dialog>, instead of leaving the results.
+  // The iframe is same-origin, so it's sized to its page (and re-sized as the
+  // card flips or the form posts back); the dialog scrolls when that's taller
+  // than the screen. The address carries ?group=<GroupId> while it's open, so
+  // the results page reopens on that group (shared links, reloads). Ctrl/⌘-
+  // click, and browsers without <dialog>, follow the link to the page itself.
+  (function () {
+    var dialog = null, frame = null, sizer = null, lastLink = null;
+    var setParam = function (id) {
+      if (!history.replaceState) return;
+      var url = new URL(location.href);
+      if (id) url.searchParams.set('group', id); else url.searchParams.delete('group');
+      history.replaceState(null, '', url.toString().replace(/all=(&|$)/, 'all$1'));
+    };
+    var build = function () {
+      dialog = document.createElement('dialog');
+      dialog.className = 'group-modal';
+      dialog.setAttribute('aria-label', 'Group details');
+      dialog.innerHTML =
+        '<button type="button" class="group-modal__close" data-group-modal-close aria-label="Close"><svg width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg></button>' +
+        '<div class="group-modal__loading" aria-hidden="true"><span></span></div>' +
+        '<iframe class="group-modal__frame" title="Group details"></iframe>';
+      document.body.appendChild(dialog);
+      frame = dialog.querySelector('iframe');
+      frame.addEventListener('load', function () {
+        var doc;
+        try { doc = frame.contentDocument; } catch (err) { doc = null; }
+        if (sizer) { sizer.disconnect(); sizer = null; }
+        if (!doc || !doc.body || frame.getAttribute('src') === 'about:blank') return;
+        var fit = function () { frame.style.height = Math.ceil(doc.body.getBoundingClientRect().height) + 'px'; };
+        fit();
+        var RO = frame.contentWindow.ResizeObserver || window.ResizeObserver;
+        if (RO) { sizer = new RO(fit); sizer.observe(doc.body); }
+        dialog.classList.add('is-loaded');
+        dialog.scrollTop = 0;
+      });
+      dialog.addEventListener('close', function () {
+        if (sizer) { sizer.disconnect(); sizer = null; }
+        frame.setAttribute('src', 'about:blank');
+        frame.style.height = '';
+        dialog.classList.remove('is-loaded');
+        document.body.classList.remove('is-locked');
+        setParam(null);
+        if (lastLink && document.contains(lastLink)) lastLink.focus({ preventScroll: true });
+      });
+      dialog.addEventListener('click', function (e) {
+        if (e.target.closest('[data-group-modal-close]')) { dialog.close(); return; }
+        var r = dialog.getBoundingClientRect();   // a click on the backdrop
+        if (e.clientY < r.top || e.clientY > r.bottom || e.clientX < r.left || e.clientX > r.right) dialog.close();
+      });
+    };
+    var open = function (link) {
+      if (!dialog) build();
+      lastLink = link;
+      dialog.classList.remove('is-loaded');
+      var card = link.closest('[data-tone]');
+      if (card) dialog.setAttribute('data-tone', card.getAttribute('data-tone')); else dialog.removeAttribute('data-tone');
+      frame.setAttribute('src', link.href);
+      document.body.classList.add('is-locked');
+      dialog.showModal();
+      dialog.querySelector('[data-group-modal-close]').focus();
+      setParam(link.getAttribute('data-group-modal'));
+    };
+    var supported = typeof HTMLDialogElement === 'function';
+    document.addEventListener('click', function (e) {
+      var link = e.target.closest('a[data-group-modal]');
+      if (!link || !supported || e.metaKey || e.ctrlKey || e.shiftKey || e.button > 0) return;
+      e.preventDefault();
+      open(link);
+    });
+    // Reopen from the address (?group=ID), once the finder has laid out its cards
+    var wanted = new URLSearchParams(location.search).get('group');
+    if (wanted && supported) {
+      var link = document.querySelector('a[data-group-modal="' + wanted.replace(/[^0-9]/g, '') + '"]');
+      if (link) open(link);
+    }
+  })();
+
+  // --- Group details ([data-group-detail]: LifeGroupDetails.lava) -------------------
+  // The card's front is the group; its back holds Rock's Group Registration
+  // block, which sits after the card on the page (found by Rock's own
+  // .group-registration class, or a block given the CSS class "group-signup")
+  // and is moved into the back here. "Sign up for this group" flips the card (a
+  // quarter turn out, swap faces, a quarter turn in; a plain swap with reduced
+  // motion). The open face is remembered for the browser session, so after the
+  // form posts back the card opens on its back with the result. Inside the
+  // finder's pop-up (html.is-framed), "Back to groups" closes the pop-up.
+  document.querySelectorAll('[data-group-detail]').forEach(function (gd) {
+    var card = gd.querySelector('[data-gd-card]');
+    var front = gd.querySelector('[data-gd-front]');
+    var back = gd.querySelector('[data-gd-back]');
+    var slot = gd.querySelector('[data-gd-slot]');
+    var flipBtn = gd.querySelector('[data-gd-flip]');
+    var form = document.querySelector('.group-signup') || document.querySelector('.block-instance.group-registration');   // a block given that class, else Rock's own class for its Group Registration block
+    var key = 'gd-face-' + gd.getAttribute('data-group-detail');
+    var framed = root.classList.contains('is-framed');
+    var host = null;
+    try { host = framed && window.frameElement ? window.frameElement.closest('dialog') : null; } catch (err) { host = null; }
+
+    if (form && slot && flipBtn && back) {
+      slot.appendChild(form);
+      flipBtn.hidden = false;
+    }
+    var store = function (v) { try { if (v) sessionStorage.setItem(key, v); else sessionStorage.removeItem(key); } catch (err) { /* private mode */ } };
+    var stored = function () { try { return sessionStorage.getItem(key); } catch (err) { return null; } };
+    var toTop = function () {
+      if (host) host.scrollTop = 0;
+      else if (gd.getBoundingClientRect().top < 0) window.scrollTo({ top: window.scrollY + gd.getBoundingClientRect().top - 16, behavior: 'instant' });
+    };
+    var swap = function (toBack) {
+      front.hidden = toBack;
+      back.hidden = !toBack;
+      store(toBack ? 'back' : null);
+    };
+    var flip = function (toBack) {
+      var focusTarget = function () {
+        var t = toBack ? back.querySelector('#gd-signup') : flipBtn;
+        if (t) t.focus({ preventScroll: true });
+      };
+      if (reduced.matches || !card.animate) { swap(toBack); toTop(); focusTarget(); return; }
+      var dir = toBack ? 1 : -1;
+      card.animate([{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(' + (90 * dir) + 'deg)' }], { duration: 170, easing: 'cubic-bezier(0.55, 0, 1, 0.45)' }).finished.then(function () {
+        swap(toBack);
+        toTop();
+        return card.animate([{ transform: 'rotateY(' + (-90 * dir) + 'deg)' }, { transform: 'rotateY(0deg)' }], { duration: 260, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }).finished;
+      }).then(focusTarget);
+    };
+
+    if (form && back && stored() === 'back') swap(true);
+
+    gd.addEventListener('click', function (e) {
+      if (e.target.closest('[data-gd-flip]')) { flip(true); return; }
+      if (e.target.closest('[data-gd-unflip]')) { flip(false); return; }
+      if (host && e.target.closest('[data-gd-close]')) { e.preventDefault(); store(null); host.close(); }
+    });
+  });
+
   // --- Content modals (.content-modal <dialog>, e.g. Outreach's partners) -----------
   // A [data-modal-open="<dialog id>"] button opens that dialog; [data-modal-close]
   // inside it, Esc (the browser's own) or a click on the backdrop closes it. The

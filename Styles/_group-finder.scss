@@ -1,0 +1,373 @@
+// ===========================================================================
+// GROUP FINDER — the Life Group search page (Assets/Lava/LifeGroupSearch.lava;
+// behaviour in theme.js "Group finder").
+//
+//   .gf-quiz        one question per screen in a card: progress line and bar,
+//                   "Skip to all groups", the question, big answer buttons
+//                   (.gf-option, each with how many groups it leaves; pressed =
+//                   brand wash; disabled = leaves none), Back / Next
+//   .gf-results     the count, Soonest / Closest to me, Start over
+//   .gf-filters     the filter bar, sticky under the header: a frosted bar out
+//                   to the screen edges (like .content-subnav) whose row of
+//                   buttons scrolls sideways on phones. A button opens its
+//                   question's answers in the panel INSIDE the bar, so the bar
+//                   grows and pushes the cards down; nothing covers them.
+//                   Then the note when answers were left out, and the cards
+//   .group-card     a group: a band with the day(s) and the kind of group (in
+//                   its colour, below), name, tags, three lines of
+//                   description, when and where, "View group" (or "Sign up"),
+//                   childcare icon at the bottom right ("?" = ask about it).
+//                   --dropin: a "Drop in" sticker on the corner. The whole card
+//                   is the link ([data-card], theme.js); it opens the group in
+//                   the pop-up (.group-modal, theme.js "Group pop-up")
+//   [data-tone]     GROUP COLOURS, by kind of group (LifeGroupSearch.lava and
+//                   LifeGroupDetails.lava set it; colorByGroupType there turns
+//                   it off): light bands, the brand's green and sand with a
+//                   soft blue and a coral to complement them. --tone (band), --on-tone (text on the band),
+//                   --tone-strong (dots, icons, rings on white), --tone-wash
+//                   (tiles)
+// All buttons are type="button": Rock wraps the page in one form.
+// ===========================================================================
+
+@use "config" as *;
+
+// ---------------------------------------------------------------------------
+// Group colours, all light (dark text on every band): mixed is the light brand
+// green, young adults a warm sand, men a soft blue and women a reddish-orange
+// coral (blue and coral are the complements, kept dusty so they sit with the
+// lime instead of fighting it, as the first pastels did). Without data-tone
+// everything falls back to neutral surfaces.
+// ---------------------------------------------------------------------------
+[data-tone="mixed"] {
+  --tone:        oklch(0.91 0.11 124);   // ≈ v-green-200
+  --tone-strong: oklch(0.55 0.14 124);
+  --tone-wash:   oklch(0.91 0.11 124 / 0.45);
+  --on-tone:     var(--v-neutral-900);
+}
+[data-tone="men"] {
+  --tone:        oklch(0.90 0.055 240);
+  --tone-strong: oklch(0.52 0.09 240);
+  --tone-wash:   oklch(0.90 0.055 240 / 0.5);
+  --on-tone:     var(--v-neutral-900);
+}
+[data-tone="women"] {
+  --tone:        oklch(0.88 0.08 42);
+  --tone-strong: oklch(0.55 0.13 42);
+  --tone-wash:   oklch(0.88 0.08 42 / 0.5);
+  --on-tone:     var(--v-neutral-900);
+}
+[data-tone="young-adult"] {
+  --tone:        oklch(0.90 0.055 82);
+  --tone-strong: oklch(0.55 0.08 82);
+  --tone-wash:   oklch(0.90 0.055 82 / 0.5);
+  --on-tone:     var(--v-neutral-900);
+}
+
+.gf { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-xl); padding-bottom: var(--space-2xl); }   // (one column no wider than the page: the filter row scrolls inside it)
+.gf [hidden] { display: none !important; }   // the grids and flex rows below would otherwise show hidden parts
+
+// ---------------------------------------------------------------------------
+// Quiz
+// ---------------------------------------------------------------------------
+.gf-quiz {
+  width: 100%; max-width: 46rem;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+  scroll-margin-top: calc(var(--header-h) + var(--space-md));
+}
+.gf-quiz__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-xs) var(--space-md); }
+.gf-quiz__progress {
+  margin: 0;
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-widest); text-transform: uppercase;
+  color: var(--brand-text);
+}
+.gf-quiz__skip,
+.gf-quiz__back {
+  display: inline-flex; align-items: center; gap: 0.3em;
+  padding: 0; border: 0; background: none;
+  font: inherit; font-size: 0.875rem; font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.gf-quiz__skip { text-decoration: underline; text-underline-offset: 0.2em; }
+.gf-quiz__skip:hover, .gf-quiz__back:hover { color: var(--brand-text); }
+.gf-quiz__bar { height: 4px; margin: var(--space-sm) 0 var(--space-xl); border-radius: var(--radius-pill); background: var(--border-subtle); overflow: hidden; }
+.gf-quiz__bar span { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--brand); transition: width var(--duration) var(--ease-out); }
+
+.gf-step__intro { margin: 0 0 var(--space-sm); color: var(--text-secondary); }
+.gf-step__q {
+  margin: 0;
+  font-size: clamp(1.5rem, 3.6vw, 2.25rem); line-height: 1.1;
+  text-transform: uppercase; text-wrap: balance;
+  color: var(--text);
+}
+.gf-step__q:focus { outline: none; }
+.gf-step__hint { margin: var(--space-xs) 0 0; color: var(--text-secondary); }
+
+.gf-options { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-sm); margin-top: var(--space-lg); }
+@media (min-width: #{$bp-sm}) {
+  .gf-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gf-options--days { grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); }   // as many as fit ("Wednesday" plus its count)
+}
+.gf-option {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm);
+  min-height: 3.5rem;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  font: inherit; font-size: 1rem; font-weight: 700; text-align: left;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--duration) var(--ease-out), background var(--duration) var(--ease-out);
+}
+.gf-option:hover:not(:disabled) { border-color: var(--brand); }
+.gf-option[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-wash); box-shadow: inset 0 0 0 1px var(--brand); }
+.gf-option:disabled { opacity: 0.45; cursor: not-allowed; }
+.gf-quiz [data-gf-filter-only] { display: none; }   // "Any" kind of group: a filter answer, not a quiz one
+// The kinds of group, each with its colour's dot
+.gf-option[data-tone] { justify-content: flex-start; }
+.gf-option[data-tone]::before { content: ""; flex: none; width: 0.75rem; aspect-ratio: 1; border-radius: 50%; background: var(--tone-strong); }
+.gf-option[data-tone] .gf-option__count { margin-left: auto; }
+.gf-option__count {
+  flex: none;
+  min-width: 1.75rem; padding: 0.1rem 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--bg-subtle, var(--border-subtle));
+  font-size: 0.75rem; font-weight: 800; text-align: center;
+  color: var(--text-secondary);
+}
+.gf-option[aria-pressed="true"] .gf-option__count { background: var(--bg-elevated); color: var(--brand-text); }
+.gf-step__near { margin: var(--space-md) 0 0; }
+.gf-step__near .pill-btn { cursor: pointer; }
+.is-locating [data-gf-near], .is-locating [data-gf-sort="near"] { opacity: 0.6; pointer-events: none; }
+
+.gf-quiz__foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); margin-top: var(--space-xl); min-height: 2.75rem; }
+.gf-quiz__foot .btn { margin-left: auto; }
+
+// ---------------------------------------------------------------------------
+// Results
+// ---------------------------------------------------------------------------
+.gf-results { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-lg); }
+.gf-results__head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-sm) var(--space-md); }
+.gf-results__count { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; text-transform: uppercase; color: var(--text); }
+.gf-results__actions,
+.gf-results__sort { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); }
+.gf-results__actions { gap: var(--space-sm) var(--space-md); }
+.gf-results .pill-btn { cursor: pointer; }
+.gf-results__restart,
+.gf-filters__clear {
+  display: inline-flex; align-items: center; gap: 0.35em;
+  padding: 0; border: 0; background: none;
+  font: inherit; font-size: 0.875rem; font-weight: 700;
+  color: var(--text-secondary);
+  text-decoration: underline; text-underline-offset: 0.2em;
+  cursor: pointer; white-space: nowrap;
+}
+.gf-results__restart:hover, .gf-filters__clear:hover { color: var(--brand-text); }
+
+// ---------------------------------------------------------------------------
+// Filter bar
+// ---------------------------------------------------------------------------
+.gf-filters {
+  position: sticky; top: var(--header-h); z-index: 20;
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(var(--gutter), calc(50vw - 50%));   // the row lines up with the cards
+  background: oklch(from var(--bg) l c h / 0.86);
+  border-block: 1px solid var(--border-subtle);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+}
+.gf-filters__row { display: flex; align-items: center; gap: var(--space-sm); min-height: 3.5rem; }
+.gf-filters__label {
+  display: inline-flex; align-items: center; gap: 0.35em; flex: none;
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.gf-filters__buttons {
+  display: flex; gap: var(--space-xs);
+  flex: 1 1 auto; min-width: 0;
+  padding-block: var(--space-xs);
+  overflow-x: auto; scrollbar-width: none;
+}
+.gf-filters__buttons::-webkit-scrollbar { display: none; }
+@media (max-width: #{$bp-sm - 1px}) {
+  .gf-filters__label span { display: none; }   // phones: the icon alone
+  // the row runs to the screen edge and fades out there, so it reads as scrollable
+  .gf-filters__buttons { margin-right: calc(var(--gutter) * -1); padding-right: var(--gutter); mask-image: linear-gradient(to left, transparent, #000 var(--gutter)); }
+  .gf-filters__clear { display: none; }   // phones: clearing is each panel's Any (and Start over)
+}
+@media (min-width: #{$bp-md}) {
+  .gf-filters__buttons { flex-wrap: wrap; overflow: visible; }
+}
+.gf-filter {
+  display: inline-flex; align-items: center; gap: 0.4em; flex: none;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  font: inherit; font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--duration) var(--ease-out), background var(--duration) var(--ease-out);
+}
+.gf-filter svg { transition: transform var(--duration) var(--ease-out); }
+.gf-filter:hover { border-color: var(--brand); }
+.gf-filter.is-active { border-color: var(--brand); background: var(--brand-wash); color: var(--brand-text); }
+.gf-filter[aria-expanded="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
+.gf-filter[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+.gf-filters__panel {
+  max-height: calc(100dvh - var(--header-h) - 5rem);
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: var(--space-md) 0 var(--space-lg);
+  border-top: 1px solid var(--border-subtle);
+}
+.gf-filters__panel .gf-options { margin-top: 0; grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr)); gap: var(--space-xs); }
+@media (min-width: #{$bp-sm}) { .gf-filters__panel .gf-options { grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); } }
+.gf-filters__panel .gf-option { min-height: 2.75rem; padding: 0.4rem 0.75rem; font-size: 0.9375rem; }
+.gf-filters__done { display: flex; justify-content: flex-end; margin-top: var(--space-md); }
+.gf-results__note {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-lg);
+  background: var(--brand-wash);
+  font-size: 0.9375rem; color: var(--text);
+}
+
+.gf-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-lg); margin: 0; padding: 0; list-style: none; }
+@media (min-width: #{$bp-sm}) { .gf-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: #{$bp-md}) { .gf-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.group-card {
+  --card-pad: clamp(1.25rem, 2.5vw, 1.75rem);
+  position: relative;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--card-pad);
+  border-radius: var(--radius-xl);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--duration) var(--ease-out), transform var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out);
+}
+.group-card:hover { transform: translateY(-2px); border-color: var(--brand); box-shadow: var(--shadow-md); }
+.group-card[data-tone]:hover { border-color: var(--tone-strong); }
+// The band: day(s) and the kind of group, in the kind's colour
+.group-card__band {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm);
+  align-self: stretch;
+  margin: calc(-1 * var(--card-pad)) calc(-1 * var(--card-pad)) var(--space-2xs);
+  padding: 0.75rem var(--card-pad);
+  border-radius: calc(var(--radius-xl) - 1px) calc(var(--radius-xl) - 1px) 0 0;
+  background: var(--tone, var(--surface));
+  color: var(--on-tone, var(--text));
+}
+.group-card__when,
+.group-card__kind {
+  margin: 0;
+  font-size: 0.75rem; font-weight: 800; line-height: 1.2;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: inherit;   // the band's --on-tone, over the site's paragraph colour
+}
+.group-card__kind { font-weight: 700; text-align: right; opacity: 0.78; }
+// Drop in: a sticker on the corner
+.group-card--dropin .group-card__band { padding-right: 4.25rem; }
+.group-card--dropin .group-card__title { padding-right: 2rem; }
+.group-card__sticker,
+.group-detail__sticker {
+  position: absolute; top: -0.9rem; right: -0.6rem; z-index: 1;
+  display: grid; place-items: center;
+  width: 4.5rem; aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--ink);
+  outline: 1.5px dashed oklch(from var(--brand) l c h / 0.7); outline-offset: -5px;
+  box-shadow: var(--shadow-md);
+  font-size: 0.75rem; font-weight: 900; line-height: 1; text-align: center;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand-bright);
+  transform: rotate(-10deg);
+}
+.group-card__title { margin: 0; font-size: 1.25rem; line-height: 1.2; text-transform: uppercase; color: var(--text); }
+.group-card__title a { color: inherit; text-decoration: none; }
+.group-card__title a:is(:hover, :focus) { color: inherit; }
+.group-card__title a:focus-visible { outline: 2px solid var(--brand); outline-offset: 3px; border-radius: 2px; }
+.group-card__tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
+.group-card__tags:not(:has(li)) { display: none; }
+.group-card__tags li {
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.group-card__tags .group-card__full { border-color: currentColor; color: var(--text); }
+.content-page .group-card__desc,
+.group-card__desc {
+  margin: 0;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden;
+  font-size: 0.9375rem; line-height: 1.55; color: var(--text-secondary);
+}
+.group-card__meta { display: grid; gap: 0.3rem; margin: 0; padding: 0; list-style: none; font-size: 0.875rem; font-weight: 600; color: var(--text); }
+.group-card__meta li { display: flex; align-items: flex-start; gap: 0.45rem; }
+.group-card__meta svg { flex: none; margin-top: 0.15rem; color: var(--brand-text); }
+.group-card__distance { font-weight: 500; color: var(--text-secondary); }
+.group-card__foot {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm);
+  width: 100%; min-height: 2.25rem;
+  margin-top: auto; padding-top: var(--space-xs);
+}
+.group-card__cta {
+  display: inline-flex; align-items: center; gap: 0.35em;
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--brand-text);
+}
+
+.group-card__childcare {
+  position: relative; flex: none;
+  display: grid; place-items: center;
+  width: 2.25rem; aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--brand-wash);
+  color: var(--brand-text);
+}
+.group-card__childcare--ask::after {   // "Ask for Details"
+  content: "?";
+  position: absolute; top: -0.25rem; right: -0.3rem;
+  display: grid; place-items: center;
+  width: 1.05rem; aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--brand);
+  background: var(--bg-elevated);
+  font-size: 0.625rem; font-weight: 900; line-height: 1;
+}
+
+.gf-empty { text-align: center; color: var(--text-secondary); }
+
+// Filtering and sorting animate (theme.js, view transitions). Only the cards
+// are captured, so the page itself stays live and clickable under them; the
+// overlay is clipped below the sticky filter bar (--gf-clip, set by theme.js).
+// Cards that stay slide to their new place; new ones fade in once the others
+// have started to move; dropped ones fade out quickly.
+html.gf-vt { view-transition-name: none; }
+html.gf-vt::view-transition { pointer-events: none; clip-path: inset(var(--gf-clip, 0px) 0 0 0); }
+html.gf-vt::view-transition-group(*) { animation-duration: 420ms; animation-timing-function: var(--ease-out); }
+html.gf-vt::view-transition-old(*):only-child { animation: gf-card-out 180ms var(--ease-out) both; }
+html.gf-vt::view-transition-new(*):only-child { animation: gf-card-in 320ms var(--ease-out) 140ms both; }
+@keyframes gf-card-out { to { opacity: 0; transform: scale(0.96); } }
+@keyframes gf-card-in { from { opacity: 0; transform: scale(0.96); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .gf-quiz__bar span, .group-card, .gf-filter, .gf-filter svg { transition: none; }
+  .group-card:hover { transform: none; }
+}

@@ -1,0 +1,330 @@
+{% comment %}
+    LIFE GROUP DETAILS — one group (route `next-steps/find-a-group/details`,
+    ?GroupId=). Shown in the group finder's pop-up (LifeGroupSearch.lava; theme.js
+    "Group pop-up" loads this page in an iframe) and on its own when linked
+    directly.
+
+    Page:                     Layout Blank (Layouts/Blank.aspx: theme CSS, font,
+                              icons and theme.js, no header or footer)
+    Block 1 (Main zone):      an HTML block
+      Block content:          {% include '~~/Assets/Lava/LifeGroupDetails.lava' %}
+      Enabled Lava Commands:  RockEntity  (the group, the campuses)
+    Block 2 (Main zone):      Rock's Group Registration block, below it
+      (theme.js finds it by Rock's own class, group-registration; to use a
+      different block, give it the CSS Class group-signup)
+      Its Lava template:      blank (this card already shows the group)
+
+    THE CARD
+      Front   a band in the kind of group's colour (as on the finder's cards)
+              with the name and when it meets; the description; the facts
+              (schedule, where, kind, content, childcare, drop in, leaders); a
+              map; "Sign up for this group" and "Back to groups".
+              A quiet share button (the design system's share menu, as on the
+              event cards; theme.js "Share dropdowns") ends that row: Facebook,
+              Email, Text message, Copy link, all with this page's own address
+              (shareUrl: the group alone, its name as the page title).
+      Back    the Group Registration block. theme.js ("Group details") moves the
+              .group-signup block into the card's back, and "Sign up for this
+              group" flips the card over to it. After the form posts back the
+              card opens on its back again (the browser session remembers), so
+              the result shows where the form was.
+      Without JavaScript, or without the registration block, there's no flip:
+      the block (if any) shows under the card.
+      AlternateSignup (an address on the group): the sign-up button goes there
+      instead (out of the pop-up; a new tab when it's off-site).
+      Full (capacity set and reached): no sign-up, a note instead.
+
+    PLACE AND MAP (Google Static Maps, the Global attribute GoogleAPIKey)
+      At VRL (the campus location, a room in it, or 1831 S Barker): "At Valley
+        Real Life", the room's name, a pin on the campus.
+      ApproxGeo = Yes: the town only, and the map shows a shaded circle around
+        the group's coordinates ROUNDED to two decimals (about 1 km), no pin, so
+        neither the page nor the map's address carries the real location.
+      Otherwise: the street address and a pin.
+      No coordinates: no map; no location: "Ask the leader where it meets".
+      The map opens Google Maps (the rounded point for approximate groups).
+
+    Only active, public groups show (requirePublic below), as in the finder;
+    anything else reads "We couldn't find that group".
+    Styles: Styles/_group-detail.scss.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign finderUrl = '/next-steps/find-a-group/search' -%}
+{%- assign detailUrl = '/next-steps/find-a-group/details' -%}{%- comment -%} this page: the address the share menu passes on {%- endcomment -%}
+{%- assign requirePublic = true -%}
+{%- assign colorByGroupType = true -%}{%- comment -%} keep the same as LifeGroupSearch.lava's {%- endcomment -%}
+{%- assign mapZoom = 14 -%}
+{%- assign approxZoom = 13 -%}
+
+{%- assign groupId = 'Global' | PageParameter:'GroupId' | AsInteger -%}
+{%- assign Group = null -%}
+{%- if groupId and groupId > 0 -%}
+  {%- group id:'{{ groupId }}' securityenabled:'false' -%}
+    {%- assign Group = group -%}
+  {%- endgroup -%}
+{%- endif -%}
+{%- if Group -%}
+  {%- if Group.IsActive != true or Group.IsArchived == true %}{% assign Group = null %}{% endif -%}
+{%- endif -%}
+{%- if Group and requirePublic -%}
+  {%- if Group.IsPublic != true %}{% assign Group = null %}{% endif -%}
+{%- endif -%}
+
+{%- if Group -%}
+
+  {%- comment -%} Kind of group, and its colour (as in LifeGroupSearch.lava) {%- endcomment -%}
+  {%- assign compLabels = 'mixed:Mixed|men:Men’s|women:Women’s|young-adult:Young adults' | Split:'|' -%}
+  {%- assign compText = Group | Attribute:'GroupComp' | Trim -%}
+  {%- assign compList = compText | Split:',' -%}
+  {%- assign compKeys = ' ' -%}
+  {%- assign kindText = '' -%}
+  {%- for compItem in compList -%}
+    {%- assign compName = compItem | Trim -%}
+    {%- if compName != '' -%}
+      {%- assign compKey = compName | Downcase | Replace:' ','-' -%}
+      {%- assign compKeys = compKeys | Append:compKey | Append:' ' -%}
+      {%- assign compLabel = compName -%}
+      {%- for pair in compLabels -%}
+        {%- assign pairKey = pair | Split:':' | First -%}
+        {%- if pairKey == compKey %}{% assign compLabel = pair | Split:':' | Last %}{% endif -%}
+      {%- endfor -%}
+      {%- if kindText != '' %}{% assign kindText = kindText | Append:' · ' %}{% endif -%}
+      {%- assign kindText = kindText | Append:compLabel -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- assign toneKey = '' -%}
+  {%- if compKeys contains ' young-adult ' %}{% assign toneKey = 'young-adult' %}{% elsif compKeys contains ' men ' %}{% assign toneKey = 'men' %}{% elsif compKeys contains ' women ' %}{% assign toneKey = 'women' %}{% elsif compKeys contains ' mixed ' %}{% assign toneKey = 'mixed' %}{% endif -%}
+  {%- if colorByGroupType == false %}{% assign toneKey = '' %}{% endif -%}
+
+  {%- comment -%} When {%- endcomment -%}
+  {%- assign schedText = Group.Schedule.FriendlyScheduleText | Default:'' | Trim -%}
+  {%- if schedText contains '<' %}{% assign schedText = '' %}{% endif -%}
+  {%- assign schedText = schedText | Replace:'Weekly: ','' -%}
+  {%- assign daysText = Group | Attribute:'DaysOfWeek' | Trim -%}
+
+  {%- comment -%} Content, childcare, drop in {%- endcomment -%}
+  {%- assign topicText = Group | Attribute:'Topic' | Trim -%}
+  {%- assign topicLower = topicText | Downcase -%}
+  {%- assign childcareText = Group | Attribute:'HasChildcare' | Downcase | Trim -%}
+  {%- assign dropInText = Group | Attribute:'IsDropInGroup' | Downcase | Trim -%}
+  {%- assign isDropIn = false -%}
+  {%- if dropInText == 'yes' or dropInText == 'true' %}{% assign isDropIn = true %}{% endif -%}
+
+  {%- comment -%} Full: capacity set and reached; leaders {%- endcomment -%}
+  {%- assign capacity = Group.GroupCapacity | Default:0 | AsInteger -%}
+  {%- assign activeMembers = 0 -%}
+  {%- assign leaderNames = '' | Split:'' -%}
+  {%- assign leaderLasts = '' | Split:'' -%}
+  {%- for member in Group.Members -%}
+    {%- capture memberStatus %}{{ member.GroupMemberStatus }}{% endcapture -%}
+    {%- if memberStatus == 'Active' -%}
+      {%- assign activeMembers = activeMembers | Plus:1 -%}
+      {%- if member.GroupRole.IsLeader -%}
+        {%- assign leaderNames = leaderNames | AddToArray:member.Person.NickName -%}
+        {%- assign leaderLasts = leaderLasts | AddToArray:member.Person.LastName -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+  {%- assign isFull = false -%}
+  {%- if capacity > 0 and activeMembers >= capacity %}{% assign isFull = true %}{% endif -%}
+  {%- comment -%} Leaders: "Jon & Amy Pierce" for a couple, otherwise full names {%- endcomment -%}
+  {%- assign leadersText = '' -%}
+  {%- assign leaderCount = leaderNames | Size -%}
+  {%- if leaderCount == 2 and leaderLasts[0] == leaderLasts[1] -%}
+    {%- assign leadersText = leaderNames[0] | Append:' & ' | Append:leaderNames[1] | Append:' ' | Append:leaderLasts[0] -%}
+  {%- else -%}
+    {%- for leaderName in leaderNames -%}
+      {%- if forloop.first == false %}{% if forloop.last %}{% assign leadersText = leadersText | Append:' & ' %}{% else %}{% assign leadersText = leadersText | Append:', ' %}{% endif %}{% endif -%}
+      {%- assign leadersText = leadersText | Append:leaderName | Append:' ' | Append:leaderLasts[forloop.index0] -%}
+    {%- endfor -%}
+  {%- endif -%}
+
+  {%- comment -%} Place {%- endcomment -%}
+  {%- assign campusLocationIds = ',' -%}
+  {%- campus where:'IsActive == true' securityenabled:'false' -%}
+    {%- for campusItem in campusItems -%}
+      {%- if campusItem.LocationId %}{% assign campusLocationIds = campusLocationIds | Append:campusItem.LocationId | Append:',' %}{% endif -%}
+    {%- endfor -%}
+  {%- endcampus -%}
+  {%- assign groupLocation = null -%}
+  {%- for gl in Group.GroupLocations -%}
+    {%- if gl.Location %}{% assign groupLocation = gl.Location %}{% break %}{% endif -%}
+  {%- endfor -%}
+  {%- assign approxText = Group | Attribute:'ApproxGeo' | Downcase | Trim -%}
+  {%- assign isApprox = false -%}
+  {%- if approxText == 'yes' or approxText == 'true' %}{% assign isApprox = true %}{% endif -%}
+  {%- assign onCampus = false -%}
+  {%- assign placeText = '' -%}
+  {%- assign placeNote = '' -%}
+  {%- assign mapPoint = '' -%}
+  {%- assign mapQuery = '' -%}
+  {%- if groupLocation -%}
+    {%- assign street = groupLocation.Street1 | Default:'' | Trim -%}
+    {%- assign streetLower = street | Downcase -%}
+    {%- assign cityName = groupLocation.City | Default:'' | Trim -%}
+    {%- assign locationName = groupLocation.Name | Default:'' | Trim -%}
+    {%- assign locationNameLower = locationName | Downcase -%}
+    {%- assign locationKey = ',' | Append:groupLocation.Id | Append:',' -%}
+    {%- assign parentKey = ',' | Append:groupLocation.ParentLocationId | Append:',' -%}
+    {%- if streetLower contains '1831' and streetLower contains 'barker' %}{% assign onCampus = true %}{% endif -%}
+    {%- if locationNameLower contains 'barker' %}{% assign onCampus = true %}{% endif -%}
+    {%- if campusLocationIds contains locationKey or campusLocationIds contains parentKey %}{% assign onCampus = true %}{% endif -%}
+    {%- if onCampus -%}
+      {%- assign isApprox = false -%}
+      {%- assign placeText = 'At Valley Real Life' -%}
+      {%- comment -%} a room's name (not the campus's own) {%- endcomment -%}
+      {%- assign placeNote = locationName -%}
+      {%- if locationNameLower contains 'barker' or locationNameLower contains 'valley real life' %}{% assign placeNote = '' %}{% endif -%}
+      {%- if street != '' %}{% assign mapQuery = street | Append:', ' | Append:cityName %}{% else %}{% assign mapQuery = '1831 S Barker Rd, Greenacres, WA' %}{% endif -%}
+    {%- elsif isApprox -%}
+      {%- if cityName != '' %}{% assign placeText = 'Near ' | Append:cityName %}{% else %}{% assign placeText = 'A home nearby' %}{% endif -%}
+      {%- assign placeNote = 'The leader shares the address when you sign up.' -%}
+    {%- else -%}
+      {%- assign placeText = street -%}
+      {%- if cityName != '' %}{% if placeText != '' %}{% assign placeText = placeText | Append:', ' %}{% endif %}{% assign placeText = placeText | Append:cityName %}{% endif -%}
+      {%- if locationName != '' and placeText == '' %}{% assign placeText = locationName %}{% endif -%}
+      {%- assign mapQuery = placeText -%}
+    {%- endif -%}
+    {%- if groupLocation.Latitude -%}
+      {%- if isApprox -%}
+        {%- assign lat = groupLocation.Latitude | Format:'0.00' -%}
+        {%- assign lng = groupLocation.Longitude | Format:'0.00' -%}
+        {%- assign mapQuery = lat | Append:',' | Append:lng -%}
+      {%- else -%}
+        {%- assign lat = groupLocation.Latitude | Format:'0.00000' -%}
+        {%- assign lng = groupLocation.Longitude | Format:'0.00000' -%}
+      {%- endif -%}
+      {%- assign mapPoint = lat | Append:',' | Append:lng -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- if placeText == '' %}{% assign placeText = 'Ask the leader where it meets' %}{% assign mapPoint = '' %}{% endif -%}
+  {%- assign mapKey = 'Global' | Attribute:'GoogleAPIKey' | Trim -%}
+  {%- if mapKey == '' %}{% assign mapPoint = '' %}{% endif -%}
+
+  {%- comment -%} Sign up somewhere else {%- endcomment -%}
+  {%- assign altSignup = Group | Attribute:'AlternateSignup','RawValue' | Trim -%}
+  {%- assign altExternal = false -%}
+  {%- if altSignup != '' -%}
+    {%- assign altStart = altSignup | Slice:0,4 | Downcase -%}
+    {%- if altStart == 'http' %}{% unless altSignup contains 'vrl.church' %}{% assign altExternal = true %}{% endunless %}{% endif -%}
+  {%- endif -%}
+
+  {%- capture pageTitleSet %}{{ Group.Name | SetPageTitle }}{% endcapture -%}
+
+<article class="group-detail" data-group-detail="{{ Group.Id }}"{% if toneKey != '' %} data-tone="{{ toneKey }}"{% endif %} itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="{{ Group.Name | Escape }}">
+  <div class="group-detail__card" data-gd-card>
+
+    <!-- ===== FRONT: the group ===== -->
+    <section class="group-detail__face" data-gd-front aria-labelledby="gd-name">
+      <header class="group-detail__band">
+        <p class="group-detail__kicker">{% if kindText != '' %}{{ kindText }} {% endif %}Life Group</p>
+        <h1 class="group-detail__name" id="gd-name">{{ Group.Name }}</h1>
+        {%- if schedText != '' %}
+        <p class="group-detail__when">{{ schedText }}</p>
+        {%- endif %}
+        {%- if isDropIn %}
+        <span class="group-detail__sticker">Drop in</span>
+        {%- endif %}
+      </header>
+
+      <div class="group-detail__body" itemprop="articleBody">
+        {%- assign description = Group.Description | Trim -%}
+        {%- if description != '' %}
+        <div class="group-detail__desc">{{ description | Escape | NewlineToBr }}</div>
+        {%- endif %}
+
+        <ul class="group-detail__facts">
+          {%- if schedText != '' or daysText != '' %}
+          <li><span class="group-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-clock"/></svg></span><span><strong>When</strong>{% if schedText != '' %}{{ schedText }}{% else %}{{ daysText }}{% endif %}</span></li>
+          {%- endif %}
+          <li><span class="group-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-map-pin"/></svg></span><span><strong>Where</strong>{{ placeText }}{% if placeNote != '' %}<small>{{ placeNote }}</small>{% endif %}</span></li>
+          {%- if kindText != '' %}
+          <li><span class="group-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-users"/></svg></span><span><strong>Who</strong>{{ kindText }}</span></li>
+          {%- endif %}
+          {%- if topicText != '' and topicLower != 'other' %}
+          <li><span class="group-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-book"/></svg></span><span><strong>What we study</strong>{% if topicLower contains 'sermon series' %}We follow along with the weekend message{% else %}{{ topicText }}{% endif %}</span></li>
+          {%- endif %}
+          {%- if childcareText == 'yes' or childcareText contains 'ask' %}
+          <li><span class="group-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-kid"/></svg></span><span><strong>Childcare</strong>{% if childcareText == 'yes' %}Available{% else %}Ask the leader about childcare{% endif %}</span></li>
+          {%- endif %}
+          {%- if isDropIn %}
+          <li><span class="group-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-heart"/></svg></span><span><strong>Drop in</strong>Come any week, no sign-up needed</span></li>
+          {%- endif %}
+          {%- if leadersText != '' %}
+          <li><span class="group-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-user-circle"/></svg></span><span><strong>{% if leaderCount > 1 %}Leaders{% else %}Leader{% endif %}</strong>{{ leadersText }}</span></li>
+          {%- endif %}
+        </ul>
+
+        {%- if mapPoint != '' %}
+        {%- capture mapSrc %}https://maps.googleapis.com/maps/api/staticmap?center={{ mapPoint }}&zoom={% if isApprox %}{{ approxZoom }}{% else %}{{ mapZoom }}{% endif %}&size=640x280&scale=2&maptype=roadmap&style=feature:poi%7Cvisibility:off&style=feature:transit%7Cvisibility:off{% unless isApprox %}&markers=color:0x9bc93c%7C{{ mapPoint }}{% endunless %}&key={{ mapKey }}{% endcapture %}
+        <a class="group-detail__map{% if isApprox %} group-detail__map--approx{% endif %}" href="https://www.google.com/maps/search/?api=1&query={{ mapQuery | UrlEncode }}" target="_blank" rel="noopener">
+          <img src="{{ mapSrc | Trim }}" width="640" height="280" alt="{% if isApprox %}Map of the area near where {{ Group.Name | Escape }} meets{% else %}Map of where {{ Group.Name | Escape }} meets{% endif %}" loading="lazy">
+          <span class="group-detail__map-label">{% if isApprox %}Meets in this area{% else %}Open in Google Maps{% endif %} <svg width="14" height="14" aria-hidden="true"><use href="#i-arrow-up-right"/></svg></span>
+        </a>
+        {%- endif %}
+      </div>
+
+      <footer class="group-detail__actions">
+        {%- if isFull %}
+        <p class="group-detail__full">This group is full right now. Check back soon, or find another group that fits.</p>
+        {%- elsif altSignup != '' %}
+        <a class="btn btn--primary" href="{{ altSignup | Escape }}"{% if altExternal %} target="_blank" rel="noopener"{% else %} target="_top"{% endif %}>Sign up for this group</a>
+        {%- else %}
+        <button type="button" class="btn btn--primary" data-gd-flip hidden>Sign up for this group</button>
+        {%- endif %}
+        <a class="btn btn--outline" href="{{ finderUrl }}" target="_top" data-gd-close>Back to groups</a>
+        {%- capture shareUrl %}{{ 'Global' | Page:'Scheme' }}://{{ 'Global' | Page:'Host' }}{{ detailUrl }}?GroupId={{ Group.Id }}{% endcapture %}
+        {%- capture shareText %}{{ Group.Name }} · a Life Group at Valley Real Life{% endcapture %}
+        <div class="share group-detail__share">
+          <button class="share__btn" type="button" aria-expanded="false" aria-controls="gd-share" aria-label="Share this group" data-share-toggle>
+            <svg width="18" height="18" aria-hidden="true"><use href="#i-share"/></svg>
+          </button>
+          <div class="share__menu" id="gd-share" data-open="false">
+            <a class="share__item" href="https://www.facebook.com/sharer/sharer.php?u={{ shareUrl | EscapeDataString }}" target="_blank" rel="noopener"><svg width="16" height="16" aria-hidden="true"><use href="#i-facebook"/></svg> Facebook</a>
+            <a class="share__item" href="mailto:?subject={{ shareText | EscapeDataString }}&amp;body={{ shareUrl | EscapeDataString }}" target="_top"><svg width="16" height="16" aria-hidden="true"><use href="#i-mail"/></svg> Email</a>
+            <a class="share__item" href="sms:?&amp;body={{ shareText | Append:' ' | Append:shareUrl | EscapeDataString }}" target="_top"><svg width="16" height="16" aria-hidden="true"><use href="#i-message"/></svg> Text message</a>
+            <div class="share__divider"></div>
+            <button class="share__item" type="button" data-copy="{{ shareUrl }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-copy"/></svg> <span>Copy link</span></button>
+          </div>
+        </div>
+      </footer>
+    </section>
+
+    <!-- ===== BACK: sign up (theme.js moves the .group-signup block in here) ===== -->
+    <section class="group-detail__face group-detail__face--back" data-gd-back aria-labelledby="gd-signup" hidden>
+      <header class="group-detail__band group-detail__band--slim">
+        <button type="button" class="group-detail__back" data-gd-unflip><svg width="14" height="14" aria-hidden="true"><use href="#i-chevron-left"/></svg> Back to the group</button>
+        <p class="group-detail__kicker">Sign up</p>
+        <h2 class="group-detail__name" id="gd-signup" tabindex="-1">{{ Group.Name }}</h2>
+        {%- if schedText != '' %}
+        <p class="group-detail__when">{{ schedText }}</p>
+        {%- endif %}
+      </header>
+      <div class="group-detail__form" data-gd-slot></div>
+    </section>
+
+  </div>
+</article>
+
+{%- else -%}
+
+<article class="group-detail group-detail--missing">
+  <div class="group-detail__card">
+    <section class="group-detail__face">
+      <header class="group-detail__band">
+        <p class="group-detail__kicker">Life Groups</p>
+        <h1 class="group-detail__name">We couldn't find that group</h1>
+      </header>
+      <div class="group-detail__body">
+        <p>It may have finished or stopped taking new people. There are plenty of others to choose from.</p>
+      </div>
+      <footer class="group-detail__actions">
+        <a class="btn btn--primary" href="{{ finderUrl }}" target="_top" data-gd-close>Find a group</a>
+      </footer>
+    </section>
+  </div>
+</article>
+
+{%- endif -%}

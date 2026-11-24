@@ -27,19 +27,22 @@
                       that has them; hidden if none), more resources, and a
                       "Leading a group?" aside linking to My groups in My Account
 
-    FINDER: the group finder page isn't built on the new site yet, so these
-    links go nowhere until it is. When it exists, set its address and the
-    query string each tile adds to set its filter.
+    FINDER: the Join a group buttons go to the finder's search page,
+    /next-steps/find-a-group/search (its start page is /next-steps/
+    find-a-group, Assets/Lava/FindGroup.lava). The query string each tile adds
+    to set its filter (finderOnSite, …) is one of the finder's address answers
+    (Assets/Lava/LifeGroupSearch.lava: where=campus, where=offsite,
+    dropin=yes), so those links skip its quiz.
     Styles: Styles/_content.scss (content-feature, content-verse,
     content-subnav, content-bento, content-standfirst, content-promo, content-tiles--thirds,
     content-columns, content-crosslink, content-aside, row-links, row-link).
 {% endcomment %}
 
 {%- comment -%} ===== FINDER ===== {%- endcomment -%}
-{%- assign groupFinderUrl = '/ministries/life-groups/find' -%}
-{%- assign finderOnSite  = '?Meets=OnSite' -%}
-{%- assign finderDropIn  = '?Meets=DropIn' -%}
-{%- assign finderOffSite = '?Meets=OffSite' -%}
+{%- assign groupFinderUrl = '/next-steps/find-a-group/search' -%}{%- comment -%} the finder's search page; same as Assets/Lava/FindGroup.lava's finderUrl {%- endcomment -%}
+{%- assign finderOnSite  = '?where=campus' -%}
+{%- assign finderDropIn  = '?dropin=yes' -%}
+{%- assign finderOffSite = '?where=offsite' -%}
 {%- assign myGroupsUrl = '/my-account#my-groups' -%}
 
 {%- comment -%} ===== ROOTED =====

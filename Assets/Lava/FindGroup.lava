@@ -1,0 +1,123 @@
+{% comment %}
+    FIND A GROUP — the group finder's start page (route
+    `next-steps/find-a-group`, InnerDefault, the page header as set in Page
+    Properties). A utility lander, not the Life Groups ministry page: it gets
+    people into the finder (the search application page), and points new
+    people to the easiest way in first.
+
+    Block:                    an HTML block in the Main zone
+    Block content:            {% include '~~/Assets/Lava/FindGroup.lava' %}
+    Enabled Lava Commands:    RockEntity  (the Rooted card)
+    Cache Duration:           0  (Start here depends on who's signed in)
+
+    Sections:
+      Start here      for everyone EXCEPT someone signed in who's already an
+                      active member of an active Life Group (group type 25):
+                      Rooted (its next date and sign-up, from the event;
+                      Partials/EventPromo.lava) beside a tile on drop-in
+                      groups. When Rooted isn't scheduled, the drop-in tile
+                      stands alone.
+      Group finder    photos (PLACEHOLDER) beside the launch button
+      About           a crosslink to the Life Groups page
+
+    FINDER: the search page is /next-steps/find-a-group/search (finderUrl;
+    the same address as Assets/Lava/Lifegroups.lava's Join a group buttons).
+    The drop-in tile adds the finder's drop-in answer (?dropin=yes,
+    LifeGroupSearch.lava), which opens straight on drop-in groups.
+    Styles: Styles/_content.scss (content-standfirst, content-columns--stretch,
+    content-promo, content-crosslink, content-split, content-mosaic).
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign lifeGroupTypeId = '25' -%}
+{%- assign rootedOccurrenceId = 639 -%}
+{%- assign finderUrl = '/next-steps/find-a-group/search' -%}
+{%- assign finderDropIn = '?dropin=yes' -%}{%- comment -%} the finder's drop-in answer: skips its quiz {%- endcomment -%}
+{%- assign lifeGroupsUrl = '/ministries/life-groups' -%}
+
+{%- comment -%}
+  Start here: everyone, unless they're signed in and already in a Life Group.
+  Groups returns the person's memberships in that group type with an Active
+  member status; the loop also makes sure the group itself is active and not
+  archived.
+{%- endcomment -%}
+{%- assign showStartHere = true -%}
+{%- if CurrentPerson -%}
+  {%- assign lifeGroupMemberships = CurrentPerson | Groups:lifeGroupTypeId,'Active' -%}
+  {%- for membership in lifeGroupMemberships -%}
+    {%- if membership.Group.IsActive and membership.Group.IsArchived != true %}{% assign showStartHere = false %}{% break %}{% endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{%- assign rootedHtml = '' -%}
+{%- if showStartHere -%}
+  {%- assign promoOccurrenceId = rootedOccurrenceId -%}
+  {%- capture rootedHtml %}{% include '~~/Assets/Lava/Partials/EventPromo.lava' %}{% endcapture -%}
+  {%- assign rootedHtml = rootedHtml | Trim -%}
+{%- endif -%}
+
+<article class="content-page find-group" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Find a Group">
+  <div class="content-toc-scope" itemprop="articleBody">
+
+  {%- if showStartHere %}
+  <!-- ===== START HERE (not shown to someone already in a Life Group) ===== -->
+  <div class="sermons-divider" id="start"><h2>New to Life Groups?</h2></div>
+
+  {%- capture dropInTile %}
+    <section class="content-tile content-crosslink" aria-labelledby="fg-dropin">
+      <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-clock"/></svg></span>
+      <div>
+        <h2 id="fg-dropin">Drop in any week</h2>
+        <p>Not ready to sign up? Drop-in groups welcome anyone, any week. Find one that fits your schedule and just show up.</p>
+      </div>
+      <a class="btn btn--outline" href="{{ finderUrl }}{{ finderDropIn }}">Find a drop-in group</a>
+    </section>
+  {%- endcapture %}
+
+  {%- if rootedHtml != '' %}
+  <p class="content-standfirst">Start here: <strong>Rooted</strong> is the easiest way to meet new friends and find your way into a group.</p>
+
+  <div class="content-columns content-columns--stretch">
+    {{ rootedHtml }}
+    {{ dropInTile }}
+  </div>
+  {%- else %}
+  <p class="content-standfirst">Start here: <strong>drop-in groups</strong> are the easiest way to meet new friends and find your way into a group.</p>
+
+  {{ dropInTile }}
+  {%- endif %}
+  {%- endif %}
+
+  <!-- ===== GROUP FINDER ===== -->
+  <div class="sermons-divider" id="finder"><h2>Group finder</h2></div>
+
+  <section class="content-split" aria-labelledby="fg-finder">
+    <div class="content-split__text">
+      <p class="content-kicker">Men's, women's, mixed, young adult and recovery</p>
+      <h2 id="fg-finder">Find your people</h2>
+      <p>Search Life Groups by day, time, place and the kind of group you're looking for, at VRL and in homes around the valley. When one looks right, reach out and we'll help you take it from there.</p>
+      <p><a class="btn btn--primary" href="{{ finderUrl }}">Launch the group finder</a></p>
+    </div>
+    <div class="content-split__media">
+      {%- comment -%} PLACEHOLDER: group photos. Swap each figure's <span> for <img src="…" alt="…" loading="lazy"> and drop content-photo--placeholder. {%- endcomment %}
+      <div class="content-mosaic">
+        <figure class="content-photo content-photo--placeholder"><span>Photo: a group around a table</span></figure>
+        <figure class="content-photo content-photo--placeholder"><span>Photo: open Bibles</span></figure>
+        <figure class="content-photo content-photo--placeholder"><span>Photo: praying together</span></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT: the Life Groups page ===== -->
+  <section class="content-tile content-crosslink" aria-labelledby="fg-about">
+    <span class="content-tile__icon" aria-hidden="true"><svg width="22" height="22"><use href="#i-users"/></svg></span>
+    <div>
+      <h2 id="fg-about">What are Life Groups?</h2>
+      <p>Why we meet in groups, the kinds of groups there are, and resources for your group.</p>
+    </div>
+    <a class="btn btn--outline" href="{{ lifeGroupsUrl }}">About Life Groups</a>
+  </section>
+
+  </div>
+</article>
