@@ -11,7 +11,7 @@ The Discover VRL page (new.vrl.church/discover-vrl) is for people thinking about
 5. **What to expect.** What a service is like, beside a photo.
 6. **Questions.** Six questions that open when tapped, beside a photo.
 7. **When you arrive.** Connecting Point (beside a map of the lobby) and the Café (with "Your first drink is on us").
-8. **First Step Lunch.** What it is and when, beside the event's card (its photo, the next date and a **Save your seat** button), the same card the Students page uses for MSM and HSM.
+8. **First Step Lunch.** What it is and when, beside the event's card (its photo, the next date and a **Save your seat** button), the same card the Students page uses for MSM and HSM. The card always shows the next lunch on the Rock calendar. If none is scheduled, a stand-in card says "First Sunday of the month" and **Save your seat** goes to What's Happening.
 9. **Directions.** A map, the address, service times and **Get directions**, beside ways to watch online. This matches the Location page.
 
 ## Copy for approval
@@ -74,7 +74,6 @@ Each piece is marked:
 
 - **Photos.** All of them are placeholders: six for the grid at the top, then one each for What to expect, Questions, the Café and First Step Lunch.
 - **A map of the lobby** showing where Connecting Point is.
-- **The First Step Lunch event in Rock**, with a photo. Until it's set up, a stand-in card says "First Sunday of the month" and **Save your seat** goes to What's Happening. Once it's in Rock, the card shows the event's photo and next date, and the button goes to that lunch.
 - **Links that don't exist yet.** Until each one is added, its link is left out and the sentence reads without it:
   - the New Guest Form. Until then the line reads "Let us know it's your first time", with no button,
   - the Café's weekday hours.

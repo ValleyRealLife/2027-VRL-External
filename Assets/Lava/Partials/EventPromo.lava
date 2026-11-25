@@ -12,6 +12,10 @@
         {% include '~~/Assets/Lava/Partials/EventPromo.lava' %}
 
       promoOccurrenceId  the event occurrence id (as in /events/{id})
+      promoEventItemId   OR the calendar event's id (Rock's Event Detail
+                         page); the card then uses whichever of its
+                         occurrences is next. Wins over promoOccurrenceId,
+                         and is cleared after each include.
       promoButtonText    the button (default: "Sign up for <event name>")
 
     Renders NOTHING unless the event is scheduled: active, approved, and with
@@ -24,6 +28,29 @@
 {% endcomment %}
 {%- assign promoOccurrenceId = promoOccurrenceId | AsInteger | Default:0 -%}
 {%- assign promoButtonText = promoButtonText | Default:'' | Trim -%}
+{%- assign promoEventItemId = promoEventItemId | AsInteger | Default:0 -%}
+{%- if promoEventItemId > 0 -%}
+  {%- comment -%} The event's soonest occurrence still within 30 minutes of starting {%- endcomment -%}
+  {%- assign promoOccurrenceId = 0 -%}
+  {%- assign promoBest = '' -%}
+  {%- eventitemoccurrence where:'EventItemId == {{ promoEventItemId }}' securityenabled:'false' -%}
+    {%- for promoOcc in eventitemoccurrenceItems -%}
+      {%- assign promoOccNext = promoOcc.NextStartDateTime -%}
+      {%- if promoOccNext -%}
+        {%- assign promoOccAway = 'Now' | DateDiff:promoOccNext,'m' -%}
+        {%- if promoOccAway >= -30 -%}
+          {%- if promoBest == '' -%}
+            {%- assign promoBest = promoOccNext -%}{%- assign promoOccurrenceId = promoOcc.Id -%}
+          {%- else -%}
+            {%- assign promoOccVsBest = promoBest | DateDiff:promoOccNext,'m' -%}
+            {%- if promoOccVsBest < 0 -%}{%- assign promoBest = promoOccNext -%}{%- assign promoOccurrenceId = promoOcc.Id -%}{%- endif -%}
+          {%- endif -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endeventitemoccurrence -%}
+  {%- assign promoEventItemId = 0 -%}
+{%- endif -%}
 {%- if promoOccurrenceId > 0 -%}
 {%- eventitemoccurrence id:'{{ promoOccurrenceId }}' securityenabled:'false' -%}
   {%- assign promoEvent = eventitemoccurrence.EventItem -%}

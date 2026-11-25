@@ -4,20 +4,27 @@
 
   Block:                    an HTML block in the Discover VRL page's Feature zone
   Block content:            {% include '~~/Assets/Lava/DiscoverVRLHero.lava' %}
-  Enabled Lava Commands:    none
+  Enabled Lava Commands:    RockEntity
   Page:                     InnerDefault, PageHeaderStyle Hidden, DarkHeader
                             checked
 
   The title is the page's title ("Discover VRL"); the lead line under it is
   the page's Description (Page Properties). The button jumps to What to expect
   on this page.
-  The video: "We are VRL", Rock media element 1157 (Rock's media player, so
-  views are tracked like the messages).
+  The video: the newest media element in media folder 27 (heroMediaFolderId;
+  newest by its upload date at the source, e.g. Vimeo), so uploading a new
+  "We are VRL" video replaces it. Rock's media player, so views are tracked
+  like the messages. If the folder is empty, media element 1157.
 
   The page content under it: Assets/Lava/DiscoverVRL.lava (Main zone).
 {%- endcomment -%}
 {%- assign heroKicker = 'New here?' -%}
+{%- assign heroMediaFolderId = 27 -%}
 {%- assign heroMediaId = 1157 -%}
+{%- mediaelement where:'MediaFolderId == {{ heroMediaFolderId }}' sort:'SourceCreatedDateTime desc' limit:'1' securityenabled:'false' -%}
+  {%- assign heroLatestMedia = mediaelementItems | First -%}
+  {%- if heroLatestMedia %}{% assign heroMediaId = heroLatestMedia.Id %}{% endif -%}
+{%- endmediaelement -%}
 {%- capture heroActions -%}
   <a class="btn btn--primary" href="#expect">Plan your visit</a>
 {%- endcapture -%}

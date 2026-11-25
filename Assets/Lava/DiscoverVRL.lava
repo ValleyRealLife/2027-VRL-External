@@ -55,14 +55,15 @@
   date and Save your seat, the whole card linking to /events/{id}. It shows
   while the event is scheduled: active, approved, and a next date no more
   than 30 minutes past.
-  PLACEHOLDER: the event isn't in Rock yet. Until firstStepOccurrenceId is set
-  (or while it isn't scheduled) a stand-in card in the same style says
-  "First Sundays" and its button goes to firstStepFallbackUrl, the events list.
+  firstStepEventId is the calendar event (Event Detail in Rock admin); the
+  card uses whichever of its occurrences is next. While none is scheduled, a
+  stand-in card in the same style says "First Sunday of the month" and its
+  button goes to firstStepFallbackUrl, the events list.
 {%- endcomment -%}
-{%- assign firstStepOccurrenceId = 0 -%}
+{%- assign firstStepEventId = 259 -%}
 {%- assign firstStepFallbackUrl = '/next-steps/events' -%}
 
-{%- assign promoOccurrenceId = firstStepOccurrenceId -%}
+{%- assign promoEventItemId = firstStepEventId -%}
 {%- assign promoButtonText = 'Save your seat' -%}
 {%- capture firstStepCard %}{% include '~~/Assets/Lava/Partials/EventPromo.lava' %}{% endcapture -%}
 {%- assign firstStepCard = firstStepCard | Trim -%}
@@ -222,7 +223,7 @@
       {%- if firstStepCard != '' %}
       {{ firstStepCard }}
       {%- else %}
-      {%- comment -%} PLACEHOLDER: until the event is in Rock, the card's look with a stand-in photo {%- endcomment %}
+      {%- comment -%} While no lunch is scheduled: the card's look with a stand-in photo {%- endcomment %}
       <div class="content-promo" data-card style="--promo-bg: linear-gradient(135deg, var(--v-green-300), var(--v-green-50))">
         <div class="content-promo__image content-photo--placeholder"><span>Photo: First Step Lunch</span></div>
         <div class="content-promo__bar">

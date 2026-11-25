@@ -998,6 +998,20 @@
   backdrop-filter: blur(16px) saturate(1.4);
   -webkit-backdrop-filter: blur(16px) saturate(1.4);
 }
+// A narrow card drops the button, so the bar stays one line and the card
+// keeps its shape (the bar wrapping made it taller and squarer). The card is
+// still the link; the button stays for keyboards and screen readers, hidden
+// visually, and the card shows the focus ring while it's focused.
+.content-promo { container-type: inline-size; }
+@container (width < 30rem) {
+  .content-promo__bar { flex-wrap: nowrap; }
+  .content-promo__bar > .btn {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+}
+.content-promo:has(> .content-promo__bar > .btn:focus-visible) { outline: 3px solid var(--brand-text); outline-offset: 3px; }
 .content-promo__when { margin: 0; }
 .content-promo__when dt { font-size: 0.75rem; font-weight: 800; letter-spacing: var(--tracking-widest); text-transform: uppercase; color: var(--text-muted); }
 .content-promo__when dd { margin: 0.15rem 0 0; font-size: 1.25rem; font-weight: 800; letter-spacing: var(--tracking-tight); color: var(--text); }
