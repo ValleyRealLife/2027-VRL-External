@@ -1,0 +1,57 @@
+{% comment %}
+    STAFF (CONCEPT DATA) — the people on the staff page, written out by hand
+    until the page is built from Rock. It outputs a JSON array (in the order
+    shown); StaffPhotos.lava and StaffDetail.lava capture it and read it with
+    FromJSON (an include's own assigns don't reach the page that includes it):
+
+        {%- capture staffJson %}{% include '~~/Assets/Lava/Partials/StaffConcept.lava' %}{% endcapture -%}
+        {%- assign staffList = staffJson | FromJSON -%}
+
+      Key     the address key (?Staff= on the detail page, ?staff= on the list)
+      Team    the staff page groups people by it (StaffPhotos.lava staffTeams;
+              anyone else goes in a last "More of our team" section), and the
+              detail page shows it over the name
+      Photo   the file name stem in Assets/Images/Staff_Photos: <Photo>_a.webp
+              (everyday) and <Photo>_b.webp (the fun one), transparent
+              cut-outs 934×1280
+      Tone    the card's colour: lime, sky, coral or sand (Styles/_staff.scss),
+              taken in turn down the page
+      Bio     paragraphs
+
+    Names, titles and emails: the current staff page (www.vrl.church/about/
+    our-staff), except Brittany's title (Executive Admin, as asked).
+    Teams: from the titles. PLACEHOLDERS: every bio except Brittany's; the
+    teams of Brittany (Executive Team), Jolene (Women's Ministry) and Kjell
+    (Operations), which aren't one of the four.
+{% endcomment %}
+[
+  { "Key": "tyler-lane", "First": "Tyler", "Name": "Tyler Lane", "Title": "Next Generation Team Leader", "Team": "Next Gen", "Email": "lane@vrl.church", "Photo": "TylerLane", "Tone": "lime",
+    "Bio": ["A short bio goes here: what Tyler does at VRL, and something fun about them."] },
+  { "Key": "amy-jarvis", "First": "Amy", "Name": "Amy Jarvis", "Title": "Elementary Coordinator", "Team": "Next Gen", "Email": "ajarvis@vrl.church", "Photo": "AmyJarvis", "Tone": "sky",
+    "Bio": ["A short bio goes here: what Amy does at VRL, and something fun about them."] },
+
+  { "Key": "stan-vandegriffe", "First": "Stan", "Name": "Stan Vandegriffe", "Title": "Facility Support", "Team": "Facilities & Safety", "Email": "svandegriffe@vrl.church", "Photo": "StanVandegriffe", "Tone": "coral",
+    "Bio": ["A short bio goes here: what Stan does at VRL, and something fun about them."] },
+
+  { "Key": "chris-short", "First": "Chris", "Name": "Chris Short", "Title": "Outreach Team Leader", "Team": "Outreach", "Email": "cshort@vrl.church", "Photo": "ChrisShort", "Tone": "sand",
+    "Bio": ["A short bio goes here: what Chris does at VRL, and something fun about them."] },
+  { "Key": "steve-allen", "First": "Steve", "Name": "Steve Allen", "Title": "Outreach Team", "Team": "Outreach", "Email": "sallen@vrl.church", "Photo": "SteveAllen", "Tone": "lime",
+    "Bio": ["A short bio goes here: what Steve does at VRL, and something fun about them."] },
+  { "Key": "brad-pesnell", "First": "Brad", "Name": "Brad Pesnell", "Title": "Care Pastor", "Team": "Outreach", "Email": "bpesnell@vrl.church", "Photo": "BradPesnell", "Tone": "sky",
+    "Bio": ["A short bio goes here: what Brad does at VRL, and something fun about them."] },
+
+  { "Key": "nicolas-hinman", "First": "Nicolas", "Name": "Nicolas Hinman", "Title": "Videographer", "Team": "Worship Experience", "Email": "nhinman@vrl.church", "Photo": "NicHinman", "Tone": "coral",
+    "Bio": ["A short bio goes here: what Nicolas does at VRL, and something fun about them."] },
+  { "Key": "cori-noll", "First": "Cori", "Name": "Cori Noll", "Title": "Worship Experience Ministry Assistant", "Team": "Worship Experience", "Email": "cnoll@vrl.church", "Photo": "CoriNoll", "Tone": "sand",
+    "Bio": ["A short bio goes here: what Cori does at VRL, and something fun about them."] },
+  { "Key": "drew-payne", "First": "Drew", "Name": "Drew Payne", "Title": "Tech Coordinator", "Team": "Worship Experience", "Email": "dpayne@vrl.church", "Photo": "DrewPayne", "Tone": "lime",
+    "Bio": ["A short bio goes here: what Drew does at VRL, and something fun about them."] },
+
+  { "Key": "jolene-fisher", "First": "Jolene", "Name": "Jolene Fisher", "Title": "Women's Ministry Lead", "Team": "Women's Ministry", "Email": "jfisher@vrl.church", "Photo": "JoleneFisher", "Tone": "sky",
+    "Bio": ["A short bio goes here: what Jolene does at VRL, and something fun about them."] },
+  { "Key": "brittany-murphy", "First": "Brittany", "Name": "Brittany Murphy", "Title": "Executive Admin", "Team": "Executive Team", "Email": "bmurphy@vrl.church", "Photo": "BrittanyMurphy", "Tone": "coral",
+    "Bio": ["Brittany keeps our executive team running on time: calendars, meetings, details and about a hundred things nobody else sees. Need time with one of our pastors? Brittany's the person to ask.",
+            "Also VRL's unofficial Diet Coke supplier. The fridge is always stocked, and if a cold can turns up on your desk at 2pm, you know who to thank."] },
+  { "Key": "kjell-nygren", "First": "Kjell", "Name": "Kjell Nygren", "Title": "Technology & Systems Lead", "Team": "Operations", "Email": "knygren@vrl.church", "Photo": "KjellNygren", "Tone": "sand",
+    "Bio": ["A short bio goes here: what Kjell does at VRL, and something fun about them."] }
+]

@@ -1,0 +1,78 @@
+{% comment %}
+    STAFF — the staff page: its people as photo cards (Styles/_staff.scss).
+    CONCEPT: the people are written out by hand (Partials/StaffConcept.lava)
+    to get the design right before it's built from Rock (people, teams,
+    photos).
+
+    Block:                    an HTML block in the page's Main zone
+    Block content:            {% include '~~/Assets/Lava/StaffPhotos.lava' %}
+    Enabled Lava Commands:    none (for now)
+
+    THE TEAMS
+      One section per team, in the order of staffTeams, under a divider;
+      people whose team isn't one of them go in a last section,
+      otherTeamTitle. A team with nobody in it is left out.
+
+    THE CARD (from the designer's concept)
+      A cut-out photo standing in a panel in the person's colour (lime, sky,
+      coral or sand), the head rising above the panel's top edge and the
+      shoulders a little past its sides; under the photo, a deeper band (the
+      panel's width) with the name in white. Under
+      the card: the title, then the email.
+      Hover (or keyboard focus) crossfades the everyday photo (A) to the fun
+      one (B).
+      The card opens the person's page (StaffDetail.lava, staffDetailUrl
+      ?Staff=<key>) in a pop-up, as the group finder's cards do (theme.js
+      "Frame pop-up"); the address carries ?staff=<key> while it's open.
+      Ctrl/⌘-click opens the page itself. The email is its own link.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign staffDetailUrl = '/page/42047' -%}{%- comment -%} PLACEHOLDER: the staff detail page; a route once it's dynamic {%- endcomment -%}
+{%- capture staffJson %}{% include '~~/Assets/Lava/Partials/StaffConcept.lava' %}{% endcapture -%}
+{%- assign staffList = staffJson | FromJSON -%}
+{%- assign staffPhotoPath = '~~/Assets/Images/Staff_Photos/' | ResolveRockUrl -%}
+{%- assign staffTeams = 'Next Gen|Facilities & Safety|Outreach|Worship Experience' -%}
+{%- assign otherTeamTitle = 'More of our team' -%}{%- comment -%} PLACEHOLDER: until everyone's team is one of the four {%- endcomment -%}
+{%- assign teamKeys = '|' | Append:staffTeams | Append:'|' -%}
+{%- assign sectionTitles = staffTeams | Append:'|' | Append:otherTeamTitle | Split:'|' -%}
+
+<article class="content-page staff" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Our staff">
+  <div itemprop="articleBody">
+
+  {%- for sectionTitle in sectionTitles %}
+  {%- capture sectionCards -%}
+    {%- for person in staffList -%}
+      {%- assign personKey = '|' | Append:person.Team | Append:'|' -%}
+      {%- if teamKeys contains personKey %}{% assign personSection = person.Team %}{% else %}{% assign personSection = otherTeamTitle %}{% endif -%}
+      {%- if personSection == sectionTitle %}
+      <li class="staff-card" data-card data-tone="{{ person.Tone }}">
+        <div class="staff-card__frame">
+          <div class="staff-photo">
+            <img class="staff-photo__img" src="{{ staffPhotoPath }}{{ person.Photo }}_a.webp" width="934" height="1280" alt="{{ person.Name | Escape }}" loading="lazy" decoding="async">
+            <img class="staff-photo__img staff-photo__img--alt" src="{{ staffPhotoPath }}{{ person.Photo }}_b.webp" width="934" height="1280" alt="" aria-hidden="true" loading="lazy" decoding="async">
+          </div>
+          <h3 class="staff-card__name"><a href="{{ staffDetailUrl }}?Staff={{ person.Key }}" data-card-link data-staff-modal="{{ person.Key }}">{{ person.Name }}</a></h3>
+        </div>
+        <p class="staff-card__role">{{ person.Title }}</p>
+        {%- if person.Email != '' %}
+        <p class="staff-card__email"><a class="staff-card__email-link" href="mailto:{{ person.Email }}">{{ person.Email | Replace:'@','<wbr>@' }}</a></p>
+        {%- endif %}
+      </li>
+      {%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- assign sectionCards = sectionCards | Trim -%}
+  {%- if sectionCards != '' %}
+  <section class="staff-team" aria-labelledby="staff-team-{{ forloop.index }}">
+    <div class="sermons-divider"><h2 id="staff-team-{{ forloop.index }}">{{ sectionTitle }}</h2></div>
+    <ul class="staff-grid">
+      {{ sectionCards }}
+    </ul>
+  </section>
+  {%- endif %}
+  {%- endfor %}
+
+  </div>
+</article>

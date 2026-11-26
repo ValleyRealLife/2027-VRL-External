@@ -1,0 +1,262 @@
+// ===========================================================================
+// STAFF — the staff page (Assets/Lava/StaffPhotos.lava) and one staff member
+// (Assets/Lava/StaffDetail.lava, Blank layout, shown in the staff page's
+// pop-up: theme.js "Frame pop-up", .group-modal in Styles/_group-detail.scss).
+//
+//   .staff-photo       two transparent cut-outs of the person, the same size,
+//                      stacked: A (everyday) and B (the fun one). B crossfades
+//                      in on hover / keyboard focus (devices that hover), or a
+//                      tap on the detail page (.is-alt, theme.js). B arrives
+//                      before A leaves, so the two never ghost at half
+//                      strength. Both lift a touch, from the feet.
+//                      The source files are 934×1280 with headroom; the box
+//                      trims the top 140px, so B's can still clears it.
+//   .staff-grid        the cards: two across on a phone, as many as fit wider
+//   .staff-card        (the designer's concept) the photo standing in a panel
+//                      in the person's colour, the head rising above the
+//                      panel's top edge and the shoulders past its sides (the
+//                      panel is inset); under the photo, a deeper badge with
+//                      the name in white (the card's link). Panel and badge
+//                      carry a fine grain. Under the card: the title, the email.
+//   .staff-detail      the person's card: a band in their colour, the photo standing
+//                      on its bottom edge and, beside it (under it on a narrow
+//                      card), the team, name and title; then the bio, the
+//                      contact rows and the buttons, the width of the card.
+//                      On its own page: centred on the page background, with a
+//                      shadow. In the pop-up (html.is-framed): edge to edge.
+//   Colours: [data-tone] lime, sky, coral, sand on the card / the detail.
+// ===========================================================================
+
+@use "config" as *;
+
+// ---------------------------------------------------------------------------
+// The four colours: the group finder's Lime, Sky, Coral and Sand (the same
+// --tone / --tone-strong / --tone-wash, Styles/_group-finder.scss "Group
+// colours"), plus a lighter top for the panel's gradient (--tone-light down
+// to --tone: almost white, held for the top 15%, then the fade) and the name
+// badge (white name text: 3:1 or better, large bold type). The pop-up copies the
+// card's data-tone, so its loading state is in the person's colour too.
+// ---------------------------------------------------------------------------
+[data-tone="lime"] {
+  --tone:        oklch(0.91 0.11 124);
+  --tone-strong: oklch(0.55 0.14 124);
+  --tone-wash:   oklch(0.91 0.11 124 / 0.45);
+  --tone-light:  oklch(0.99 0.015 124);
+  --tone-badge:  oklch(0.62 0.14 124);
+  --on-tone:     var(--v-neutral-900);
+}
+[data-tone="sky"] {
+  --tone:        oklch(0.90 0.055 240);
+  --tone-strong: oklch(0.52 0.09 240);
+  --tone-wash:   oklch(0.90 0.055 240 / 0.5);
+  --tone-light:  oklch(0.99 0.008 240);
+  --tone-badge:  oklch(0.60 0.09 240);
+  --on-tone:     var(--v-neutral-900);
+}
+[data-tone="coral"] {
+  --tone:        oklch(0.88 0.08 42);
+  --tone-strong: oklch(0.55 0.13 42);
+  --tone-wash:   oklch(0.88 0.08 42 / 0.5);
+  --tone-light:  oklch(0.99 0.01 42);
+  --tone-badge:  oklch(0.62 0.13 42);
+  --on-tone:     var(--v-neutral-900);
+}
+[data-tone="sand"] {
+  --tone:        oklch(0.90 0.055 82);
+  --tone-strong: oklch(0.55 0.08 82);
+  --tone-wash:   oklch(0.90 0.055 82 / 0.5);
+  --tone-light:  oklch(0.99 0.01 82);
+  --tone-badge:  oklch(0.62 0.085 82);
+  --on-tone:     var(--v-neutral-900);
+}
+
+// A fine grain over the panel and badge (as the concept's paper texture)
+$staff-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .14 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+// ---------------------------------------------------------------------------
+// The photo (A ⇄ B)
+// ---------------------------------------------------------------------------
+.staff-photo {
+  position: relative; isolation: isolate;
+  aspect-ratio: 934 / 1140;
+}
+.staff-photo__img {
+  position: absolute; left: 0; bottom: 0;
+  width: 100%; height: auto;
+  pointer-events: none;   // the headroom rises over the card above; the card takes the hover and click
+  transform-origin: 50% 100%;
+  transition: opacity 320ms var(--ease-out), transform 480ms var(--ease-out);
+}
+.staff-photo__img--alt { opacity: 0; transition-delay: 120ms, 0ms; }   // leaves after A is back
+
+@mixin staff-photo-alt {
+  .staff-photo__img { opacity: 0; transition-delay: 120ms, 0ms; transform: scale(1.03); }   // A leaves once B has arrived
+  .staff-photo__img--alt { opacity: 1; transition-delay: 0ms, 0ms; }
+}
+@media (hover: hover) {
+  .staff-card:is(:hover, :focus-within) .staff-photo,
+  .staff-photo[data-staff-photo]:hover { @include staff-photo-alt; }
+}
+.staff-photo.is-alt { @include staff-photo-alt; }
+.staff-photo[data-staff-photo] { cursor: pointer; }
+@media (hover: hover) { .staff-photo[data-staff-photo] { cursor: default; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .staff-photo__img { transition-duration: 1ms; transform: none !important; }
+}
+
+// ---------------------------------------------------------------------------
+// The staff page
+// ---------------------------------------------------------------------------
+.staff-team + .staff-team { margin-top: var(--space-3xl); }
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+  gap: var(--space-xl) var(--space-md);
+  margin: var(--space-xl) 0 0; padding: 0; list-style: none;
+}
+@media (min-width: $bp-md) {
+  .staff-grid { grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: var(--space-2xl) var(--space-xl); }
+}
+
+.staff-card { cursor: pointer; text-align: center; }
+.staff-card__frame {
+  --staff-inset: 7%;   // the panel and badge are narrower than the photo, so the shoulders reach past the sides
+  container-type: inline-size;
+  display: grid;
+  transition: filter var(--duration) var(--ease-out);
+}
+@media (hover: hover) {
+  .staff-card:hover .staff-card__frame { filter: drop-shadow(0 12px 18px oklch(0.2 0.02 135 / 0.18)); }
+}
+.staff-card .staff-photo::before {   // the panel the person stands in
+  content: ""; position: absolute; inset: 33% var(--staff-inset) 0; z-index: -1;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: $staff-grain, linear-gradient(to bottom, var(--tone-light, var(--v-green-50)) 15%, var(--tone, var(--v-green-200)));
+}
+.staff-card__name {   // the badge
+  margin: 0 var(--staff-inset);
+  padding: 0.75em 0.6em 0.8em;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+  background: $staff-grain, var(--tone-badge, var(--v-green-600));
+  box-shadow: inset 0 12px 12px -12px oklch(0 0 0 / 0.35);   // the floor under the photo
+  font-size: clamp(0.875rem, 7.5cqi, 1.375rem); font-weight: 900; line-height: 1;
+  letter-spacing: -0.035em; text-transform: uppercase; text-wrap: balance;
+  color: #fff;
+}
+.staff-card__name a { color: inherit; text-decoration: none; }
+.staff-card__name a:focus-visible { outline-color: #fff; }
+.staff-card__role {
+  margin: var(--space-md) 0 0;
+  font-size: clamp(0.8125rem, 1.6vw, 1rem); font-weight: 800; line-height: 1.25;
+  letter-spacing: -0.01em; text-transform: uppercase;
+  color: var(--text);
+}
+.staff-card__email { margin: 0.25rem 0 0; font-size: clamp(0.75rem, 1.4vw, 0.9375rem); letter-spacing: 0.01em; text-transform: uppercase; }
+.staff-card__email-link { color: var(--tone-strong, var(--brand-text)); text-decoration: none; overflow-wrap: break-word; }   // a long one breaks at the @ (<wbr>)
+.staff-card__email-link:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+
+// ---------------------------------------------------------------------------
+// One staff member (Blank layout; the pop-up)
+// ---------------------------------------------------------------------------
+body.rock-blank:has(.staff-detail) { background: var(--bg); }
+body.rock-blank:has(.staff-detail) > form > main { padding: clamp(1rem, 4vw, 3rem) var(--gutter); }
+html.is-framed body.rock-blank:has(.staff-detail) { background: transparent; }
+html.is-framed body.rock-blank:has(.staff-detail) > form > main { padding: 0; }
+html.is-framed:has(.staff-detail) { background: transparent; }
+
+.staff-detail {
+  container-type: inline-size;
+  max-width: 46rem;
+  margin-inline: auto;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+.staff-detail__card {
+  display: grid;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+html.is-framed .staff-detail { max-width: none; }
+html.is-framed .staff-detail__card { box-shadow: none; }
+
+// The band (the person's colour): the person standing on its bottom edge; the
+// name beside them on a wide card (both halves carry the same gradient, so
+// they read as one)
+.staff-detail {
+  --staff-band: #{$staff-grain}, linear-gradient(to bottom, var(--tone-light, var(--v-green-50)) 15%, var(--tone, var(--v-green-200)));
+}
+.staff-detail__media {
+  display: grid; justify-items: center; align-items: end;
+  padding: clamp(1.75rem, 6cqi, 2.5rem) clamp(1.25rem, 5cqi, 2rem) 0;   // room for a prop over the head (Brittany's can)
+  background: var(--staff-band);
+}
+.staff-detail__media .staff-photo {
+  width: min(18rem, 80%);
+  aspect-ratio: 934 / 980;   // a shorter box than the cards': the photos' headroom (kept so heads line up) rises past its top into the band's padding instead of making the band taller
+}
+.staff-detail__head { padding: clamp(1.5rem, 6cqi, 2.5rem) clamp(1.25rem, 6cqi, 2.5rem) 0; }
+
+.staff-detail__body {
+  display: grid; gap: var(--space-lg); align-content: start;
+  padding: clamp(1.25rem, 5cqi, 2rem) clamp(1.25rem, 6cqi, 2.5rem) clamp(1.5rem, 6cqi, 2.5rem);
+}
+@container (min-width: 36rem) {
+  .staff-detail__card { grid-template-columns: minmax(0, 6fr) minmax(0, 7fr); }
+  .staff-detail__media { padding-inline: clamp(1rem, 3cqi, 1.5rem) 0; }
+  .staff-detail__media .staff-photo { width: min(21rem, 100%); }
+  .staff-detail__head {
+    display: grid; align-content: end;
+    padding: 4rem clamp(1.25rem, 5cqi, 2.5rem) clamp(1.5rem, 5cqi, 2.25rem) clamp(0.5rem, 2cqi, 1rem);
+    background: var(--staff-band);
+  }
+  html.is-framed .staff-detail__head { padding-right: 4rem; }   // clear of the pop-up's close button
+  .staff-detail__body { grid-column: 1 / -1; padding-top: clamp(1.5rem, 5cqi, 2.25rem); }
+  .staff-detail__facts { grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+}
+
+.staff-detail__kicker {
+  margin: 0;
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-widest); text-transform: uppercase;
+  color: var(--tone-strong, var(--brand-text));
+}
+.staff-detail__name {
+  margin: 0.4rem 0 0;
+  font-size: clamp(1.75rem, 7cqi, 2.5rem); line-height: 1.05;
+  text-transform: uppercase; text-wrap: balance;
+  color: var(--text);
+}
+.staff-detail__role { margin: 0.4rem 0 0; font-weight: 700; color: var(--text-secondary); }
+
+.staff-detail__bio { font-size: 1rem; line-height: 1.65; color: var(--text-secondary); }
+.staff-detail__bio > p { margin: 0 0 0.75em; }
+.staff-detail__bio > :last-child { margin-bottom: 0; }
+
+// Contact rows: an icon tile each (as the group details' facts)
+.staff-detail__facts { display: grid; gap: 0.9rem; margin: 0; padding: 0; list-style: none; }
+.staff-detail__facts li { display: flex; align-items: flex-start; gap: 0.8rem; }
+.staff-detail__icon {
+  flex: none;
+  display: grid; place-items: center;
+  width: 2.5rem; aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  background: var(--tone-wash, var(--brand-wash));
+  color: var(--tone-strong, var(--brand-text));
+}
+.staff-detail__facts li > span:last-child { min-width: 0; padding-top: 0.05rem; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.staff-detail__facts strong {
+  display: block; margin-bottom: 0.1rem;
+  font-size: 0.6875rem; font-weight: 800;
+  letter-spacing: var(--tracking-widest); text-transform: uppercase;
+  color: var(--text-muted);
+}
+.staff-detail__facts a { color: var(--text); text-decoration: underline; text-decoration-color: var(--tone-strong, var(--brand)); text-underline-offset: 0.2em; }
+.staff-detail__facts a:hover { color: var(--brand-text); }
+
+.staff-detail__actions { display: flex; flex-wrap: wrap; gap: var(--space-sm); padding-top: var(--space-xs); }
+@media (max-width: #{$bp-sm - 1px}) {
+  html.is-framed .staff-detail__card { border-radius: var(--radius-xl); }
+}

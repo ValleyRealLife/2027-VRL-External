@@ -945,30 +945,36 @@
     if (start.results) showResults(); else showStep(0);
   });
 
-  // --- Group pop-up ([data-group-modal] links: the finder's cards) ------------------
-  // A link with data-group-modal="<GroupId>" opens its page (LifeGroupDetails.lava,
-  // Blank layout) in an iframe inside a <dialog>, instead of leaving the results.
-  // The iframe is same-origin, so it's sized to its page (and re-sized as the
-  // card flips or the form posts back); the dialog scrolls when that's taller
-  // than the screen. The address carries ?group=<GroupId> while it's open, so
-  // the results page reopens on that group (shared links, reloads). Ctrl/⌘-
-  // click, and browsers without <dialog>, follow the link to the page itself.
+  // --- Frame pop-up ([data-group-modal] / [data-staff-modal] links) ------------------
+  // A link with data-group-modal="<GroupId>" (the finder's cards) or
+  // data-staff-modal="<key>" (the staff page's cards) opens its page
+  // (LifeGroupDetails.lava / StaffDetail.lava, Blank layout) in an iframe inside
+  // a <dialog>, instead of leaving the page. The iframe is same-origin, so it's
+  // sized to its page (and re-sized as the card flips or the form posts back);
+  // the dialog scrolls when that's taller than the screen. The address carries
+  // ?group=<GroupId> / ?staff=<key> while it's open, so the page reopens on it
+  // (shared links, reloads). Ctrl/⌘-click, and browsers without <dialog>,
+  // follow the link to the page itself. Inside the pop-up, a [data-frame-close]
+  // link closes it (below).
   (function () {
-    var dialog = null, frame = null, sizer = null, lastLink = null;
+    var kinds = [
+      { attr: 'data-group-modal', param: 'group', label: 'Group details', clean: /[^0-9]/g },
+      { attr: 'data-staff-modal', param: 'staff', label: 'Staff details', clean: /[^a-z0-9-]/g }
+    ];
+    var dialog = null, frame = null, sizer = null, lastLink = null, kind = kinds[0];
     var setParam = function (id) {
       if (!history.replaceState) return;
       var url = new URL(location.href);
-      if (id) url.searchParams.set('group', id); else url.searchParams.delete('group');
+      if (id) url.searchParams.set(kind.param, id); else url.searchParams.delete(kind.param);
       history.replaceState(null, '', url.toString().replace(/all=(&|$)/, 'all$1'));
     };
     var build = function () {
       dialog = document.createElement('dialog');
       dialog.className = 'group-modal';
-      dialog.setAttribute('aria-label', 'Group details');
       dialog.innerHTML =
         '<button type="button" class="group-modal__close" data-group-modal-close aria-label="Close"><svg width="18" height="18" aria-hidden="true"><use href="#i-x"/></svg></button>' +
         '<div class="group-modal__loading" aria-hidden="true"><span></span></div>' +
-        '<iframe class="group-modal__frame" title="Group details"></iframe>';
+        '<iframe class="group-modal__frame"></iframe>';
       document.body.appendChild(dialog);
       frame = dialog.querySelector('iframe');
       frame.addEventListener('load', function () {
@@ -998,32 +1004,60 @@
         if (e.clientY < r.top || e.clientY > r.bottom || e.clientX < r.left || e.clientX > r.right) dialog.close();
       });
     };
-    var open = function (link) {
+    var open = function (link, k) {
       if (!dialog) build();
       lastLink = link;
+      kind = k;
       dialog.classList.remove('is-loaded');
+      dialog.setAttribute('aria-label', k.label);
+      frame.setAttribute('title', k.label);
       var card = link.closest('[data-tone]');
       if (card) dialog.setAttribute('data-tone', card.getAttribute('data-tone')); else dialog.removeAttribute('data-tone');
       frame.setAttribute('src', link.href);
       document.body.classList.add('is-locked');
       dialog.showModal();
       dialog.querySelector('[data-group-modal-close]').focus();
-      setParam(link.getAttribute('data-group-modal'));
+      setParam(link.getAttribute(k.attr));
     };
     var supported = typeof HTMLDialogElement === 'function';
     document.addEventListener('click', function (e) {
-      var link = e.target.closest('a[data-group-modal]');
-      if (!link || !supported || e.metaKey || e.ctrlKey || e.shiftKey || e.button > 0) return;
-      e.preventDefault();
-      open(link);
+      if (!supported || e.metaKey || e.ctrlKey || e.shiftKey || e.button > 0) return;
+      for (var i = 0; i < kinds.length; i += 1) {
+        var link = e.target.closest('a[' + kinds[i].attr + ']');
+        if (link) { e.preventDefault(); open(link, kinds[i]); return; }
+      }
     });
-    // Reopen from the address (?group=ID), once the finder has laid out its cards
-    var wanted = new URLSearchParams(location.search).get('group');
-    if (wanted && supported) {
-      var link = document.querySelector('a[data-group-modal="' + wanted.replace(/[^0-9]/g, '') + '"]');
-      if (link) open(link);
+    // Reopen from the address (?group=ID / ?staff=key), once the cards are laid out
+    if (supported) {
+      var params = new URLSearchParams(location.search);
+      kinds.some(function (k) {
+        var wanted = params.get(k.param);
+        var link = wanted && document.querySelector('a[' + k.attr + '="' + wanted.replace(k.clean, '') + '"]');
+        if (link) open(link, k);
+        return !!link;
+      });
     }
   })();
+
+  // --- Inside a frame pop-up: [data-frame-close] closes it ---------------------------
+  // (e.g. StaffDetail.lava's "Back to staff"). On its own page the link is
+  // followed as usual.
+  if (root.classList.contains('is-framed')) {
+    document.addEventListener('click', function (e) {
+      var closer = e.target.closest('[data-frame-close]');
+      if (!closer) return;
+      var host = null;
+      try { host = window.frameElement ? window.frameElement.closest('dialog') : null; } catch (err) { host = null; }
+      if (host) { e.preventDefault(); host.close(); }
+    });
+  }
+
+  // --- Staff photo, tap to swap ([data-staff-photo]: StaffDetail.lava) ----------------
+  // Devices that hover swap to the fun photo on hover (CSS); a tap toggles it.
+  document.addEventListener('click', function (e) {
+    var photo = e.target.closest('[data-staff-photo]');
+    if (photo && !window.matchMedia('(hover: hover)').matches) photo.classList.toggle('is-alt');
+  });
 
   // --- Group details ([data-group-detail]: LifeGroupDetails.lava) -------------------
   // The card's front is the group; its back holds Rock's Group Registration

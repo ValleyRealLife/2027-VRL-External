@@ -1,0 +1,82 @@
+{% comment %}
+    STAFF DETAIL — one staff member (Styles/_staff.scss). Shown in the staff
+    page's pop-up (StaffPhotos.lava; theme.js "Frame pop-up" loads this page in
+    an iframe) and on its own when linked directly: ?Staff=<key>, one of the
+    people in Partials/StaffConcept.lava (CONCEPT: written out by hand; they
+    become Rock records once it's dynamic). Without a match: the first person.
+
+    Page:                     Layout Blank (Layouts/Blank.aspx), as the Life
+                              Group details page
+    Block (Main zone):        an HTML block
+      Block content:          {% include '~~/Assets/Lava/StaffDetail.lava' %}
+      Enabled Lava Commands:  none (for now)
+
+    THE CARD
+      A band in the person's colour (data-tone: lime, sky, coral, sand) with the cut-out photo standing on its bottom edge (hover
+      or a tap swaps to the fun photo, as on the staff page) and, beside it on
+      a wide card (under it on a narrow one), the team they serve on, the name
+      and the title. Then a short bio, the contact rows (email, phone) and
+      Email <first name>. Inside the
+      pop-up (html.is-framed) "Back to staff" closes the pop-up
+      ([data-frame-close], theme.js); on its own page it goes to the staff page.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign staffPageUrl = '/page/42046' -%}{%- comment -%} PLACEHOLDER: the staff page; a route once it's dynamic {%- endcomment -%}
+{%- assign phoneText = '(509) 232-0840' -%}{%- comment -%} the church office, for everyone (for now) {%- endcomment -%}
+{%- assign phoneLink = '+15092320840' -%}
+
+{%- comment -%} ===== THE PERSON ===== {%- endcomment -%}
+{%- capture staffJson %}{% include '~~/Assets/Lava/Partials/StaffConcept.lava' %}{% endcapture -%}
+{%- assign staffList = staffJson | FromJSON -%}
+{%- assign staffPhotoPath = '~~/Assets/Images/Staff_Photos/' | ResolveRockUrl -%}
+{%- assign staffKey = 'Global' | PageParameter:'Staff' | Default:'' | Downcase -%}
+{%- assign person = staffList | First -%}
+{%- for p in staffList -%}
+  {%- if p.Key == staffKey %}{% assign person = p %}{% break %}{% endif -%}
+{%- endfor -%}
+{%- assign firstName = person.First -%}
+{%- assign fullName = person.Name -%}
+{%- assign jobTitle = person.Title -%}
+{%- assign teamName = person.Team -%}
+{%- assign email = person.Email | Default:'' -%}
+{%- assign photoA = staffPhotoPath | Append:person.Photo | Append:'_a.webp' -%}
+{%- assign photoB = staffPhotoPath | Append:person.Photo | Append:'_b.webp' -%}
+{%- capture bio %}{% for para in person.Bio %}<p>{{ para | Escape }}</p>{% endfor %}{% endcapture -%}
+
+<article class="staff-detail" data-tone="{{ person.Tone }}" itemscope itemtype="https://schema.org/Person">
+  <div class="staff-detail__card">
+    <div class="staff-detail__media">
+      <div class="staff-photo" data-staff-photo>
+        <img class="staff-photo__img" src="{{ photoA }}" width="934" height="1280" alt="{{ fullName }}" itemprop="image">
+        <img class="staff-photo__img staff-photo__img--alt" src="{{ photoB }}" width="934" height="1280" alt="" aria-hidden="true" decoding="async">
+      </div>
+    </div>
+
+    <header class="staff-detail__head">
+      <p class="staff-detail__kicker">{{ teamName }}</p>
+      <h1 class="staff-detail__name" itemprop="name">{{ fullName }}</h1>
+      <p class="staff-detail__role" itemprop="jobTitle">{{ jobTitle }}</p>
+    </header>
+
+    <div class="staff-detail__body">
+      <div class="staff-detail__bio" itemprop="description">{{ bio }}</div>
+
+      <ul class="staff-detail__facts">
+        {%- if email != '' %}
+        <li><span class="staff-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-mail"/></svg></span><span><strong>Email</strong><a href="mailto:{{ email }}" itemprop="email">{{ email }}</a></span></li>
+        {%- endif %}
+        {%- if phoneText != '' %}
+        <li><span class="staff-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-phone"/></svg></span><span><strong>Phone</strong><a href="tel:{{ phoneLink }}" itemprop="telephone">{{ phoneText }}</a></span></li>
+        {%- endif %}
+      </ul>
+
+      <footer class="staff-detail__actions">
+        {%- if email != '' %}
+        <a class="btn btn--primary" href="mailto:{{ email }}">Email {{ firstName }}</a>
+        {%- endif %}
+        <a class="btn btn--outline" href="{{ staffPageUrl }}" data-frame-close>Back to staff</a>
+      </footer>
+    </div>
+  </div>
+</article>
