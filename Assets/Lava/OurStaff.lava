@@ -1,0 +1,135 @@
+{% comment %}
+    OUR STAFF — the staff page, from the Staff content channel (Styles/_staff.scss;
+    the design was worked out on the concept page, StaffPhotos.lava, kept for
+    reference).
+
+    Block:                    an HTML block in the page's Main zone
+    Block content:            {% include '~~/Assets/Lava/OurStaff.lava' %}
+    Enabled Lava Commands:    RockEntity
+
+    THE ITEMS (content channel staffChannelId), in the channel's order, then by
+    name:
+      Title            display name          StaffRole        job title
+      Content          bio (detail page)     StaffEmail       public email
+      StaffGrouping    defined value (Staff Grouping: Leadership, Staff, Elders)
+      StaffTeam        defined value (Staff Teams)
+      StaffPhotoA      the everyday cut-out  StaffPhotoB      the fun one (optional;
+                                                              without it, no swap)
+      StaffExtension   (detail page)         StaffPerson      (not used yet)
+
+    TWO VIEWS (Group by: Default / Team; without JavaScript both show)
+      Default     one section per Staff Grouping value
+      Team        one section per Staff Teams value
+      Sections follow the defined values' order (drag to reorder in Rock); a
+      value with nobody in it is left out, as is anyone without a value for
+      that view.
+
+    THE BAR (sticky under the site header)
+      Group by (a menu in the share sheet's style) and a search box that
+      filters the cards as you type (theme.js "Staff search"), on name, title
+      and team: every word must match. Sections with nobody left hide; a note
+      shows when no one does.
+
+    THE CARD
+      As the concept: the cut-out in a panel in a colour (lime, sky, coral,
+      sand, mixed up but never twice in a row), the name badge (first name over
+      last), the title. Hover crossfades A to B. The card opens the person's page
+      (OurStaffDetail.lava, staffDetailUrl/<slug>?Tone=<colour>) in the
+      pop-up (theme.js "Frame pop-up").
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign staffChannelId = 385 -%}
+{%- assign groupingTypeId = 189 -%}
+{%- assign teamTypeId = 131 -%}
+{%- assign staffDetailUrl = '/about/our-staff' -%}{%- comment -%} the detail page's route, about/our-staff/{Staff} (Blank layout, OurStaffDetail.lava): /staff/<item slug> {%- endcomment -%}
+{%- assign tones = 'lime,sky,coral,sand' | Split:',' -%}
+{%- assign views = 'StaffGrouping^Default,StaffTeam^Team' | Split:',' -%}
+
+{%- contentchannelitem where:'ContentChannelId == {{ staffChannelId }}' sort:'Order, Title' securityenabled:'false' -%}
+{%- assign staffItems = contentchannelitemItems -%}
+
+<article class="content-page staff" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="Our staff">
+  <div itemprop="articleBody" data-staff-search>
+
+    {%- comment -%} The bar: Group by (a share-sheet menu, theme.js "Share dropdowns" opens it, "Staff search" switches the view) and the search; it needs JavaScript, so it ships hidden {%- endcomment %}
+    <div class="staff-bar" data-staff-bar hidden>
+      <div class="share staff-bar__group">
+        <button class="pill-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="staff-group-menu" data-share-toggle>
+          <svg width="14" height="14" aria-hidden="true"><use href="#i-adjustments"/></svg> Group by <svg width="12" height="12" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+        </button>
+        <div class="share__menu share__menu--down" id="staff-group-menu" role="menu" aria-label="Group by" data-open="false">
+          {%- for view in views %}
+            {%- assign viewParts = view | Split:'^' %}
+          <button class="share__item" type="button" role="menuitemradio" aria-checked="{% if forloop.first %}true{% else %}false{% endif %}" data-staff-view-pick="staff-view-{{ forloop.index }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg> {{ viewParts[1] }}</button>
+          {%- endfor %}
+        </div>
+      </div>
+      <div class="staff-bar__search" role="search">
+        <svg class="staff-bar__search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <label class="u-visually-hidden" for="staff-search-q">Search by name, title or team</label>
+        <input type="search" id="staff-search-q" placeholder="Search staff" autocomplete="off" enterkeyhint="search" data-staff-search-input>
+      </div>
+      <p class="u-visually-hidden" role="status" data-staff-search-status></p>
+    </div>
+
+    {%- for view in views %}
+      {%- assign viewParts = view | Split:'^' -%}
+      {%- assign viewAttr = viewParts[0] -%}
+      {%- assign viewIndex = forloop.index -%}
+      {%- if viewAttr == 'StaffTeam' %}{% assign viewTypeId = teamTypeId %}{% else %}{% assign viewTypeId = groupingTypeId %}{% endif %}
+    <div class="staff-view" id="staff-view-{{ viewIndex }}" data-staff-view>
+      {%- definedvalue where:'DefinedTypeId == {{ viewTypeId }}' sort:'Order' securityenabled:'false' -%}
+      {%- for section in definedvalueItems -%}
+        {%- assign sectionGuid = section.Guid | Append:'' | Downcase -%}
+        {%- assign lastToneIndex = -1 -%}
+        {%- capture sectionCards -%}
+          {%- for item in staffItems -%}
+            {%- assign itemGuid = item | Attribute:viewAttr,'RawValue' | Downcase -%}
+            {%- if itemGuid == sectionGuid -%}
+              {%- comment -%} A colour that looks random but stays the person's (from the item Id), never the same as the card before {%- endcomment -%}
+              {%- assign toneIndex = item.Id | Times:item.Id | Modulo:13 | Modulo:4 -%}
+              {%- if toneIndex == lastToneIndex %}{% assign toneIndex = toneIndex | Plus:1 | Modulo:4 %}{% endif -%}
+              {%- assign lastToneIndex = toneIndex -%}
+              {%- assign tone = tones[toneIndex] -%}
+              {%- assign staffKey = item.PrimarySlug | Default:item.Id -%}
+              {%- assign photoA = item | Attribute:'StaffPhotoA','Url' -%}
+              {%- assign photoB = item | Attribute:'StaffPhotoB','Url' | Default:photoA -%}
+              {%- assign firstName = item.Title | Split:' ' | First -%}
+              {%- assign lastName = item.Title | ReplaceFirst:firstName,'' | Trim -%}
+              {%- assign roleText = item | Attribute:'StaffRole' -%}
+              {%- capture searchText %}{{ item.Title }} {{ roleText }} {{ item | Attribute:'StaffTeam' }}{% endcapture %}
+        <li class="staff-card" data-card data-tone="{{ tone }}" data-search="{{ searchText | Downcase | Escape }}">
+          <div class="staff-card__frame">
+            <div class="staff-photo">
+              {%- if photoA != '' %}
+              <img class="staff-photo__img" src="{{ photoA }}" width="934" height="1280" alt="{{ item.Title | Escape }}" loading="lazy" decoding="async">
+              <img class="staff-photo__img staff-photo__img--alt" src="{{ photoB }}" width="934" height="1280" alt="" aria-hidden="true" loading="lazy" decoding="async">
+              {%- endif %}
+            </div>
+            <h3 class="staff-card__name"><a href="{{ staffDetailUrl }}/{{ staffKey }}?Tone={{ tone }}" data-card-link data-staff-modal="{{ staffKey }}"><span>{{ firstName }}</span> <span>{{ lastName }}</span></a></h3>
+          </div>
+          <p class="staff-card__role">{{ roleText }}</p>
+        </li>
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endcapture -%}
+        {%- assign sectionCards = sectionCards | Trim -%}
+        {%- if sectionCards != '' %}
+      <section class="staff-team" aria-labelledby="staff-{{ viewIndex }}-{{ section.Id }}">
+        <div class="sermons-divider"><h2 id="staff-{{ viewIndex }}-{{ section.Id }}">{{ section.Value }}</h2></div>
+        <ul class="staff-grid">
+          {{ sectionCards }}
+        </ul>
+      </section>
+        {%- endif -%}
+      {%- endfor -%}
+      {%- enddefinedvalue %}
+      <p class="staff-empty" data-staff-empty hidden>No one matches that. Try a first name, a title or a team.</p>
+    </div>
+    {%- endfor %}
+
+  </div>
+</article>
+{%- endcontentchannelitem -%}

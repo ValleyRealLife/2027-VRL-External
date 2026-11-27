@@ -1374,6 +1374,72 @@
     });
   });
 
+  // --- Staff search ([data-staff-search]: OurStaff.lava) ------------------------------
+  // Filters the staff cards as you type: every word has to appear in the
+  // card's data-search (name, title, team). A section with nobody left hides,
+  // and each view shows its "no one matches" note when it's empty. The bar
+  // (Group by, a share-sheet menu, + search) ships hidden, since it needs this. Enter mustn't post
+  // Rock's form. Typing, or switching views, while scrolled into the list
+  // brings the list's top back up under the bar.
+  document.querySelectorAll('[data-staff-search]').forEach(function (root) {
+    var bar = root.querySelector('[data-staff-bar]');
+    var input = root.querySelector('[data-staff-search-input]');
+    var status = root.querySelector('[data-staff-search-status]');
+    if (!bar || !input) return;
+    bar.hidden = false;
+    var norm = function (s) { return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
+    var cards = Array.prototype.slice.call(root.querySelectorAll('[data-search]'));
+    var texts = cards.map(function (c) { return norm(c.getAttribute('data-search')); });
+    var panels = Array.prototype.slice.call(root.querySelectorAll('[data-staff-view]'));
+    var picks = Array.prototype.slice.call(root.querySelectorAll('[data-staff-view-pick]'));
+    panels.forEach(function (p, i) { p.hidden = i > 0; });
+    var toTop = function () {
+      var panel = panels.filter(function (p) { return !p.hidden; })[0];
+      if (!panel) return;
+      var gap = parseFloat(getComputedStyle(bar).marginBottom) || 0;
+      var y = panel.getBoundingClientRect().top - bar.getBoundingClientRect().bottom - gap;
+      if (y < -1) window.scrollBy(0, y);
+    };
+    var run = function () {
+      var words = norm(input.value).split(/\s+/).filter(Boolean);
+      cards.forEach(function (c, i) {
+        c.hidden = !words.every(function (w) { return texts[i].indexOf(w) > -1; });
+      });
+      root.querySelectorAll('.staff-team').forEach(function (s) {
+        s.hidden = !s.querySelector('[data-search]:not([hidden])');
+      });
+      var shown = 0;
+      panels.forEach(function (p) {
+        var n = p.querySelectorAll('[data-search]:not([hidden])').length;
+        var empty = p.querySelector('[data-staff-empty]');
+        if (empty) empty.hidden = n > 0;
+        if (!p.hidden) shown = n;
+      });
+      if (status) status.textContent = words.length ? (shown === 1 ? '1 person' : shown + ' people') : '';
+      toTop();
+    };
+    input.addEventListener('input', run);
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') e.preventDefault(); });
+    // Group by: a menu item shows its view, ticks itself and closes the menu
+    root.addEventListener('click', function (e) {
+      var pick = e.target.closest('[data-staff-view-pick]');
+      if (!pick) return;
+      var id = pick.getAttribute('data-staff-view-pick');
+      panels.forEach(function (p) { p.hidden = p.id !== id; });
+      picks.forEach(function (b) { b.setAttribute('aria-checked', String(b === pick)); });
+      closeAllShares();
+      var toggle = root.querySelector('.staff-bar [data-share-toggle]');
+      if (toggle) toggle.focus({ preventScroll: true });
+      run();
+    });
+    root.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || !e.target.closest('.staff-bar .share')) return;
+      closeAllShares();
+      var toggle = root.querySelector('.staff-bar [data-share-toggle]');
+      if (toggle) toggle.focus();
+    });
+  });
+
   // --- Pill tabs ([data-pill-tabs]: ManageGiving.lava) -------------------------------
   // Tabs over whole Rock blocks: each tab's data-panel is a class, and every
   // element with it (usually a block whose CSS Class setting includes it)

@@ -1,0 +1,107 @@
+{% comment %}
+    OUR STAFF DETAIL — one staff member from the Staff content channel
+    (Styles/_staff.scss). Shown in the staff page's pop-up (OurStaff.lava;
+    theme.js "Frame pop-up") and on its own as a digital business card:
+    /about/our-staff/<item slug> (route about/our-staff/{Staff}; ?Staff= works too).
+    ?Tone=<lime|sky|coral|sand> is the card's colour; without it, the
+    person's own colour (the same pick as the staff page's, from the Id).
+
+    Page:                     Layout Blank (Layouts/Blank.aspx)
+    Block (Main zone):        an HTML block
+      Block content:          {% include '~~/Assets/Lava/OurStaffDetail.lava' %}
+      Enabled Lava Commands:  RockEntity
+
+    THE CARD (as the concept, StaffDetail.lava): the band in the person's
+    colour with the cut-out (tap or hover swaps to StaffPhotoB), the team
+    (else the grouping), name and title; the bio (the item's Content), email,
+    the office phone with StaffExtension. On its own page (not in the
+    pop-up, which has its close) an All Staff button.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign staffChannelId = 385 -%}
+{%- assign staffPageUrl = '/about/our-staff' -%}
+{%- assign phoneText = '(509) 232-0840' -%}{%- comment -%} the church office {%- endcomment -%}
+{%- assign phoneLink = '+15092320840' -%}
+
+{%- assign staffKey = 'Global' | PageParameter:'Staff' | Default:'' | Downcase -%}
+{%- assign tone = 'Global' | PageParameter:'Tone' | Default:'' | Downcase -%}
+{%- assign toneKey = '|' | Append:tone | Append:'|' -%}
+{%- unless tone != '' and '|lime|sky|coral|sand|' contains toneKey %}{% assign tone = '' %}{% endunless -%}
+
+{%- assign item = null -%}
+{%- if staffKey != '' -%}
+{%- contentchannelitem where:'ContentChannelId == {{ staffChannelId }}' securityenabled:'false' -%}
+  {%- for i in contentchannelitemItems -%}
+    {%- assign iSlug = i.PrimarySlug | Default:'' | Downcase -%}
+    {%- assign iId = i.Id | Append:'' -%}
+    {%- if iSlug == staffKey or iId == staffKey %}{% assign item = i %}{% break %}{% endif -%}
+  {%- endfor -%}
+{%- endcontentchannelitem -%}
+{%- endif -%}
+
+{%- if item %}
+{%- assign fullName = item.Title -%}
+{%- assign teamName = item | Attribute:'StaffTeam' | Trim -%}
+{%- if teamName == '' %}{% assign teamName = item | Attribute:'StaffGrouping' | Trim %}{% endif -%}
+{%- assign email = item | Attribute:'StaffEmail' | Trim -%}
+{%- assign ext = item | Attribute:'StaffExtension' | Trim -%}
+{%- if ext != '' %}{% assign phoneText = phoneText | Append:' ext. ' | Append:ext %}{% assign phoneLink = phoneLink | Append:',' | Append:ext %}{% endif -%}
+{%- assign photoA = item | Attribute:'StaffPhotoA','Url' -%}
+{%- assign photoB = item | Attribute:'StaffPhotoB','Url' | Default:photoA -%}
+{%- if tone == '' -%}
+  {%- assign tones = 'lime,sky,coral,sand' | Split:',' -%}
+  {%- assign toneIndex = item.Id | Times:item.Id | Modulo:13 | Modulo:4 -%}
+  {%- assign tone = tones[toneIndex] -%}
+{%- endif -%}
+{{ fullName | SetPageTitle }}
+
+<article class="staff-detail" data-tone="{{ tone }}" itemscope itemtype="https://schema.org/Person">
+  <div class="staff-detail__card">
+    <div class="staff-detail__media">
+      <div class="staff-photo" data-staff-photo>
+        {%- if photoA != '' %}
+        <img class="staff-photo__img" src="{{ photoA }}" width="934" height="1280" alt="{{ fullName | Escape }}" itemprop="image">
+        <img class="staff-photo__img staff-photo__img--alt" src="{{ photoB }}" width="934" height="1280" alt="" aria-hidden="true" decoding="async">
+        {%- endif %}
+      </div>
+    </div>
+
+    <header class="staff-detail__head">
+      {%- if teamName != '' %}
+      <p class="staff-detail__kicker">{{ teamName }}</p>
+      {%- endif %}
+      <h1 class="staff-detail__name" itemprop="name">{{ fullName }}</h1>
+      <p class="staff-detail__role" itemprop="jobTitle">{{ item | Attribute:'StaffRole' }}</p>
+    </header>
+
+    <div class="staff-detail__body">
+      {%- if item.Content != '' %}
+      <div class="staff-detail__bio" itemprop="description">{{ item.Content }}</div>
+      {%- endif %}
+
+      <ul class="staff-detail__facts">
+        {%- if email != '' %}
+        <li><span class="staff-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-mail"/></svg></span><span><strong>Email</strong><a href="mailto:{{ email }}" itemprop="email">{{ email }}</a></span></li>
+        {%- endif %}
+        <li><span class="staff-detail__icon" aria-hidden="true"><svg width="20" height="20"><use href="#i-phone"/></svg></span><span><strong>Phone</strong><a href="tel:{{ phoneLink }}" itemprop="telephone">{{ phoneText }}</a></span></li>
+      </ul>
+
+      <footer class="staff-detail__actions">
+        <a class="btn btn--outline" href="{{ staffPageUrl }}">All Staff</a>
+      </footer>
+    </div>
+  </div>
+</article>
+{%- else %}
+<article class="staff-detail" data-tone="{{ tone | Default:'lime' }}">
+  <div class="staff-detail__card">
+    <div class="staff-detail__body">
+      <p>We couldn't find that staff member.</p>
+      <footer class="staff-detail__actions">
+        <a class="btn btn--outline" href="{{ staffPageUrl }}">All Staff</a>
+      </footer>
+    </div>
+  </div>
+</article>
+{%- endif %}
