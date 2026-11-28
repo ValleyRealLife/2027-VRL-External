@@ -1,0 +1,127 @@
+{% comment %}
+    VOLUNTEER OPPORTUNITY DETAIL — one opportunity, as a card
+    (Styles/_volunteer.scss): /next-steps/volunteer/detail?OpportunityId=<id>.
+    Shown in the volunteer page's pop-up (VolunteerListing.lava; theme.js
+    "Frame pop-up") and on its own when linked directly.
+
+    Page:                     Layout Blank (Layouts/Blank.aspx), so it fits
+                              the pop-up
+    Block 1 (Main zone):      an HTML block
+      Block content:          {% include '~~/Assets/Lava/VolunteerOpportunityDetail.lava' %}
+      Enabled Lava Commands:  RockEntity
+    Block 2 (Main zone):      Rock's Connection Opportunity Signup block,
+                              below it. It reads the same OpportunityId.
+      theme.js ("Group details", which also runs this card) moves it into
+      the card's back (found by Rock's own class,
+      connection-opportunity-signup; to use a different block, give it the
+      CSS Class volunteer-signup). It takes the Life Group card's form
+      styles (Styles/_group-detail.scss).
+      Its Lava Template: blank (this card already shows the opportunity).
+      Without JavaScript, or without the block, there's no flip: the block
+      (if any) shows under the card.
+
+    THE CARD (flips, as the Life Group card)
+      Front   an ultrawide header: the photo (PLACEHOLDER: the green
+              gradient until the opportunity has one) with the team and the
+              name over it, and at its lower right "Email <name>" (the
+              opportunity's default connector: the first campus that has one
+              with an active email; no connector, no link). Then the summary,
+              the description, "Sign up to serve" (flips the card) and, on its
+              own page (not in the pop-up, which has its close), All
+              opportunities.
+      Back    a slim band (Back, Sign up, the name), then the sign-up block.
+              After the form posts back the card opens on its back again (the
+              browser session remembers), so the result shows where the form
+              was.
+    An opportunity that's missing, inactive or in another connection type
+    gets a note instead.
+{% endcomment %}
+
+{%- comment -%} ===== SETTINGS ===== {%- endcomment -%}
+{%- assign connectionTypeId = 10 -%}
+{%- assign listUrl = '/next-steps/volunteer' -%}
+
+{%- assign oppId = 'Global' | PageParameter:'OpportunityId' | AsInteger | Default:0 -%}
+{%- assign opp = null -%}
+{%- if oppId > 0 -%}
+{%- connectionopportunity id:'{{ oppId }}' securityenabled:'false' -%}
+  {%- if connectionopportunity.IsActive and connectionopportunity.ConnectionTypeId == connectionTypeId %}{% assign opp = connectionopportunity %}{% endif -%}
+{%- endconnectionopportunity -%}
+{%- endif -%}
+
+{%- if opp %}
+{%- assign oppName = opp.PublicName | Default:opp.Name -%}
+{%- assign teamName = opp | Attribute:'ConnectedTeam' | Trim -%}
+{%- assign oppSummary = opp.Summary | StripHtml | Trim -%}
+{%- comment -%} The contact: the first default connector (set per campus on the opportunity) with an active email {%- endcomment -%}
+{%- assign connectorEmail = '' -%}
+{%- assign connectorName = '' -%}
+{%- for oppCampus in opp.ConnectionOpportunityCampuses -%}
+  {%- assign connector = oppCampus.DefaultConnectorPersonAlias.Person -%}
+  {%- if connector and connector.Email != '' and connector.IsEmailActive -%}
+    {%- assign connectorEmail = connector.Email -%}
+    {%- assign connectorName = connector.NickName | Default:connector.FirstName -%}
+    {%- break -%}
+  {%- endif -%}
+{%- endfor -%}
+{{ oppName | SetPageTitle }}
+
+<article class="volunteer-detail" data-volunteer-detail="{{ opp.Id }}" itemscope itemtype="https://schema.org/Article">
+  <meta itemprop="headline" content="{{ oppName | Escape }}">
+  <div class="volunteer-detail__card" data-gd-card>
+
+    <!-- ===== FRONT: the opportunity ===== -->
+    <section class="volunteer-detail__face" data-gd-front aria-labelledby="vd-name">
+      <header class="volunteer-detail__hero{% if opp.PhotoId %} volunteer-detail__hero--photo{% else %} content-photo--placeholder{% endif %}">
+        {%- if opp.PhotoId %}
+        <img class="volunteer-detail__hero-img" src="/GetImage.ashx?id={{ opp.PhotoId }}&amp;w=1400&amp;h=467&amp;mode=crop" width="1400" height="467" alt="" decoding="async">
+        {%- endif %}
+        <div class="volunteer-detail__hero-text">
+          {%- if teamName != '' %}
+          <p class="volunteer-detail__kicker">{{ teamName }}</p>
+          {%- endif %}
+          <h1 class="volunteer-detail__name" id="vd-name">{{ oppName }}</h1>
+        </div>
+        {%- if connectorEmail != '' %}
+        <a class="volunteer-detail__contact" href="mailto:{{ connectorEmail }}?subject={{ oppName | EscapeDataString }}"><svg width="16" height="16" aria-hidden="true"><use href="#i-mail"/></svg> Email {{ connectorName }}</a>
+        {%- endif %}
+      </header>
+
+      {%- if oppSummary != '' %}
+      <p class="volunteer-detail__summary">{{ oppSummary }}</p>
+      {%- endif %}
+
+      {%- if opp.Description != '' %}
+      <div class="volunteer-detail__text" itemprop="articleBody">{{ opp.Description }}</div>
+      {%- endif %}
+
+      <footer class="volunteer-detail__actions">
+        <button type="button" class="btn btn--primary" data-gd-flip hidden>Sign up to serve</button>
+        <a class="btn btn--outline volunteer-detail__all" href="{{ listUrl }}">All opportunities</a>
+      </footer>
+    </section>
+
+    <!-- ===== BACK: sign up (theme.js moves the sign-up block in here) ===== -->
+    <section class="volunteer-detail__face" data-gd-back aria-labelledby="vd-signup" hidden>
+      <header class="volunteer-detail__band content-photo--placeholder">
+        <button type="button" class="volunteer-detail__back" data-gd-unflip><svg width="14" height="14" aria-hidden="true"><use href="#i-chevron-left"/></svg> Back</button>
+        <p class="volunteer-detail__kicker">Sign up</p>
+        <h2 class="volunteer-detail__name volunteer-detail__name--slim" id="vd-signup" tabindex="-1">{{ oppName }}</h2>
+      </header>
+      <div class="volunteer-detail__form" data-gd-slot></div>
+    </section>
+
+  </div>
+</article>
+{%- else %}
+<article class="volunteer-detail">
+  <div class="volunteer-detail__card">
+    <div class="volunteer-detail__text">
+      <p>We couldn't find that opportunity. It may be full or no longer open.</p>
+    </div>
+    <footer class="volunteer-detail__actions">
+      <a class="btn btn--outline volunteer-detail__all" href="{{ listUrl }}">All opportunities</a>
+    </footer>
+  </div>
+</article>
+{%- endif %}

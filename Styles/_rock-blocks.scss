@@ -8,7 +8,7 @@
 //
 // Scope: Rock blocks inside the page (main.page), and the Group Registration
 // block once theme.js has moved it into a Life Group card's back
-// (.group-detail__form, Blank layout: LifeGroupDetails.lava); never Rock's
+// (.group-detail__form, Blank layout: LifeGroupDetails.lava; .volunteer-detail__form: VolunteerOpportunityDetail.lava); never Rock's
 // admin UI ($not-admin: modals, config bars). The scope sits in :where(), so each rule
 // stays at its plain-class specificity: it beats core.css (loaded first) and
 // loses to any block-specific partial (_profile.scss, _giving.scss), which
@@ -17,7 +17,7 @@
 @use "config" as *;
 
 $tile-pad: clamp(1.25rem, 2.5vw, 1.75rem);
-$in: ':where(.page .block-instance, .group-detail__form > .block-instance)';
+$in: ':where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance)';
 $ok: ':where(#{$not-admin})';
 
 // The panel: My Account's tile card. The heading becomes a tile title.

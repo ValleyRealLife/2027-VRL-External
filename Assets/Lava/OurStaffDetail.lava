@@ -13,7 +13,8 @@
 
     THE CARD (as the concept, StaffDetail.lava): the band in the person's
     colour with the cut-out (tap or hover swaps to StaffPhotoB), the team
-    (else the grouping), name and title; the bio (the item's Content), email,
+    (else the grouping), name and title; the bio (the item's Content), the
+    RelatedLinks matrix (LinkTitle, LinkURL) as text links one per line, email,
     the office phone with StaffExtension. On its own page (not in the
     pop-up, which has its close) an All Staff button.
 {% endcomment %}
@@ -78,6 +79,29 @@
     <div class="staff-detail__body">
       {%- if item.Content != '' %}
       <div class="staff-detail__bio" itemprop="description">{{ item.Content }}</div>
+      {%- endif %}
+
+      {%- comment -%} RelatedLinks (a matrix: LinkTitle, LinkURL), one per line in the matrix's order. Off-site links open a new tab; ours leave the pop-up (_top) rather than load inside it {%- endcomment -%}
+      {%- assign linkMatrix = item | Attribute:'RelatedLinks','Object' -%}
+      {%- assign linkRows = linkMatrix.AttributeMatrixItems | Sort:'Order' -%}
+      {%- capture relatedLinks -%}
+        {%- for row in linkRows -%}
+          {%- assign linkUrl = row | Attribute:'LinkURL','RawValue' | Trim -%}
+          {%- if linkUrl == '' %}{% continue %}{% endif -%}
+          {%- assign linkTitle = row | Attribute:'LinkTitle' | Trim | Default:linkUrl -%}
+          {%- assign linkHost = linkUrl | Downcase -%}
+          {%- assign linkTarget = '_top' -%}
+          {%- if linkHost contains '://' -%}
+            {%- unless linkHost contains 'vrl.church' %}{% assign linkTarget = '_blank' %}{% endunless -%}
+          {%- endif %}
+        <li><a href="{{ linkUrl | Escape }}" target="{{ linkTarget }}"{% if linkTarget == '_blank' %} rel="noopener"{% endif %}>{{ linkTitle }}</a></li>
+        {%- endfor -%}
+      {%- endcapture -%}
+      {%- assign relatedLinks = relatedLinks | Trim -%}
+      {%- if relatedLinks != '' %}
+      <ul class="staff-detail__links" aria-label="Related links">
+        {{ relatedLinks }}
+      </ul>
       {%- endif %}
 
       <ul class="staff-detail__facts">

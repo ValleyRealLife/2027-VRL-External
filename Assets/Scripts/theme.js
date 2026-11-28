@@ -946,9 +946,11 @@
   });
 
   // --- Frame pop-up ([data-group-modal] / [data-staff-modal] links) ------------------
-  // A link with data-group-modal="<GroupId>" (the finder's cards) or
-  // data-staff-modal="<key>" (the staff page's cards) opens its page
-  // (LifeGroupDetails.lava / StaffDetail.lava, Blank layout) in an iframe inside
+  // A link with data-group-modal="<GroupId>" (the finder's cards),
+  // data-staff-modal="<key>" (the staff page's cards) or
+  // data-volunteer-modal="<OpportunityId>" (the volunteer page's lists) opens its
+  // page (LifeGroupDetails.lava / OurStaffDetail.lava /
+  // VolunteerOpportunityDetail.lava, Blank layout) in an iframe inside
   // a <dialog>, instead of leaving the page. The iframe is same-origin, so it's
   // sized to its page (and re-sized as the card flips or the form posts back);
   // the dialog scrolls when that's taller than the screen. The address carries
@@ -959,7 +961,8 @@
   (function () {
     var kinds = [
       { attr: 'data-group-modal', param: 'group', label: 'Group details', clean: /[^0-9]/g },
-      { attr: 'data-staff-modal', param: 'staff', label: 'Staff details', clean: /[^a-z0-9-]/g }
+      { attr: 'data-staff-modal', param: 'staff', label: 'Staff details', clean: /[^a-z0-9-]/g },
+      { attr: 'data-volunteer-modal', param: 'opportunity', label: 'Volunteer opportunity', clean: /[^0-9]/g }
     ];
     var dialog = null, frame = null, sizer = null, lastLink = null, kind = kinds[0];
     var setParam = function (id) {
@@ -1068,14 +1071,21 @@
   // motion). The open face is remembered for the browser session, so after the
   // form posts back the card opens on its back with the result. Inside the
   // finder's pop-up (html.is-framed), "Back to groups" closes the pop-up.
-  document.querySelectorAll('[data-group-detail]').forEach(function (gd) {
+  // The volunteer opportunity card ([data-volunteer-detail]:
+  // VolunteerOpportunityDetail.lava) flips the same way, to Rock's Connection
+  // Opportunity Signup block (Rock's own class, or a block given the CSS class
+  // "volunteer-signup").
+  document.querySelectorAll('[data-group-detail], [data-volunteer-detail]').forEach(function (gd) {
+    var volunteer = gd.hasAttribute('data-volunteer-detail');
     var card = gd.querySelector('[data-gd-card]');
     var front = gd.querySelector('[data-gd-front]');
     var back = gd.querySelector('[data-gd-back]');
     var slot = gd.querySelector('[data-gd-slot]');
     var flipBtn = gd.querySelector('[data-gd-flip]');
-    var form = document.querySelector('.group-signup') || document.querySelector('.block-instance.group-registration');   // a block given that class, else Rock's own class for its Group Registration block
-    var key = 'gd-face-' + gd.getAttribute('data-group-detail');
+    var form = volunteer
+      ? document.querySelector('.volunteer-signup') || document.querySelector('.block-instance.connection-opportunity-signup')
+      : document.querySelector('.group-signup') || document.querySelector('.block-instance.group-registration');   // a block given that class, else Rock's own class for the block
+    var key = volunteer ? 'vd-face-' + gd.getAttribute('data-volunteer-detail') : 'gd-face-' + gd.getAttribute('data-group-detail');
     var framed = root.classList.contains('is-framed');
     var host = null;
     try { host = framed && window.frameElement ? window.frameElement.closest('dialog') : null; } catch (err) { host = null; }
@@ -1097,7 +1107,7 @@
     };
     var flip = function (toBack) {
       var focusTarget = function () {
-        var t = toBack ? back.querySelector('#gd-signup') : flipBtn;
+        var t = toBack ? back.querySelector('h2[tabindex="-1"]') : flipBtn;   // the back's heading (#gd-signup / #vd-signup)
         if (t) t.focus({ preventScroll: true });
       };
       if (reduced.matches || !card.animate) { swap(toBack); toTop(); focusTarget(); return; }
@@ -1385,6 +1395,7 @@
     var bar = root.querySelector('[data-staff-bar]');
     var input = root.querySelector('[data-staff-search-input]');
     var status = root.querySelector('[data-staff-search-status]');
+    var clear = root.querySelector('[data-staff-search-clear]');
     if (!bar || !input) return;
     bar.hidden = false;
     var norm = function (s) { return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''); };
@@ -1416,10 +1427,17 @@
         if (!p.hidden) shown = n;
       });
       if (status) status.textContent = words.length ? (shown === 1 ? '1 person' : shown + ' people') : '';
+      if (clear) clear.hidden = input.value === '';
       toTop();
     };
     input.addEventListener('input', run);
-    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') e.preventDefault(); });
+    // The x (and Esc) clears the search and keeps focus in the box
+    var reset = function () { input.value = ''; run(); input.focus(); };
+    if (clear) clear.addEventListener('click', reset);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') e.preventDefault();
+      if (e.key === 'Escape' && input.value) { e.preventDefault(); reset(); }
+    });
     // Group by: a menu item shows its view, ticks itself and closes the menu
     root.addEventListener('click', function (e) {
       var pick = e.target.closest('[data-staff-view-pick]');

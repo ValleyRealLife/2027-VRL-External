@@ -181,27 +181,27 @@ html.is-framed .group-detail__band { padding-right: 4.25rem; }   // clear of the
 // button styles (Styles/_rock-blocks.scss counts .group-detail__form as a
 // page); here it loses its panel, takes the login card's roomier fields, and
 // ends on a full-width Register.
-.group-detail__form { padding: clamp(1.5rem, 6cqi, 2.5rem) clamp(1.25rem, 6cqi, 2.5rem); }
-.group-detail__form .panel-block { margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
-.group-detail__form .panel-block > :is(.panel-heading, .panel-header) { display: none; }
-.group-detail__form .panel-block > .panel-body { padding: 0; }
-.group-detail__form fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+:is(.group-detail__form, .volunteer-detail__form) { padding: clamp(1.5rem, 6cqi, 2.5rem) clamp(1.25rem, 6cqi, 2.5rem); }
+:is(.group-detail__form, .volunteer-detail__form) .panel-block { margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+:is(.group-detail__form, .volunteer-detail__form) .panel-block > :is(.panel-heading, .panel-header) { display: none; }
+:is(.group-detail__form, .volunteer-detail__form) .panel-block > .panel-body { padding: 0; }
+:is(.group-detail__form, .volunteer-detail__form) fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 
 // The block's intro ("Please complete the form below…"): a plain line, not a blue box
-.group-detail__form .alert-info { margin: 0 0 var(--space-lg); padding: 0; border: 0; background: none; font-size: 1rem; line-height: 1.6; color: var(--text-secondary); }
+:is(.group-detail__form, .volunteer-detail__form) .alert-info { margin: 0 0 var(--space-lg); padding: 0; border: 0; background: none; font-size: 1rem; line-height: 1.6; color: var(--text-secondary); }
 // What the form says back: registered, full, or what to fix
-.group-detail__form .alert:not(.alert-info) { margin: 0 0 var(--space-lg); padding: var(--space-md) var(--space-lg); border: 0; border-radius: var(--radius-lg); font-size: 1rem; line-height: 1.5; }
-.group-detail__form .alert-success { background: var(--brand-wash); color: var(--text); }
-.group-detail__form .alert-warning { background: oklch(0.95 0.05 80); color: var(--text); }
-.group-detail__form :is(.alert-validation, .alert-danger) { background: oklch(0.95 0.03 25); color: oklch(0.42 0.15 25); }
-.group-detail__form :is(.alert-validation, .alert-danger) ul { margin: var(--space-2xs) 0 0; padding-left: 1.25rem; }
+:is(.group-detail__form, .volunteer-detail__form) .alert:not(.alert-info) { margin: 0 0 var(--space-lg); padding: var(--space-md) var(--space-lg); border: 0; border-radius: var(--radius-lg); font-size: 1rem; line-height: 1.5; }
+:is(.group-detail__form, .volunteer-detail__form) .alert-success { background: var(--brand-wash); color: var(--text); }
+:is(.group-detail__form, .volunteer-detail__form) .alert-warning { background: oklch(0.95 0.05 80); color: var(--text); }
+:is(.group-detail__form, .volunteer-detail__form) :is(.alert-validation, .alert-danger) { background: oklch(0.95 0.03 25); color: oklch(0.42 0.15 25); }
+:is(.group-detail__form, .volunteer-detail__form) :is(.alert-validation, .alert-danger) ul { margin: var(--space-2xs) 0 0; padding-left: 1.25rem; }
 
 // Fields: the login card's (Styles/_login.scss)
-.group-detail__form .form-group { margin-bottom: var(--space-md); }
-.group-detail__form .control-label { margin-bottom: var(--space-xs); font-size: 0.875rem; font-weight: 700; }
-.group-detail__form .required > .control-label::before { display: none; }   // every field here is required; the optional ones say so
-.group-detail__form .form-group:not(.required):has(:is(input.form-control, select.form-control)) > .control-label::after { content: " (optional)"; font-weight: 500; color: var(--text-muted); }
-.group-detail__form :is(.form-control, select.form-control) {
+:is(.group-detail__form, .volunteer-detail__form) .form-group { margin-bottom: var(--space-md); }
+:is(.group-detail__form, .volunteer-detail__form) .control-label { margin-bottom: var(--space-xs); font-size: 0.875rem; font-weight: 700; }
+:is(.group-detail__form, .volunteer-detail__form) .required > .control-label::before { display: none; }   // every field here is required; the optional ones say so
+:is(.group-detail__form, .volunteer-detail__form) .form-group:not(.required):has(:is(input.form-control, select.form-control)) > .control-label::after { content: " (optional)"; font-weight: 500; color: var(--text-muted); }
+:is(.group-detail__form, .volunteer-detail__form) :is(.form-control, select.form-control) {
   height: 3rem; min-height: 3rem;
   padding: 0 var(--space-md);
   background: var(--bg-elevated) !important;   // over core.css's !important fill
@@ -211,13 +211,13 @@ html.is-framed .group-detail__band { padding-right: 4.25rem; }   // clear of the
   font: inherit; font-size: 1rem;   // 16px: iOS won't zoom the page on focus
   transition: border-color var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
 }
-.group-detail__form .form-control:hover { border-color: var(--border-strong); }
-.group-detail__form .form-control:focus { outline: 0; border-color: var(--brand-text); box-shadow: 0 0 0 4px var(--brand-glow-soft); }
+:is(.group-detail__form, .volunteer-detail__form) .form-control:hover { border-color: var(--border-strong); }
+:is(.group-detail__form, .volunteer-detail__form) .form-control:focus { outline: 0; border-color: var(--brand-text); box-shadow: 0 0 0 4px var(--brand-glow-soft); }
 // Email's envelope add-on: dropped; the field reads on its own
-.group-detail__form .input-group-addon { display: none; }
-.group-detail__form .input-group { display: flex; width: 100%; }   // (Bootstrap's table layout would shrink the field without its add-on)
-.group-detail__form .input-group > .form-control { flex: 1 1 auto; width: 100%; border-radius: var(--radius-md); }
-.group-detail__form .checkbox label { font-size: 0.875rem; color: var(--text-secondary); }
+:is(.group-detail__form, .volunteer-detail__form) .input-group-addon { display: none; }
+:is(.group-detail__form, .volunteer-detail__form) .input-group { display: flex; width: 100%; }   // (Bootstrap's table layout would shrink the field without its add-on)
+:is(.group-detail__form, .volunteer-detail__form) .input-group > .form-control { flex: 1 1 auto; width: 100%; border-radius: var(--radius-md); }
+:is(.group-detail__form, .volunteer-detail__form) .checkbox label { font-size: 0.875rem; color: var(--text-secondary); }
 // Fields the block can't turn off. Its Full mode always asks for Home Phone and
 // Address as well as Mobile Phone; these classes in the block's CSS Class
 // (Block Properties) hide them. Both are optional, so a hidden one is just sent
@@ -228,10 +228,10 @@ html.is-framed .group-detail__band { padding-right: 4.25rem; }   // clear of the
 .signup-no-address .address-control { display: none; }
 
 // The captcha, then Register across the card
-.group-detail__form .actions { margin-top: var(--space-lg); padding-top: 0; border-top: 0; }
-.group-detail__form .footer-actions { display: grid; gap: var(--space-md); width: 100%; }
-.group-detail__form .footer-actions .btn { width: 100%; min-height: 3rem; justify-content: center; }
-.group-detail__form .footer-secondary-actions:empty { display: none; }
+:is(.group-detail__form, .volunteer-detail__form) .actions { margin-top: var(--space-lg); padding-top: 0; border-top: 0; }
+:is(.group-detail__form, .volunteer-detail__form) .footer-actions { display: grid; gap: var(--space-md); width: 100%; }
+:is(.group-detail__form, .volunteer-detail__form) .footer-actions .btn { width: 100%; min-height: 3rem; justify-content: center; }
+:is(.group-detail__form, .volunteer-detail__form) .footer-secondary-actions:empty { display: none; }
 
 // ---------------------------------------------------------------------------
 // The pop-up (the finder page)

@@ -1,0 +1,166 @@
+// ===========================================================================
+// VOLUNTEER — the volunteer page (Assets/Lava/VolunteerListing.lava) and one
+// opportunity (Assets/Lava/VolunteerOpportunityDetail.lava, Blank layout,
+// shown in the volunteer page's pop-up: theme.js "Frame pop-up", .group-modal
+// in Styles/_group-detail.scss).
+//
+//   .volunteer-team          a team's section under its divider: a photo
+//                            beside the list of its opportunities (row links,
+//                            Styles/_content.scss). --flip puts the photo on
+//                            the right (every other section). Phones: the
+//                            photo on top.
+//   .volunteer-detail        the opportunity as a card: an ultrawide header (team, name, "Email <connector>"),
+//                            summary, description; flips (as the Life Group card) to Sign up (Rock's
+//                            Connection Opportunity Signup block, moved in by
+//                            theme.js; its fields and button take the Life
+//                            Group card's form styles, .volunteer-detail__form
+//                            in Styles/_group-detail.scss), All opportunities
+//                            (only on its own page; the pop-up has its close)
+// ===========================================================================
+
+@use "config" as *;
+
+// ---------------------------------------------------------------------------
+// Team sections
+// ---------------------------------------------------------------------------
+.volunteer-team {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+}
+.volunteer-team__photo { aspect-ratio: 3 / 2; }
+.volunteer-team__list { margin: 0; padding: 0; list-style: none; }
+.volunteer-team__list .row-link {
+  min-height: 3.5rem;
+  padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.volunteer-team__list .row-link__label { font-size: 1rem; font-weight: 700; line-height: 1.3; }
+@media (min-width: $bp-sm) {
+  .volunteer-team { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-lg); }
+  .volunteer-team--flip .volunteer-team__photo { order: 2; }
+}
+
+// ---------------------------------------------------------------------------
+// The opportunity card (Blank layout: on its own, a card centred on the
+// page; in the pop-up, the pop-up is the card)
+// ---------------------------------------------------------------------------
+body.rock-blank:has(.volunteer-detail) { background: var(--bg); }
+body.rock-blank:has(.volunteer-detail) > form > main { padding: clamp(1rem, 4vw, 3rem) var(--gutter); }
+html.is-framed body.rock-blank:has(.volunteer-detail) { background: transparent; }
+html.is-framed body.rock-blank:has(.volunteer-detail) > form > main { padding: 0; }
+html.is-framed:has(.volunteer-detail) { background: transparent; }
+
+.volunteer-detail {
+  container-type: inline-size;
+  max-width: 46rem;
+  margin-inline: auto;
+  perspective: 2400px;   // the flip (theme.js "Group details")
+  text-align: start;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+.volunteer-detail__card {
+  display: grid;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+html.is-framed .volunteer-detail { max-width: none; }
+html.is-framed .volunteer-detail__card { box-shadow: none; }
+
+// The header: an ultrawide photo (taller on narrow cards, so the name still
+// fits) with the team and the name at its lower left and the contact link at
+// its lower right. Over a photo: a dark wash and light text; over the
+// placeholder: dark text.
+.volunteer-detail__hero {
+  position: relative; isolation: isolate;
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+  min-height: max(11rem, 33.333cqi);   // 3:1, but it grows if the name and the contact need more
+  padding: clamp(1rem, 4cqi, 1.75rem) clamp(1.25rem, 6cqi, 2.5rem);
+  background-color: var(--brand-deep);
+}
+.volunteer-detail__hero-img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.volunteer-detail__hero--photo::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(to top, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0.25) 55%, rgb(0 0 0 / 0) 85%);
+}
+.volunteer-detail__hero-text { flex: 1 1 16rem; min-width: 0; }
+.volunteer-detail__kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-widest); text-transform: uppercase;
+  color: var(--brand-deep);
+}
+.volunteer-detail__name {
+  margin: 0;
+  font-size: clamp(1.625rem, 6.5cqi, 2.5rem); line-height: 1.05;
+  text-transform: uppercase; text-wrap: balance;
+  color: var(--text);
+}
+.volunteer-detail__hero--photo .volunteer-detail__kicker { color: var(--brand); }
+.volunteer-detail__hero--photo .volunteer-detail__name { color: #fff; }
+
+// Contact: a frosted pill (reads on the photo and on the placeholder)
+.volunteer-detail__contact {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 0.45em;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: oklch(1 0 0 / 0.82);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font-size: 0.8125rem; font-weight: 700; line-height: 1.2;
+  text-decoration: none;
+  transition: background-color var(--duration) var(--ease-out);
+}
+.volunteer-detail__contact:is(:link, :visited) { color: var(--text); }
+.volunteer-detail__contact:hover { background: #fff; text-decoration: none; }
+.volunteer-detail__contact:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.volunteer-detail__contact svg { flex: none; color: var(--brand-text); }
+
+.volunteer-detail__summary {
+  margin: 0; padding: clamp(1.25rem, 5cqi, 2rem) clamp(1.25rem, 6cqi, 2.5rem) 0;
+  font-size: 1.125rem; font-weight: 500; line-height: 1.55; color: var(--text);
+}
+
+.volunteer-detail__text {
+  padding: var(--space-lg) clamp(1.25rem, 6cqi, 2.5rem) 0;
+  font-size: 1rem; line-height: 1.65; color: var(--text-secondary);
+}
+.volunteer-detail__text > :where(p, ul, ol) { margin: 0 0 0.85em; }
+.volunteer-detail__text > :last-child { margin-bottom: 0; }
+.volunteer-detail__text a { @include link-prose; }   // the theme's text links (the Blank layout has no .page for _base.scss's rule)
+
+// Front's last row: Sign up to serve (shows once theme.js has moved the
+// sign-up block into the back) and All opportunities (on its own page only;
+// the pop-up has its close). Nothing to show in the pop-up: no row.
+.volunteer-detail__actions { display: flex; flex-wrap: wrap; gap: var(--space-sm); padding: clamp(1.5rem, 6cqi, 2.5rem) clamp(1.25rem, 6cqi, 2.5rem); }
+html.is-framed .volunteer-detail__all { display: none; }
+html.is-framed .volunteer-detail__actions:not(:has([data-gd-flip]:not([hidden]))) { display: none; }
+
+// Back: a slim band in the placeholder's green (Back, Sign up, the name), then
+// Rock's sign-up block
+.volunteer-detail__band {
+  display: block; place-items: normal;   // (not the placeholder's centring)
+  padding: clamp(1.25rem, 5cqi, 2rem) clamp(1.25rem, 6cqi, 2.5rem) clamp(1rem, 4cqi, 1.5rem);
+}
+html.is-framed .volunteer-detail__band { padding-right: 4.25rem; }   // clear of the pop-up's close button
+.volunteer-detail__name--slim { font-size: clamp(1.375rem, 5cqi, 1.75rem); }
+.volunteer-detail__name--slim:focus { outline: 0; }
+.volunteer-detail__back {
+  display: inline-flex; align-items: center; gap: 0.3em;
+  margin: 0 0 var(--space-md) -0.15rem; padding: 0.3rem 0.75rem 0.3rem 0.5rem;
+  border: 1px solid oklch(from var(--text) l c h / 0.25);
+  border-radius: var(--radius-pill);
+  background: oklch(1 0 0 / 0.45);
+  font: inherit; font-size: 0.75rem; font-weight: 800;
+  letter-spacing: var(--tracking-wide); text-transform: uppercase;
+  color: var(--text);
+  cursor: pointer;
+}
+.volunteer-detail__back:hover { background: oklch(1 0 0 / 0.7); }
+.volunteer-detail__back:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }

@@ -3488,7 +3488,7 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
     animation: none;
   }
 }
-:where(.page .block-instance, .group-detail__form > .block-instance) .panel-block:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .panel-block:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   margin: 0;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-2xl);
@@ -3497,13 +3497,13 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   color: var(--text);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .panel-block > .panel-heading:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .panel-block > .panel-heading:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   padding: clamp(1.25rem, 2.5vw, 1.75rem) clamp(1.25rem, 2.5vw, 1.75rem) 0;
   border: 0;
   background: none;
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .panel-block > .panel-heading .panel-title:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .panel-block > .panel-heading .panel-title:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   display: inline-flex;
   align-items: center;
   gap: 0.5em;
@@ -3516,15 +3516,15 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   color: var(--text);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .panel-block > .panel-heading .panel-title i:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .panel-block > .panel-heading .panel-title i:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   color: var(--brand-text);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .panel-block > .panel-body:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .panel-block > .panel-body:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   padding: clamp(1.25rem, 2.5vw, 1.75rem);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) legend:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) legend:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   margin: 0 0 var(--space-md);
   padding: 0 0 var(--space-xs);
   border: 0;
@@ -3537,17 +3537,17 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   color: var(--text);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance).change-password legend:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance).change-password legend:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   display: none;
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .control-label:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .control-label:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   font-size: 0.8125rem;
   font-weight: 700;
   color: var(--text);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) :is(.form-control, select.form-control):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) :is(.form-control, select.form-control):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   min-height: 2.75rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -3555,13 +3555,13 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   box-shadow: none;
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .form-control:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):focus {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .form-control:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):focus {
   border-color: var(--brand);
   box-shadow: 0 0 0 3px var(--brand-glow-soft);
   outline: 0;
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .input-group .input-group-addon:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .input-group .input-group-addon:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   border: 1px solid var(--border);
   border-right: 0;
   border-radius: var(--radius-md) 0 0 var(--radius-md);
@@ -3569,53 +3569,53 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   color: var(--text-secondary);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .input-group :is(.form-control, select.form-control):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .input-group :is(.form-control, select.form-control):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .date-parts-picker:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .date-parts-picker:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-xs);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .date-parts-picker .separator:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .date-parts-picker .separator:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   color: var(--text-muted);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) input:is([type=radio], [type=checkbox]):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) input:is([type=radio], [type=checkbox]):where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   accent-color: var(--brand);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .radio-inline:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .radio-inline:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   margin-right: var(--space-md);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .help-block:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .help-block:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   font-size: 0.8125rem;
   color: var(--text-secondary);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .btn:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(.btn-square, .table *) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .btn:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(.btn-square, .table *) {
   border-radius: var(--radius-pill);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .btn.btn-primary:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .btn.btn-primary:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   background: var(--brand);
   border-color: transparent;
   color: var(--text-on-brand);
   font-weight: 800;
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .btn.btn-primary:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):is(:hover, :focus) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .btn.btn-primary:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):is(:hover, :focus) {
   background: var(--brand-bright);
   border-color: transparent;
   color: var(--text-on-brand);
   box-shadow: var(--shadow-glow);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .btn-default:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(.btn-square, .table *) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .btn-default:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(.btn-square, .table *) {
   display: inline-flex;
   align-items: center;
   gap: 0.4em;
@@ -3625,13 +3625,13 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   font-weight: 700;
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .btn-default:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(.btn-square, .table *):is(:hover, :focus) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .btn-default:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(.btn-square, .table *):is(:hover, :focus) {
   border-color: var(--brand);
   background: var(--brand-wash);
   color: var(--text);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .actions:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .actions:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3641,7 +3641,7 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   border-top: 1px solid var(--border-subtle);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .actions .btn:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .actions .btn:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3656,33 +3656,33 @@ body.modal-open :is(.site-alert, .utilbar, .site-header, .site-footer, [data-cov
   transition: background var(--duration) var(--ease-out), color var(--duration) var(--ease-out), border-color var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .actions .btn-link:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .actions .btn-link:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   border: 1.5px solid var(--border);
   background: transparent;
   color: var(--text);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .actions .btn-link:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):is(:hover, :focus) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .actions .btn-link:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):is(:hover, :focus) {
   border-color: var(--brand);
   background: var(--brand-wash);
   color: var(--text);
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance) .actions .pull-right:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(:has(*)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .actions .pull-right:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)):not(:has(*)) {
   display: none;
 }
 
 @media (max-width: 559px) {
-  :where(.page .block-instance, .group-detail__form > .block-instance) .actions .btn:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+  :where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance) .actions .btn:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
     flex: 1 1 0;
   }
 }
-:where(.page .block-instance, .group-detail__form > .block-instance):is(.change-password, .block-narrow) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance):is(.change-password, .block-narrow) {
   max-width: 440px;
   margin-inline: auto;
 }
 
-:where(.page .block-instance, .group-detail__form > .block-instance).workflow-entry .panel-block > .panel-heading:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
+:where(.page .block-instance, .group-detail__form > .block-instance, .volunteer-detail__form > .block-instance).workflow-entry .panel-block > .panel-heading:where(:not(.modal, .modal *, .config-bar, .config-bar *, [class*=-configuration], [class*=-configuration] *)) {
   display: none;
 }
 
@@ -11304,11 +11304,11 @@ html.is-framed .group-detail__band {
   outline-offset: 2px;
 }
 
-.group-detail__form {
+:is(.group-detail__form, .volunteer-detail__form) {
   padding: clamp(1.5rem, 6cqi, 2.5rem) clamp(1.25rem, 6cqi, 2.5rem);
 }
 
-.group-detail__form .panel-block {
+:is(.group-detail__form, .volunteer-detail__form) .panel-block {
   margin: 0;
   border: 0;
   border-radius: 0;
@@ -11316,22 +11316,22 @@ html.is-framed .group-detail__band {
   box-shadow: none;
 }
 
-.group-detail__form .panel-block > :is(.panel-heading, .panel-header) {
+:is(.group-detail__form, .volunteer-detail__form) .panel-block > :is(.panel-heading, .panel-header) {
   display: none;
 }
 
-.group-detail__form .panel-block > .panel-body {
+:is(.group-detail__form, .volunteer-detail__form) .panel-block > .panel-body {
   padding: 0;
 }
 
-.group-detail__form fieldset {
+:is(.group-detail__form, .volunteer-detail__form) fieldset {
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
 }
 
-.group-detail__form .alert-info {
+:is(.group-detail__form, .volunteer-detail__form) .alert-info {
   margin: 0 0 var(--space-lg);
   padding: 0;
   border: 0;
@@ -11341,7 +11341,7 @@ html.is-framed .group-detail__band {
   color: var(--text-secondary);
 }
 
-.group-detail__form .alert:not(.alert-info) {
+:is(.group-detail__form, .volunteer-detail__form) .alert:not(.alert-info) {
   margin: 0 0 var(--space-lg);
   padding: var(--space-md) var(--space-lg);
   border: 0;
@@ -11350,47 +11350,47 @@ html.is-framed .group-detail__band {
   line-height: 1.5;
 }
 
-.group-detail__form .alert-success {
+:is(.group-detail__form, .volunteer-detail__form) .alert-success {
   background: var(--brand-wash);
   color: var(--text);
 }
 
-.group-detail__form .alert-warning {
+:is(.group-detail__form, .volunteer-detail__form) .alert-warning {
   background: oklch(95% 0.05 80deg);
   color: var(--text);
 }
 
-.group-detail__form :is(.alert-validation, .alert-danger) {
+:is(.group-detail__form, .volunteer-detail__form) :is(.alert-validation, .alert-danger) {
   background: oklch(95% 0.03 25deg);
   color: oklch(42% 0.15 25deg);
 }
 
-.group-detail__form :is(.alert-validation, .alert-danger) ul {
+:is(.group-detail__form, .volunteer-detail__form) :is(.alert-validation, .alert-danger) ul {
   margin: var(--space-2xs) 0 0;
   padding-left: 1.25rem;
 }
 
-.group-detail__form .form-group {
+:is(.group-detail__form, .volunteer-detail__form) .form-group {
   margin-bottom: var(--space-md);
 }
 
-.group-detail__form .control-label {
+:is(.group-detail__form, .volunteer-detail__form) .control-label {
   margin-bottom: var(--space-xs);
   font-size: 0.875rem;
   font-weight: 700;
 }
 
-.group-detail__form .required > .control-label::before {
+:is(.group-detail__form, .volunteer-detail__form) .required > .control-label::before {
   display: none;
 }
 
-.group-detail__form .form-group:not(.required):has(:is(input.form-control, select.form-control)) > .control-label::after {
+:is(.group-detail__form, .volunteer-detail__form) .form-group:not(.required):has(:is(input.form-control, select.form-control)) > .control-label::after {
   content: " (optional)";
   font-weight: 500;
   color: var(--text-muted);
 }
 
-.group-detail__form :is(.form-control, select.form-control) {
+:is(.group-detail__form, .volunteer-detail__form) :is(.form-control, select.form-control) {
   height: 3rem;
   min-height: 3rem;
   padding: 0 var(--space-md);
@@ -11403,32 +11403,32 @@ html.is-framed .group-detail__band {
   transition: border-color var(--duration) var(--ease-out), box-shadow var(--duration) var(--ease-out);
 }
 
-.group-detail__form .form-control:hover {
+:is(.group-detail__form, .volunteer-detail__form) .form-control:hover {
   border-color: var(--border-strong);
 }
 
-.group-detail__form .form-control:focus {
+:is(.group-detail__form, .volunteer-detail__form) .form-control:focus {
   outline: 0;
   border-color: var(--brand-text);
   box-shadow: 0 0 0 4px var(--brand-glow-soft);
 }
 
-.group-detail__form .input-group-addon {
+:is(.group-detail__form, .volunteer-detail__form) .input-group-addon {
   display: none;
 }
 
-.group-detail__form .input-group {
+:is(.group-detail__form, .volunteer-detail__form) .input-group {
   display: flex;
   width: 100%;
 }
 
-.group-detail__form .input-group > .form-control {
+:is(.group-detail__form, .volunteer-detail__form) .input-group > .form-control {
   flex: 1 1 auto;
   width: 100%;
   border-radius: var(--radius-md);
 }
 
-.group-detail__form .checkbox label {
+:is(.group-detail__form, .volunteer-detail__form) .checkbox label {
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
@@ -11441,25 +11441,25 @@ html.is-framed .group-detail__band {
   display: none;
 }
 
-.group-detail__form .actions {
+:is(.group-detail__form, .volunteer-detail__form) .actions {
   margin-top: var(--space-lg);
   padding-top: 0;
   border-top: 0;
 }
 
-.group-detail__form .footer-actions {
+:is(.group-detail__form, .volunteer-detail__form) .footer-actions {
   display: grid;
   gap: var(--space-md);
   width: 100%;
 }
 
-.group-detail__form .footer-actions .btn {
+:is(.group-detail__form, .volunteer-detail__form) .footer-actions .btn {
   width: 100%;
   min-height: 3rem;
   justify-content: center;
 }
 
-.group-detail__form .footer-secondary-actions:empty {
+:is(.group-detail__form, .volunteer-detail__form) .footer-secondary-actions:empty {
   display: none;
 }
 
@@ -11711,7 +11711,7 @@ html.is-framed .group-detail__band {
   width: 100%;
   height: 2.375rem;
   margin: 0;
-  padding: 0 0.875rem 0 2.25rem;
+  padding: 0 2.25rem 0 2.25rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--bg-elevated);
@@ -11738,7 +11738,33 @@ html.is-framed .group-detail__band {
 }
 
 .staff-bar__search input::-webkit-search-cancel-button {
-  cursor: pointer;
+  display: none;
+}
+
+.staff-bar__clear {
+  position: absolute;
+  right: 0.375rem;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-circle);
+  background: transparent;
+  color: var(--text-muted);
+  transition: background var(--duration) var(--ease-out), color var(--duration) var(--ease-out);
+}
+
+.staff-bar__clear:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.staff-bar__clear[hidden] {
+  display: none;
 }
 
 .staff-bar__search-icon {
@@ -11765,7 +11791,7 @@ html.is-framed .group-detail__band {
 }
 
 .staff-team + .staff-team {
-  margin-top: var(--space-3xl);
+  margin-top: calc(var(--space-3xl) * 2);
 }
 
 .staff-grid {
@@ -12072,8 +12098,19 @@ html.is-framed .staff-detail__card {
   color: var(--text-muted);
 }
 
+.staff-detail__links {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
 .staff-detail__facts a,
-.staff-detail__bio a {
+.staff-detail__bio a,
+.staff-detail__links a {
   color: var(--link-color, var(--brand-text));
   text-decoration: none;
   background-image: linear-gradient(currentColor, currentColor), linear-gradient(color-mix(in oklch, currentColor 35%, transparent), color-mix(in oklch, currentColor 35%, transparent));
@@ -12084,17 +12121,20 @@ html.is-framed .staff-detail__card {
   transition: background-size var(--duration-slow) var(--ease-out);
 }
 .staff-detail__facts a:is(:hover, :focus, :visited),
-.staff-detail__bio a:is(:hover, :focus, :visited) {
+.staff-detail__bio a:is(:hover, :focus, :visited),
+.staff-detail__links a:is(:hover, :focus, :visited) {
   color: var(--link-color, var(--brand-text));
   text-decoration: none;
 }
 .staff-detail__facts a:is(:hover, :focus-visible),
-.staff-detail__bio a:is(:hover, :focus-visible) {
+.staff-detail__bio a:is(:hover, :focus-visible),
+.staff-detail__links a:is(:hover, :focus-visible) {
   background-size: 100% 2px, 100% 1px;
 }
 @media (prefers-reduced-motion: reduce) {
   .staff-detail__facts a,
-  .staff-detail__bio a {
+  .staff-detail__bio a,
+  .staff-detail__links a {
     transition: none;
   }
 }
@@ -12115,5 +12155,324 @@ html.is-framed .staff-detail__actions {
     border-radius: var(--radius-xl);
   }
 }
+.staff-openings.page-head--banner {
+  margin-top: calc(var(--space-3xl) * 2);
+  padding-top: 0;
+  background: none;
+}
+
+.staff-openings > .container {
+  max-width: none;
+  padding-inline: 0;
+}
+
+.staff-openings .page-head__body .btn {
+  align-self: flex-start;
+  margin-top: var(--space-lg);
+}
+
+.staff-openings.page-head--banner .page-head__card {
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+}
+
+.staff-openings .page-head__body {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.2) 55%, rgba(0, 0, 0, 0) 85%), linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0) 85%);
+}
+
+@media (min-width: 900px) {
+  .staff-openings .page-head__body {
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.35) 35%, rgba(0, 0, 0, 0) 65%), linear-gradient(to top right, rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.25) 45%, rgba(0, 0, 0, 0) 70%);
+  }
+}
+.volunteer-team {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.volunteer-team__photo {
+  aspect-ratio: 3/2;
+}
+
+.volunteer-team__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.volunteer-team__list .row-link {
+  min-height: 3.5rem;
+  padding: var(--space-sm) var(--space-md) var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.volunteer-team__list .row-link__label {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+@media (min-width: 560px) {
+  .volunteer-team {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-lg);
+  }
+  .volunteer-team--flip .volunteer-team__photo {
+    order: 2;
+  }
+}
+body.rock-blank:has(.volunteer-detail) {
+  background: var(--bg);
+}
+
+body.rock-blank:has(.volunteer-detail) > form > main {
+  padding: clamp(1rem, 4vw, 3rem) var(--gutter);
+}
+
+html.is-framed body.rock-blank:has(.volunteer-detail) {
+  background: transparent;
+}
+
+html.is-framed body.rock-blank:has(.volunteer-detail) > form > main {
+  padding: 0;
+}
+
+html.is-framed:has(.volunteer-detail) {
+  background: transparent;
+}
+
+.volunteer-detail {
+  container-type: inline-size;
+  max-width: 46rem;
+  margin-inline: auto;
+  perspective: 2400px;
+  text-align: start;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.volunteer-detail__card {
+  display: grid;
+  border-radius: var(--radius-2xl);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+html.is-framed .volunteer-detail {
+  max-width: none;
+}
+
+html.is-framed .volunteer-detail__card {
+  box-shadow: none;
+}
+
+.volunteer-detail__hero {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-sm) var(--space-md);
+  min-height: max(11rem, 33.333cqi);
+  padding: clamp(1rem, 4cqi, 1.75rem) clamp(1.25rem, 6cqi, 2.5rem);
+  background-color: var(--brand-deep);
+}
+
+.volunteer-detail__hero-img {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.volunteer-detail__hero--photo::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.25) 55%, rgba(0, 0, 0, 0) 85%);
+}
+
+.volunteer-detail__hero-text {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.volunteer-detail__kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--brand-deep);
+}
+
+.volunteer-detail__name {
+  margin: 0;
+  font-size: clamp(1.625rem, 6.5cqi, 2.5rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-wrap: balance;
+  color: var(--text);
+}
+
+.volunteer-detail__hero--photo .volunteer-detail__kicker {
+  color: var(--brand);
+}
+
+.volunteer-detail__hero--photo .volunteer-detail__name {
+  color: #fff;
+}
+
+.volunteer-detail__contact {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: oklch(100% 0 0deg / 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: background-color var(--duration) var(--ease-out);
+}
+
+.volunteer-detail__contact:is(:link, :visited) {
+  color: var(--text);
+}
+
+.volunteer-detail__contact:hover {
+  background: #fff;
+  text-decoration: none;
+}
+
+.volunteer-detail__contact:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.volunteer-detail__contact svg {
+  flex: none;
+  color: var(--brand-text);
+}
+
+.volunteer-detail__summary {
+  margin: 0;
+  padding: clamp(1.25rem, 5cqi, 2rem) clamp(1.25rem, 6cqi, 2.5rem) 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.volunteer-detail__text {
+  padding: var(--space-lg) clamp(1.25rem, 6cqi, 2.5rem) 0;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.volunteer-detail__text > :where(p, ul, ol) {
+  margin: 0 0 0.85em;
+}
+
+.volunteer-detail__text > :last-child {
+  margin-bottom: 0;
+}
+
+.volunteer-detail__text a {
+  color: var(--link-color, var(--brand-text));
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor), linear-gradient(color-mix(in oklch, currentColor 35%, transparent), color-mix(in oklch, currentColor 35%, transparent));
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 0% 2px, 100% 1px;
+  padding-bottom: 1px;
+  transition: background-size var(--duration-slow) var(--ease-out);
+}
+.volunteer-detail__text a:is(:hover, :focus, :visited) {
+  color: var(--link-color, var(--brand-text));
+  text-decoration: none;
+}
+.volunteer-detail__text a:is(:hover, :focus-visible) {
+  background-size: 100% 2px, 100% 1px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .volunteer-detail__text a {
+    transition: none;
+  }
+}
+
+.volunteer-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding: clamp(1.5rem, 6cqi, 2.5rem) clamp(1.25rem, 6cqi, 2.5rem);
+}
+
+html.is-framed .volunteer-detail__all {
+  display: none;
+}
+
+html.is-framed .volunteer-detail__actions:not(:has([data-gd-flip]:not([hidden]))) {
+  display: none;
+}
+
+.volunteer-detail__band {
+  display: block;
+  place-items: normal;
+  padding: clamp(1.25rem, 5cqi, 2rem) clamp(1.25rem, 6cqi, 2.5rem) clamp(1rem, 4cqi, 1.5rem);
+}
+
+html.is-framed .volunteer-detail__band {
+  padding-right: 4.25rem;
+}
+
+.volunteer-detail__name--slim {
+  font-size: clamp(1.375rem, 5cqi, 1.75rem);
+}
+
+.volunteer-detail__name--slim:focus {
+  outline: 0;
+}
+
+.volunteer-detail__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  margin: 0 0 var(--space-md) -0.15rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.5rem;
+  border: 1px solid oklch(from var(--text) l c h/0.25);
+  border-radius: var(--radius-pill);
+  background: oklch(100% 0 0deg / 0.45);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.volunteer-detail__back:hover {
+  background: oklch(100% 0 0deg / 0.7);
+}
+
+.volunteer-detail__back:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
 /* CSS Overrides Bottom Start */
 /* CSS Overrides Bottom End */
